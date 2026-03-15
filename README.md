@@ -1,12 +1,12 @@
 # 👨‍🏫 mentor
 
-Teaching and knowledge transfer framework. Guides skill development and learning progression.
+Self-improving orchestration and evaluation engine for long-running multi-skill workflows. Analyzes journals, evaluates variants, and proposes skill improvements.
 
 ---
 
 ## 📖 Overview
 
-Mentor guides learning and skill development. Manages knowledge transfer, tracks progression, and optimizes learning paths.
+Mentor is a core component of the Indigo system. See SKILL.md for operational details.
 
 ---
 
@@ -18,29 +18,15 @@ Mentor guides learning and skill development. Manages knowledge transfer, tracks
 git clone https://github.com/indigokarasu/mentor.git
 ```
 
-### 🛠️ Tool Surface
+### 🛠️ Configuration
 
-```
-mentor.teach(concept, learner, ...)         📚 Teach concept
-mentor.assess_mastery(concept, ...)         ✓ Assess mastery
-mentor.suggest_next_concept(...)            ⏭️ Suggest next topic
-mentor.track_learning(learner, ...)         📊 Track progress
-mentor.create_learning_path(goal, ...)      🗺️ Create learning path
-```
+Read `SKILL.md` for:
+- ⚙️ Operational behavior
+- 🔗 Skill cooperation
+- 📋 Tool surface
+- 🔒 Privacy and data handling
 
-### 📤 Output
-
-- **mentor_lesson** — Lesson content and guidance
-- **mentor_progress** — Learner progress tracking
-- **mentor_assessment** — Mastery assessment results
-
----
-
-## ⚙️ Configuration
-
-Read `SKILL.md` for operational details, learning models, and cooperation with other skills.
-
-Read `references/` for schemas and examples.
+Read `references/` for detailed schemas, heuristics, and examples.
 
 ---
 
