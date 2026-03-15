@@ -1,12 +1,12 @@
-# mentor
+# 👨‍🏫 mentor
 
-👨‍🏫 Teaching and knowledge transfer framework. Guides skill development and learning progression.
+Teaching and knowledge transfer framework. Guides skill development and learning progression.
 
 ---
 
 ## 📖 Overview
 
-Umentor handles core responsibilities in the Indigo system. See SKILL.md for operational details.
+Mentor guides learning and skill development. Manages knowledge transfer, tracks progression, and optimizes learning paths.
 
 ---
 
@@ -14,20 +14,33 @@ Umentor handles core responsibilities in the Indigo system. See SKILL.md for ope
 
 ### 📦 Installation
 
-Clone into your skill management system:
 ```bash
 git clone https://github.com/indigokarasu/mentor.git
 ```
 
-### 🛠️ Configuration
+### 🛠️ Tool Surface
 
-Read `SKILL.md` for:
-- ⚙️ Operational behavior
-- 🔗 Skill cooperation
-- 📋 Tool surface
-- 🔒 Privacy and data handling
+```
+mentor.teach(concept, learner, ...)         📚 Teach concept
+mentor.assess_mastery(concept, ...)         ✓ Assess mastery
+mentor.suggest_next_concept(...)            ⏭️ Suggest next topic
+mentor.track_learning(learner, ...)         📊 Track progress
+mentor.create_learning_path(goal, ...)      🗺️ Create learning path
+```
 
-Read `references/` for detailed schemas, heuristics, and examples.
+### 📤 Output
+
+- **mentor_lesson** — Lesson content and guidance
+- **mentor_progress** — Learner progress tracking
+- **mentor_assessment** — Mastery assessment results
+
+---
+
+## ⚙️ Configuration
+
+Read `SKILL.md` for operational details, learning models, and cooperation with other skills.
+
+Read `references/` for schemas and examples.
 
 ---
 
