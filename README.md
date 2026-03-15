@@ -1,12 +1,12 @@
-# 👨‍🏫 mentor
+# mentor
 
-Teaching and knowledge transfer framework. Guides skill development and learning progression.
+👨‍🏫 Teaching and knowledge transfer framework. Guides skill development and learning progression.
 
 ---
 
 ## 📖 Overview
 
-Mentor handles core responsibilities in the Indigo system. See SKILL.md for operational details.
+Umentor handles core responsibilities in the Indigo system. See SKILL.md for operational details.
 
 ---
 
