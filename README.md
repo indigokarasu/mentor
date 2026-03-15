@@ -28,7 +28,7 @@ Self-improving orchestration and evaluation engine for long-running multi-skill 
 
 ## 📊 Output & Journals
 
-Produces: Produces project execution logs, task records, evaluation reports, and skill improvement proposals. Maintains champion/challenger comparison records.
+Project execution logs, task records, evaluation reports, and skill improvement proposals. Champion/challenger comparison records.
 
 ---
 
