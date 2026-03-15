@@ -1,17 +1,36 @@
-# Mentor
+# 👨‍🏫 mentor
 
-Self-improving orchestration and evaluation engine for long-running multi-skill workflows. Analyzes journals, evaluates variants, and proposes skill improvements.
+Teaching and knowledge transfer framework. Guides skill development and learning progression.
 
-## Repository Structure
+---
 
-- `ocas-mentor/` - Skill package source
-- `spec/` - Specification and build documentation
+## 📖 Overview
 
-## Installation
+Mentor handles core responsibilities in the Indigo system. See SKILL.md for operational details.
 
-This skill package is available on GitHub. To use it, clone this repository and follow the installation instructions in your skill management system.
+---
 
+## 🚀 Quick Start
 
-## License
+### 📦 Installation
+
+Clone into your skill management system:
+```bash
+git clone https://github.com/indigokarasu/mentor.git
+```
+
+### 🛠️ Configuration
+
+Read `SKILL.md` for:
+- ⚙️ Operational behavior
+- 🔗 Skill cooperation
+- 📋 Tool surface
+- 🔒 Privacy and data handling
+
+Read `references/` for detailed schemas, heuristics, and examples.
+
+---
+
+## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
