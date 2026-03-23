@@ -39,6 +39,83 @@ Mentor does not own: skill building (Forge), behavioral pattern detection (Corvu
 Mentor proposes improvements; Forge builds them. Mentor detects regressions; Praxis extracts behavioral lessons from Corvus signals.
 
 
+
+## Functions
+
+### mentor_project_create()
+
+**Purpose:** create a project with goal, constraints, and requested output
+
+**Returns:** Operation result
+
+### mentor_project_status()
+
+**Purpose:** current project state, task graph, execution progress
+
+**Returns:** Operation result
+
+### mentor_project_replan()
+
+**Purpose:** trigger strategy-level replan
+
+**Returns:** Operation result
+
+### mentor_task_list()
+
+**Purpose:** tasks with statuses, dependencies, blocking reasons
+
+**Returns:** Operation result
+
+### mentor_heartbeat_light()
+
+**Purpose:** lightweight pass: ingest journals, update aggregates, queue work
+
+**Returns:** Operation result
+
+### mentor_heartbeat_deep()
+
+**Purpose:** deep pass: full scoring, trend analysis, proposals
+
+**Returns:** Operation result
+
+### mentor_variants_list()
+
+**Purpose:** active champion/challenger pairs with evaluation status
+
+**Returns:** Operation result
+
+### mentor_variants_decide()
+
+**Purpose:** emit promotion decision for a variant (writes VariantDecision to Forge intake)
+
+**Returns:** Operation result
+
+### mentor_proposals_list()
+
+**Purpose:** pending skill improvement proposals
+
+**Returns:** Operation result
+
+### mentor_proposals_create()
+
+**Purpose:** generate a VariantProposal for a target skill (writes to Forge intake)
+
+**Returns:** Operation result
+
+### mentor_status()
+
+**Purpose:** active projects, pending evaluations, self-improvement metrics
+
+**Returns:** Operation result
+
+### mentor_journal()
+
+**Purpose:** write journal for the current run; called at end of every run
+
+**Returns:** Operation result
+
+
+
 ## Commands
 
 - `mentor.project.create` — create a project with goal, constraints, and requested output
