@@ -8,6 +8,8 @@ Mentor is the system's control plane -- in runtime mode it decomposes goals into
 
 Mentor operates in two modes that share state and telemetry. In runtime mode it acts as an orchestration engine -- decomposing goals into task graphs, supervising execution across skills, and repairing failures through a layered escalation policy from local retry up to full strategy replan. In heartbeat mode it reads journals from every skill, scores OKRs against baselines, generates improvement proposals that go to Forge for building, and routes experiments to Fellow for empirical evaluation. Together these modes form a self-improving control plane. Mentor and Elephas are parallel journal consumers -- neither blocks the other.
 
+Mentor also supports named Workflow Plans -- pre-authored, parameterized task sequences that can be invoked by name with arguments, run on a schedule, or triggered via heartbeat. Plans encode multi-skill workflows (like contact enrichment) so they can be repeated reliably without reconstructing the task graph each time.
+
 ## Commands
 
 | Command | Description |
@@ -24,10 +26,15 @@ Mentor operates in two modes that share state and telemetry. In runtime mode it 
 | `mentor.proposals.create` | Generate a VariantProposal for a target skill |
 | `mentor.status` | Active projects, pending evaluations, self-improvement metrics |
 | `mentor.journal` | Write journal for the current run |
+| `mentor.plan.list` | List available workflow plans with version and description |
+| `mentor.plan.run` | Execute a named workflow plan with optional arguments |
+| `mentor.plan.status` | Current state of a running or recent plan run |
+| `mentor.plan.resume` | Continue a paused or failed plan run from the last incomplete step |
+| `mentor.plan.history` | Recent plan run summaries |
 
 ## Setup
 
-`mentor.init` runs automatically on first invocation and creates all required directories, config.json, and JSONL files. It also registers the `mentor:deep` cron job (daily 5am) and the `mentor:light` heartbeat entry. No manual setup is required.
+`mentor.init` runs automatically on first invocation and creates all required directories, config.json, and JSONL files. It registers the `mentor:deep` cron job (daily 5am) and the `mentor:light` heartbeat entry. It also copies bundled workflow plans from the skill package to `~/openclaw/data/ocas-mentor/plans/`. No manual setup is required.
 
 ## Dependencies
 
@@ -41,6 +48,31 @@ Mentor operates in two modes that share state and telemetry. In runtime mode it 
 **External**
 - None
 
+## Workflow Plans
+
+Mentor ships with a bundled plan library. Plans are parameterized, reusable workflows that Mentor can run on demand or on a schedule.
+
+| Plan | Description |
+|---|---|
+| `contact-enrichment` | Enriches a Weave contact by scanning Gmail, running Scout OSINT, and Sift web search |
+
+Run a plan manually:
+
+```
+mentor.plan.run contact-enrichment
+mentor.plan.run contact-enrichment --arg contact_id=person_abc123
+```
+
+Schedule a daily run against a random contact:
+
+```bash
+openclaw cron add --name mentor:contact-enrich \
+  --schedule "0 3 * * *" \
+  --command "mentor.plan.run contact-enrichment" \
+  --sessionTarget isolated --lightContext true --wakeMode next-heartbeat \
+  --timezone America/Los_Angeles
+```
+
 ## Scheduled Tasks
 
 | Job | Mechanism | Schedule | Command |
@@ -49,6 +81,12 @@ Mentor operates in two modes that share state and telemetry. In runtime mode it 
 | `mentor:light` | heartbeat | Every heartbeat pass | Ingest journals, update aggregates, queue work |
 
 ## Changelog
+
+### v2.3.0 -- March 25, 2026
+- Added Workflow Plans system: named, parameterized task sequences invokable by name or via cron/heartbeat
+- New commands: `mentor.plan.list`, `mentor.plan.run`, `mentor.plan.status`, `mentor.plan.resume`, `mentor.plan.history`
+- Bundled contact-enrichment plan (Gmail + Scout + Sift pipeline)
+- Init now creates `plans/` and `plan-runs/` directories and copies bundled plans
 
 ### v2.2.0 -- March 22, 2026
 - Routing improvements
@@ -60,6 +98,7 @@ Mentor operates in two modes that share state and telemetry. In runtime mode it 
 
 ### v2.0.0 -- March 18, 2026
 - Initial release as part of the unified OCAS skill suite
+
 ---
 
 *Mentor is part of the [OpenClaw Agent Suite](https://github.com/indigokarasu) -- a collection of interconnected skills for personal intelligence, autonomous research, and continuous self-improvement. Each skill owns a narrow responsibility and communicates with others through structured signal files, shared journals, and Chronicle, a long-term knowledge graph that accumulates verified facts over time.*
