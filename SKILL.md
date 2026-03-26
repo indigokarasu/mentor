@@ -1,16 +1,16 @@
 ---
 name: ocas-mentor
-description: Mentor: self-improving orchestration and evaluation engine. Manages long-running multi-skill workflows, analyzes journals from all skills, evaluates champion vs challenger variants, and proposes skill improvements to Forge. Trigger phrases: 'manage this project', 'coordinate a multi-step analysis', 'evaluate skill performance', 'run a heartbeat', 'how are skills performing'. Do not use for web research (use Sift), skill building (use Forge), or user communication (use Dispatch).
+source: https://github.com/indigokarasu/mentor
+install: openclaw skill install https://github.com/indigokarasu/mentor
+description: Use when managing long-running multi-skill workflows, evaluating skill performance from journals, comparing champion vs challenger variants, or proposing skill improvements to Forge. Trigger phrases: 'manage this project', 'coordinate a multi-step analysis', 'evaluate skill performance', 'run a heartbeat', 'how are skills performing'. Do not use for web research (use Sift), skill building (use Forge), or user communication (use Dispatch).
 metadata: {"openclaw":{"emoji":"🎓"}}
 ---
 
 # Mentor
 
-Mentor is the control plane for long-running autonomous work. It decomposes goals into task graphs, supervises execution across skills, detects and repairs failures, and continuously evaluates orchestration quality. During heartbeat cycles, it analyzes journals, compares champion vs challenger variants, and proposes skill improvements.
+Mentor is the system's control plane — in runtime mode it decomposes goals into task graphs, supervises execution across skills, and dynamically repairs failures through a layered escalation policy from local retry up to full strategy replan. In heartbeat mode it reads journals from every skill, scores OKR performance against baselines, and generates improvement proposals that flow to Forge and Fellow for empirical evaluation and promotion.
 
-Mentor is one skill with two invocation modes sharing state, telemetry, and learning.
-
-Mentor and Elephas are parallel journal consumers. Mentor reads journals to evaluate skill performance. Elephas reads journals to extract entity knowledge into Chronicle. Neither blocks the other.
+Mentor and Elephas are parallel journal consumers: Mentor reads journals to evaluate skill performance, Elephas reads them to extract entity knowledge into Chronicle, and neither blocks the other.
 
 
 ## When to use
@@ -37,83 +37,6 @@ Mentor owns orchestration, evaluation, and the improvement loop.
 Mentor does not own: skill building (Forge), behavioral pattern detection (Corvus), behavioral refinement (Praxis), knowledge graph (Elephas), web research (Sift), communications (Dispatch), experimentation execution (Fellow).
 
 Mentor proposes improvements; Forge builds them. Mentor detects regressions; Praxis extracts behavioral lessons from Corvus signals.
-
-
-
-## Functions
-
-### mentor_project_create()
-
-**Purpose:** create a project with goal, constraints, and requested output
-
-**Returns:** Operation result
-
-### mentor_project_status()
-
-**Purpose:** current project state, task graph, execution progress
-
-**Returns:** Operation result
-
-### mentor_project_replan()
-
-**Purpose:** trigger strategy-level replan
-
-**Returns:** Operation result
-
-### mentor_task_list()
-
-**Purpose:** tasks with statuses, dependencies, blocking reasons
-
-**Returns:** Operation result
-
-### mentor_heartbeat_light()
-
-**Purpose:** lightweight pass: ingest journals, update aggregates, queue work
-
-**Returns:** Operation result
-
-### mentor_heartbeat_deep()
-
-**Purpose:** deep pass: full scoring, trend analysis, proposals
-
-**Returns:** Operation result
-
-### mentor_variants_list()
-
-**Purpose:** active champion/challenger pairs with evaluation status
-
-**Returns:** Operation result
-
-### mentor_variants_decide()
-
-**Purpose:** emit promotion decision for a variant (writes VariantDecision to Forge intake)
-
-**Returns:** Operation result
-
-### mentor_proposals_list()
-
-**Purpose:** pending skill improvement proposals
-
-**Returns:** Operation result
-
-### mentor_proposals_create()
-
-**Purpose:** generate a VariantProposal for a target skill (writes to Forge intake)
-
-**Returns:** Operation result
-
-### mentor_status()
-
-**Purpose:** active projects, pending evaluations, self-improvement metrics
-
-**Returns:** Operation result
-
-### mentor_journal()
-
-**Purpose:** write journal for the current run; called at end of every run
-
-**Returns:** Operation result
-
 
 
 ## Commands
@@ -313,9 +236,10 @@ public
 
 ## Support file map
 
-File | When to read
-`references/schemas.md` | Before creating projects, tasks, proposals, or decisions
-`references/orchestration_engine.md` | Before goal decomposition, scheduling, or failure repair
-`references/evaluation_engine.md` | Before journal ingestion, OKR scoring, or champion/challenger pairing
-`references/evolution_engine.md` | Before improvement detection, proposal generation, or promotion decisions
-`references/journal.md` | Before mentor.journal; at end of every run
+| File | When to read |
+|---|---|
+| `references/schemas.md` | Before creating projects, tasks, proposals, or decisions |
+| `references/orchestration_engine.md` | Before goal decomposition, scheduling, or failure repair |
+| `references/evaluation_engine.md` | Before journal ingestion, OKR scoring, or champion/challenger pairing |
+| `references/evolution_engine.md` | Before improvement detection, proposal generation, or promotion decisions |
+| `references/journal.md` | Before mentor.journal; at end of every run |
