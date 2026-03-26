@@ -75,11 +75,13 @@ Mentor reads journals from all skills at: `~/openclaw/journals/` (recursive scan
 
 After every Mentor command (orchestration or heartbeat):
 
-1. Persist project state, evaluation results, or proposals to local files
-2. For variant proposals: write VariantProposal file to `~/openclaw/data/ocas-forge/intake/{proposal_id}.json`
-3. For variant decisions: write VariantDecision file to `~/openclaw/data/ocas-forge/intake/{decision_id}.json`
-4. Log material decisions to `decisions.jsonl`
-5. Write journal via `mentor.journal`
+1. Check `~/openclaw/data/ocas-mentor/intake/` for CycleResult files from Fellow; process and move to `intake/processed/`
+2. Persist project state, evaluation results, or proposals to local files
+3. For experiment requests: write ExperimentRequest file to `~/openclaw/data/ocas-fellow/intake/{experiment_id}.json`, then invoke `fellow.experiment.run`
+4. For variant proposals: write VariantProposal file to `~/openclaw/data/ocas-forge/intake/{proposal_id}.json`
+5. For variant decisions: write VariantDecision file to `~/openclaw/data/ocas-forge/intake/{decision_id}.json`
+6. Log material decisions to `decisions.jsonl`
+7. Write journal via `mentor.journal`
 
 ## Layered evaluation loops
 
@@ -105,6 +107,12 @@ Order: retry with refined framing → alternate skill → split task → revise 
 
 ## Inter-skill interfaces
 
+Mentor writes ExperimentRequest files to: `~/openclaw/data/ocas-fellow/intake/{experiment_id}.json`
+Written when empirical evaluation is needed. Mentor then invokes `fellow.experiment.run`. Fellow writes the result back.
+
+Mentor receives CycleResult files from Fellow at: `~/openclaw/data/ocas-mentor/intake/{cycle_id}.json`
+Read during `mentor.heartbeat.light` and `mentor.heartbeat.deep`. On `decision: promote`, Mentor emits a VariantDecision to Forge.
+
 Mentor writes VariantProposal files to: `~/openclaw/data/ocas-forge/intake/{proposal_id}.json`
 Mentor writes VariantDecision files to: `~/openclaw/data/ocas-forge/intake/{decision_id}.json`
 
@@ -122,6 +130,9 @@ Mentor reads journals from: `~/openclaw/journals/` (all skills, recursive). This
   evaluations/
   ingestion_log.jsonl
   decisions.jsonl
+  intake/
+    {cycle_id}.json
+    processed/
 
 ~/openclaw/journals/ocas-mentor/
   YYYY-MM-DD/
@@ -200,11 +211,12 @@ Action Journal — every orchestration run, heartbeat pass, variant evaluation, 
 
 On first invocation of any Mentor command, run `mentor.init`:
 
-1. Create `~/openclaw/data/ocas-mentor/` and subdirectories (`projects/`, `evaluations/`)
+1. Create `~/openclaw/data/ocas-mentor/` and subdirectories (`projects/`, `evaluations/`, `intake/`, `intake/processed/`)
 2. Write default `config.json` with ConfigBase fields if absent
 3. Create empty JSONL files: `ingestion_log.jsonl`, `decisions.jsonl`
 4. Create `~/openclaw/journals/ocas-mentor/`
 5. Ensure `~/openclaw/data/ocas-forge/intake/` exists (create if missing)
+6. Ensure `~/openclaw/data/ocas-fellow/intake/` exists (create if missing)
 6. Register cron jobs `mentor:deep` if not already present (check `openclaw cron list` first)
 7. Register heartbeat entry `mentor:light` in `HEARTBEAT.md` if not already present
 8. Log initialization as a DecisionRecord in `decisions.jsonl`
