@@ -53,6 +53,11 @@ Mentor proposes improvements; Forge builds them. Mentor detects regressions; Pra
 - `mentor.proposals.create` — generate a VariantProposal for a target skill (writes to Forge intake)
 - `mentor.status` — active projects, pending evaluations, self-improvement metrics
 - `mentor.journal` — write journal for the current run; called at end of every run
+- `mentor.plan.list` — list available plans with plan_id, version, and description
+- `mentor.plan.run {plan_id} [--arg name=value ...]` — execute a named workflow plan
+- `mentor.plan.status {plan_run_id}` — current state of a running or recent plan run
+- `mentor.plan.resume {plan_run_id}` — continue a paused or failed plan run from the first incomplete step
+- `mentor.plan.history [--plan plan_id] [--limit N]` — recent plan run summaries
 
 
 ## Mode A — Runtime orchestration
@@ -133,6 +138,12 @@ Mentor reads journals from: `~/openclaw/journals/` (all skills, recursive). This
   intake/
     {cycle_id}.json
     processed/
+  plans/
+    {plan_id}.plan.md
+  plan-runs/
+    {plan_run_id}/
+      state.json
+      decisions.jsonl
 
 ~/openclaw/journals/ocas-mentor/
   YYYY-MM-DD/
@@ -211,15 +222,16 @@ Action Journal — every orchestration run, heartbeat pass, variant evaluation, 
 
 On first invocation of any Mentor command, run `mentor.init`:
 
-1. Create `~/openclaw/data/ocas-mentor/` and subdirectories (`projects/`, `evaluations/`, `intake/`, `intake/processed/`)
+1. Create `~/openclaw/data/ocas-mentor/` and subdirectories (`projects/`, `evaluations/`, `intake/`, `intake/processed/`, `plans/`, `plan-runs/`)
 2. Write default `config.json` with ConfigBase fields if absent
 3. Create empty JSONL files: `ingestion_log.jsonl`, `decisions.jsonl`
 4. Create `~/openclaw/journals/ocas-mentor/`
 5. Ensure `~/openclaw/data/ocas-forge/intake/` exists (create if missing)
 6. Ensure `~/openclaw/data/ocas-fellow/intake/` exists (create if missing)
-6. Register cron jobs `mentor:deep` if not already present (check `openclaw cron list` first)
-7. Register heartbeat entry `mentor:light` in `HEARTBEAT.md` if not already present
-8. Log initialization as a DecisionRecord in `decisions.jsonl`
+7. Copy bundled plans from skill package `references/plans/*.plan.md` to `~/openclaw/data/ocas-mentor/plans/` -- skip any plan file already present (do not overwrite user-modified plans)
+8. Register cron jobs `mentor:deep` if not already present (check `openclaw cron list` first)
+9. Register heartbeat entry `mentor:light` in `HEARTBEAT.md` if not already present
+10. Log initialization as a DecisionRecord in `decisions.jsonl`
 
 
 ## Background tasks
@@ -255,3 +267,6 @@ public
 | `references/evaluation_engine.md` | Before journal ingestion, OKR scoring, or champion/challenger pairing |
 | `references/evolution_engine.md` | Before improvement detection, proposal generation, or promotion decisions |
 | `references/journal.md` | Before mentor.journal; at end of every run |
+| `references/workflow_plans.md` | Before any mentor.plan.* command |
+| `references/plans/template.plan.md` | When writing a new plan file |
+| `references/plans/contact-enrichment.plan.md` | When running the contact enrichment workflow |
