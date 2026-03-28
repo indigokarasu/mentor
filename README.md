@@ -90,7 +90,7 @@ openclaw cron add --name mentor:contact-enrich \
 - Bundled contact-enrichment plan (Gmail + Scout + Sift pipeline)
 - Init now creates `plans/` and `plan-runs/` directories and copies bundled plans
 
-### v2.2.1 -- March 27, 2026
+### v2.3.0 -- March 27, 2026
 - Added `mentor.update` command and midnight cron for automatic version-checked self-updates
 
 ### v2.2.0 -- March 22, 2026
