@@ -2,7 +2,7 @@
 name: ocas-mentor
 source: https://github.com/indigokarasu/mentor
 install: openclaw skill install https://github.com/indigokarasu/mentor
-description: Use when managing long-running multi-skill workflows, evaluating skill performance from journals, comparing champion vs challenger variants, or proposing skill improvements to Forge. Trigger phrases: 'manage this project', 'coordinate a multi-step analysis', 'evaluate skill performance', 'run a heartbeat', 'how are skills performing'. Do not use for web research (use Sift), skill building (use Forge), or user communication (use Dispatch).
+description: Use when managing long-running multi-skill workflows, evaluating skill performance from journals, comparing champion vs challenger variants, or proposing skill improvements to Forge. Trigger phrases: 'manage this project', 'coordinate a multi-step analysis', 'evaluate skill performance', 'run a heartbeat', 'how are skills performing', 'update mentor'. Do not use for web research (use Sift), skill building (use Forge), or user communication (use Dispatch).
 metadata: {"openclaw":{"emoji":"🎓"}}
 ---
 
