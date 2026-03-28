@@ -26,6 +26,7 @@ Mentor also supports named Workflow Plans -- pre-authored, parameterized task se
 | `mentor.proposals.create` | Generate a VariantProposal for a target skill |
 | `mentor.status` | Active projects, pending evaluations, self-improvement metrics |
 | `mentor.journal` | Write journal for the current run |
+| `mentor.update` | Pull latest from GitHub source (preserves journals and data) |
 | `mentor.plan.list` | List available workflow plans with version and description |
 | `mentor.plan.run` | Execute a named workflow plan with optional arguments |
 | `mentor.plan.status` | Current state of a running or recent plan run |
@@ -79,6 +80,7 @@ openclaw cron add --name mentor:contact-enrich \
 |---|---|---|---|
 | `mentor:deep` | cron | `0 5 * * *` (daily 5am) | Full OKR scoring, trend analysis, variant proposals |
 | `mentor:light` | heartbeat | Every heartbeat pass | Ingest journals, update aggregates, queue work |
+| `mentor:update` | cron | `0 0 * * *` (midnight daily) | Self-update from GitHub source |
 
 ## Changelog
 
@@ -87,6 +89,9 @@ openclaw cron add --name mentor:contact-enrich \
 - New commands: `mentor.plan.list`, `mentor.plan.run`, `mentor.plan.status`, `mentor.plan.resume`, `mentor.plan.history`
 - Bundled contact-enrichment plan (Gmail + Scout + Sift pipeline)
 - Init now creates `plans/` and `plan-runs/` directories and copies bundled plans
+
+### v2.2.1 -- March 27, 2026
+- Added `mentor.update` command and midnight cron for automatic version-checked self-updates
 
 ### v2.2.0 -- March 22, 2026
 - Routing improvements
