@@ -8,12 +8,41 @@
     "read": [
       "~/openclaw/data/ocas-mentor/",
       "~/openclaw/journals/ocas-mentor/",
-      "~/openclaw/journals/*/"
+      "~/openclaw/journals/*/",
+      "~/openclaw/data/ocas-mentor/intake/"
     ],
     "write": [
       "~/openclaw/data/ocas-mentor/",
       "~/openclaw/journals/ocas-mentor/",
-      "~/openclaw/data/ocas-forge/intake/"
+      "~/openclaw/data/ocas-forge/intake/",
+      "~/openclaw/data/ocas-fellow/intake/"
+    ]
+  },
+  "self_update": {
+    "source": "https://github.com/indigokarasu/mentor",
+    "mechanism": "version-checked tarball from GitHub via gh CLI",
+    "command": "mentor.update",
+    "requires_binaries": [
+      "gh",
+      "tar",
+      "python3"
+    ]
+  },
+  "scheduled_tasks": [
+    {
+      "name": "mentor:update",
+      "schedule": "0 0 * * *",
+      "command": "mentor.update",
+      "description": "Self-update from GitHub source"
+    }
+  ],
+  "requires": {
+    "env": [
+      {
+        "name": "GOG_ACCOUNT",
+        "description": "Gmail account identifier for gog CLI (used by contact-enrichment plan)",
+        "required": false
+      }
     ]
   }
 }
