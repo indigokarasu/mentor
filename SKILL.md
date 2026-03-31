@@ -38,6 +38,11 @@ Mentor does not own: skill building (Forge), behavioral pattern detection (Corvu
 
 Mentor proposes improvements; Forge builds them. Mentor detects regressions; Praxis extracts behavioral lessons from Corvus signals.
 
+## Ontology types
+
+This skill does not extract entities and does not emit Signals to Elephas.
+
+Mentor produces EvaluationResult records stored in `~/openclaw/data/ocas-mentor/`. It reads Chronicle cooperatively via Elephas for evaluation context.
 
 ## Commands
 
