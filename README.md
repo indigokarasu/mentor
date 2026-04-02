@@ -84,6 +84,11 @@ openclaw cron add --name mentor:contact-enrich \
 
 ## Changelog
 
+### v2.5.0 -- April 2, 2026
+- Added structured entity observations in journal payloads (`entities_observed`, `relationships_observed`, `preferences_observed`)
+- Added `user_relevance` tagging on journal observations (default `agent_only` for system-internal entities)
+- Added Elephas journal cooperation in skill cooperation section
+
 ### v2.3.0 -- March 25, 2026
 - Added Workflow Plans system: named, parameterized task sequences invokable by name or via cron/heartbeat
 - New commands: `mentor.plan.list`, `mentor.plan.run`, `mentor.plan.status`, `mentor.plan.resume`, `mentor.plan.history`
