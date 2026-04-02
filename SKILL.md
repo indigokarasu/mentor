@@ -209,12 +209,21 @@ skill_okrs:
 - Fellow — invoked by Mentor; reads ExperimentRequests from Mentor's `experiment-requests/` directory; returns results to `fellow/results/` for Mentor to read (cooperative read both ways)
 - Elephas — Mentor may read Chronicle (read-only) for evaluation context
 - Corvus — Mentor may read Corvus pattern data for anomaly context
+- Elephas — journal entity observations consumed during Chronicle ingestion
 - All skills — Mentor reads journals from all skills for evaluation
 
 
 ## Journal outputs
 
 Action Journal — every orchestration run, heartbeat pass, variant evaluation, and proposal emission.
+
+When entities are encountered during a run, include the following fields in `decision.payload`:
+
+- `entities_observed` — entities encountered (e.g. Entity/AI for skills being evaluated, Concept/Action for improvement actions taken, Concept/Idea for patterns in skill behavior)
+- `relationships_observed` — relationships between observed entities
+- `preferences_observed` — any preferences inferred from observations
+
+Each entity observation must include a `user_relevance` field: `user` if the entity is directly related to the user's world, `agent_only` if encountered incidentally during internal operations, `unknown` if unclear. Most Mentor entities are `agent_only` since they concern the system's internal operations, not the user's world. Exception: if Mentor evaluates user-facing skill quality, that context might be `unknown`.
 
 
 ## Initialization
