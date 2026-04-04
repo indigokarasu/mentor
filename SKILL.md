@@ -300,3 +300,13 @@ public
 | `references/workflow_plans.md` | Before any mentor.plan.* command |
 | `references/plans/template.plan.md` | When writing a new plan file |
 | `references/plans/contact-enrichment.plan.md` | When running the contact enrichment workflow |
+
+## Update command
+
+This skill self-updates every 24 hours via:
+
+```bash
+openclaw mentor.update
+```
+
+This pulls the latest version from GitHub and restarts the skill's background tasks if applicable.
