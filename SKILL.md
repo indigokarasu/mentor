@@ -39,6 +39,16 @@ Mentor does not own: skill building (Forge), behavioral pattern detection (Corvu
 Mentor proposes improvements; Forge builds them. Mentor detects regressions; Praxis extracts behavioral lessons from Corvus signals.
 
 
+## Ontology types
+
+Mentor observes entity types during orchestration and evaluation:
+- **Concept/Event** — projects, tasks, skill performance evaluations, OKR cycles
+- **Concept/Idea** — improvement proposals, behavioral patterns detected
+- **Thing/DigitalArtifact** — project state records, task graphs, evaluation reports
+
+Mentor does not emit Signals to Elephas directly. Journal entries may include entity observations for project lineage, but they are not promoted to Chronicle as primary facts. Elephas consumes Mentor journals for reference and evaluates whether entity extractions are warranted from journal metadata.
+
+
 ## Commands
 
 - `mentor.project.create` — create a project with goal, constraints, and requested output
