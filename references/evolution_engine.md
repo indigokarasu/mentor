@@ -6,12 +6,12 @@ Detect from journal trends: high retry rate, low OKR performance, rising latency
 ## Proposal Generation
 Each proposal follows the VariantProposal schema from spec-ocas-shared-schemas.md. Fields: target skill, base version, observed problem, evidence, proposed changes, expected improvement, evaluation plan, minimum runs, critical non-regression conditions.
 
-Write proposals to: `$OCAS_DATA_ROOT/data/ocas-forge/intake/{proposal_id}.json`
+Write proposals to: the `variant_proposal` payload field in the journal entry
 
 ## Promotion Criteria
 Promote when: sufficient runs completed, aggregate scores exceed champion, no non-regression failures. Continue testing if inconclusive. Archive if consistently worse.
 
-Write decisions to: `$OCAS_DATA_ROOT/data/ocas-forge/intake/{decision_id}.json` using VariantDecision schema from spec-ocas-shared-schemas.md.
+Write decisions to: the `variant_decision` payload field in the journal entry using VariantDecision schema from spec-ocas-shared-schemas.md.
 
 See spec-ocas-interfaces.md for full handoff contracts.
 
