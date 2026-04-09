@@ -38,12 +38,12 @@ Mentor also supports named Workflow Plans -- pre-authored, parameterized task se
 
 ## Setup
 
-`mentor.init` runs automatically on first invocation and creates all required directories, config.json, and JSONL files. It registers the `mentor:deep` cron job (daily 5am) and the `mentor:light` heartbeat entry. It also copies bundled workflow plans from the skill package to `$OCAS_DATA_ROOT/data/ocas-mentor/plans/`. No manual setup is required.
+`mentor.init` runs automatically on first invocation and creates all required directories, config.json, and JSONL files. It registers the `mentor:deep` cron job (daily 5am) and the `mentor:light` heartbeat entry. It also copies bundled workflow plans from the skill package to `{agent_root}/commons/data/ocas-mentor/plans/`. No manual setup is required.
 
 ## Dependencies
 
 **OCAS Skills**
-- [Forge](https://github.com/indigokarasu/forge) -- receives VariantProposal and VariantDecision files via intake directory
+- [Forge](https://github.com/indigokarasu/forge) -- receives VariantProposal and VariantDecision files via journal payload
 - [Fellow](https://github.com/indigokarasu/fellow) -- invoked to run controlled benchmark experiments
 - [Elephas](https://github.com/indigokarasu/elephas) -- Chronicle read-only for evaluation context
 - [Corvus](https://github.com/indigokarasu/corvus) -- pattern data for anomaly context
@@ -105,7 +105,7 @@ Schedule a daily run against a random contact:
 - Routing improvements
 
 ### v2.1.0 -- March 22, 2026
-- Run completion with Forge intake integration
+- Run completion with Forge (via journal payload) integration
 - Initialization with cron and heartbeat registration
 - Background task definitions
 
