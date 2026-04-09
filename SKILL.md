@@ -1,9 +1,52 @@
 ---
 name: ocas-mentor
-source: https://github.com/indigokarasu/mentor
-install: openclaw skill install https://github.com/indigokarasu/mentor
-description: Use when managing long-running multi-skill workflows, evaluating skill performance from journals, comparing champion vs challenger variants, or proposing skill improvements to Forge. Trigger phrases: 'manage this project', 'coordinate a multi-step analysis', 'evaluate skill performance', 'run a heartbeat', 'how are skills performing', 'update mentor'. Do not use for web research (use Sift), skill building (use Forge), or user communication (use Dispatch).
-metadata: {"openclaw":{"emoji":"🎓"}}
+description: >
+  Mentor: self-improving orchestration and evaluation engine. Manages
+  long-running multi-skill workflows, analyzes journals from all skills,
+  evaluates champion vs challenger variants, and proposes skill improvements
+  to Forge. Trigger phrases: 'manage this project', 'coordinate a multi-step
+  analysis', 'evaluate skill performance', 'run a heartbeat', 'how are skills
+  performing', 'update mentor'. Do not use for web research (use Sift), skill
+  building (use Forge), or user communication (use Dispatch).
+metadata:
+  author: Indigo Karasu
+  email: mx.indigo.karasu@gmail.com
+  version: "2.6.0"
+  hermes:
+    tags: [orchestration, evaluation, improvement]
+    category: evolution
+    cron:
+      - name: "mentor:update"
+        schedule: "0 0 * * *"
+        command: "mentor.update"
+  openclaw:
+    skill_type: system
+    visibility: public
+    filesystem:
+      read:
+        - "$OCAS_DATA_ROOT/data/ocas-mentor/"
+        - "$OCAS_DATA_ROOT/journals/ocas-mentor/"
+        - "$OCAS_DATA_ROOT/journals/*/"
+        - "$OCAS_DATA_ROOT/data/ocas-mentor/intake/"
+      write:
+        - "$OCAS_DATA_ROOT/data/ocas-mentor/"
+        - "$OCAS_DATA_ROOT/journals/ocas-mentor/"
+        - "$OCAS_DATA_ROOT/data/ocas-forge/intake/"
+        - "$OCAS_DATA_ROOT/data/ocas-fellow/intake/"
+    self_update:
+      source: "https://github.com/indigokarasu/mentor"
+      mechanism: "version-checked tarball from GitHub via gh CLI"
+      command: "mentor.update"
+      requires_binaries: [gh, tar, python3]
+    requires:
+      env:
+        - name: "GOG_ACCOUNT"
+          description: "Gmail account identifier for gog CLI (used by contact-enrichment plan)"
+          required: false
+    cron:
+      - name: "mentor:update"
+        schedule: "0 0 * * *"
+        command: "mentor.update"
 ---
 
 # Mentor
@@ -245,7 +288,7 @@ On first invocation of any Mentor command, run `mentor.init`:
 3. Create empty JSONL files: `ingestion_log.jsonl`, `decisions.jsonl`, `fellow_results_ingested.jsonl`
 4. Create `/workspace/openclaw/journals/ocas-mentor/`
 5. Copy bundled plans from skill package `references/plans/*.plan.md` to `/workspace/openclaw/data/ocas-mentor/plans/` -- skip any plan file already present (do not overwrite user-modified plans)
-6. Register cron jobs `mentor:deep` and `mentor:update` if not already present (check `openclaw cron list` first)
+6. Register cron jobs `mentor:deep` and `mentor:update` if not already present (check the platform scheduling registry first)
 7. Register heartbeat entry `mentor:light` in `HEARTBEAT.md` if not already present
 8. Log initialization as a DecisionRecord in `decisions.jsonl`
 
@@ -262,14 +305,13 @@ Cron options for `mentor:deep`: `sessionTarget: isolated`, `lightContext: true`,
 
 Registration during `mentor.init`:
 ```
-openclaw cron list
-# If mentor:deep absent:
-openclaw cron add --name mentor:deep --schedule "0 5 * * *" --command "mentor.heartbeat.deep" --sessionTarget isolated --lightContext true --wakeMode next-heartbeat --timezone America/Los_Angeles
+# Check platform scheduling registry for existing tasks
+# Task declared in SKILL.md frontmatter metadata.{platform}.cron
 # If mentor:update absent:
-openclaw cron add --name mentor:update --schedule "0 0 * * *" --command "mentor.update" --sessionTarget isolated --lightContext true --timezone America/Los_Angeles
+# Task declared in SKILL.md frontmatter metadata.{platform}.cron
 ```
 
-Heartbeat registration: append `mentor:light` entry to `~/.openclaw/workspace/HEARTBEAT.md` if not already present.
+Heartbeat registration: append `mentor:light` entry to `$OCAS_WORKSPACE_ROOT/HEARTBEAT.md` if not already present.
 
 
 ## Self-update

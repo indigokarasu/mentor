@@ -1,7 +1,7 @@
 # Mentor Evaluation Engine
 
 ## Journal Ingestion
-Read newly written journals from all skills at `~/openclaw/journals/` (recursive scan). Validate schema per spec-ocas-journal.md v1.3. Quarantine malformed entries. Track ingested run_ids in `~/openclaw/data/ocas-mentor/ingestion_log.jsonl`.
+Read newly written journals from all skills at `$OCAS_DATA_ROOT/journals/` (recursive scan). Validate schema per spec-ocas-journal.md v1.3. Quarantine malformed entries. Track ingested run_ids in `$OCAS_DATA_ROOT/data/ocas-mentor/ingestion_log.jsonl`.
 
 Mentor and Elephas are parallel consumers of the same journal files. Neither blocks the other. Mentor evaluates for performance; Elephas ingests for knowledge.
 

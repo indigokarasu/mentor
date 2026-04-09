@@ -8,7 +8,7 @@ See `spec-ocas-workflow-plans.md` for the canonical plan file format specificati
 
 ## What Plans Are
 
-Plans are pre-authored, parameterized task sequences stored at `~/openclaw/data/ocas-mentor/plans/*.plan.md`. Each plan defines an ordered set of steps, the skill and command each step invokes, what inputs each step receives, and what outputs it produces for downstream steps.
+Plans are pre-authored, parameterized task sequences stored at `$OCAS_DATA_ROOT/data/ocas-mentor/plans/*.plan.md`. Each plan defines an ordered set of steps, the skill and command each step invokes, what inputs each step receives, and what outputs it produces for downstream steps.
 
 Use `mentor.plan.run` when a user invokes a known workflow by name or via cron/heartbeat automation. Use `mentor.project.create` for open-ended goals that require on-the-fly task decomposition.
 
@@ -18,7 +18,7 @@ Use `mentor.plan.run` when a user invokes a known workflow by name or via cron/h
 
 ### 1. Load and validate the plan
 
-Read the plan file at `~/openclaw/data/ocas-mentor/plans/{plan_id}.plan.md`.
+Read the plan file at `$OCAS_DATA_ROOT/data/ocas-mentor/plans/{plan_id}.plan.md`.
 
 Validate:
 - All required parameters are present (from `--arg` flags or user prompt)
@@ -31,7 +31,7 @@ If validation fails, abort before starting. Report which parameter or reference 
 
 Generate `plan_run_id` using the format `pr_{hash}`.
 
-Create directory `~/openclaw/data/ocas-mentor/plan-runs/{plan_run_id}/`.
+Create directory `$OCAS_DATA_ROOT/data/ocas-mentor/plan-runs/{plan_run_id}/`.
 
 Write initial `state.json` with:
 - All step statuses set to `pending`
@@ -73,7 +73,7 @@ Write a journal entry via `mentor.journal` covering the plan run.
 
 When `mentor.plan.resume {plan_run_id}` is invoked:
 
-1. Read `state.json` from `~/openclaw/data/ocas-mentor/plan-runs/{plan_run_id}/`.
+1. Read `state.json` from `$OCAS_DATA_ROOT/data/ocas-mentor/plan-runs/{plan_run_id}/`.
 2. Identify the first step with status `pending` or `failed`.
 3. Resume execution from that step using the original `params` from `state.json`.
 4. Do not re-run steps with status `complete`.
@@ -99,7 +99,7 @@ For cron and heartbeat invocations, required parameters with no `--arg` and no `
 
 ## Available Plans
 
-Plans in `~/openclaw/data/ocas-mentor/plans/` (discovered at runtime):
+Plans in `$OCAS_DATA_ROOT/data/ocas-mentor/plans/` (discovered at runtime):
 
 Use `mentor.plan.list` to see all available plans with their current version and description.
 
