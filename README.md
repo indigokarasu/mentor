@@ -2,6 +2,9 @@
 
 Mentor is the system's control plane -- in runtime mode it decomposes goals into task graphs, supervises execution across skills, and dynamically repairs failures through a layered escalation policy from local retry up to full strategy replan. In heartbeat mode it reads journals from every skill, scores OKR performance against baselines, and generates improvement proposals that flow to Forge and Fellow for empirical evaluation and promotion.
 
+
+Skill packages follow the [agentskills.io](https://agentskills.io/specification) open standard and are compatible with OpenClaw, Hermes Agent, and any agentskills.io-compliant client.
+
 ---
 
 ## Overview
@@ -35,7 +38,7 @@ Mentor also supports named Workflow Plans -- pre-authored, parameterized task se
 
 ## Setup
 
-`mentor.init` runs automatically on first invocation and creates all required directories, config.json, and JSONL files. It registers the `mentor:deep` cron job (daily 5am) and the `mentor:light` heartbeat entry. It also copies bundled workflow plans from the skill package to `~/openclaw/data/ocas-mentor/plans/`. No manual setup is required.
+`mentor.init` runs automatically on first invocation and creates all required directories, config.json, and JSONL files. It registers the `mentor:deep` cron job (daily 5am) and the `mentor:light` heartbeat entry. It also copies bundled workflow plans from the skill package to `$OCAS_DATA_ROOT/data/ocas-mentor/plans/`. No manual setup is required.
 
 ## Dependencies
 
@@ -67,7 +70,7 @@ mentor.plan.run contact-enrichment --arg contact_id=person_abc123
 Schedule a daily run against a random contact:
 
 ```bash
-openclaw cron add --name mentor:contact-enrich \
+# Task declared in SKILL.md frontmatter metadata.{platform}.cron
   --schedule "0 3 * * *" \
   --command "mentor.plan.run contact-enrichment" \
   --sessionTarget isolated --lightContext true --wakeMode next-heartbeat \

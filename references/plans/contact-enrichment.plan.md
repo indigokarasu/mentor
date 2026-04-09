@@ -249,7 +249,7 @@ Write a journal entry covering the full plan run as an Action Journal.
 To enrich a random contact daily:
 
 ```bash
-openclaw cron add --name mentor:contact-enrich \
+# Task declared in SKILL.md frontmatter metadata.{platform}.cron
   --schedule "0 3 * * *" \
   --command "mentor.plan.run contact-enrichment" \
   --sessionTarget isolated --lightContext true --wakeMode next-heartbeat \
