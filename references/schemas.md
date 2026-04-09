@@ -18,9 +18,9 @@
 ## VariantProposal
 See spec-ocas-shared-schemas.md for the canonical VariantProposal schema.
 
-Written to: `$OCAS_DATA_ROOT/data/ocas-forge/intake/{proposal_id}.json`
+Written to: the `variant_proposal` payload field in the journal entry
 
 ## VariantDecision
 See spec-ocas-shared-schemas.md for the canonical VariantDecision schema.
 
-Written to: `$OCAS_DATA_ROOT/data/ocas-forge/intake/{decision_id}.json`
+Written to: the `variant_decision` payload field in the journal entry
