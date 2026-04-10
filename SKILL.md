@@ -11,7 +11,7 @@ description: >
 metadata:
   author: Indigo Karasu
   email: mx.indigo.karasu@gmail.com
-  version: "2.6.1"
+  version: "2.6.2"
   hermes:
     tags: [orchestration, evaluation, improvement]
     category: evolution
@@ -355,7 +355,7 @@ public
 This skill self-updates every 24 hours via:
 
 ```bash
-openclaw mentor.update
+mentor.update
 ```
 
 This pulls the latest version from GitHub and restarts the skill's background tasks if applicable.
