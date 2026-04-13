@@ -1,3 +1,8 @@
+## [2.6.5] - 2026-04-12
+
+### Removed
+- Stale `GOG_ACCOUNT` environment variable requirement (no longer applicable)
+
 ## [2026-04-04] Spec Compliance Update
 
 ### Changes
