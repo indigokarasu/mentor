@@ -87,6 +87,9 @@ Schedule a daily run against a random contact:
 
 ## Changelog
 
+### v2.6.5 — April 12, 2026
+- Removed stale `GOG_ACCOUNT` environment variable requirement (no longer applicable)
+
 ### v2.5.0 -- April 2, 2026
 - Added structured entity observations in journal payloads (`entities_observed`, `relationships_observed`, `preferences_observed`)
 - Added `user_relevance` tagging on journal observations (default `agent_only` for system-internal entities)
