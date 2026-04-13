@@ -35,11 +35,6 @@ metadata:
       mechanism: "version-checked tarball from GitHub via gh CLI"
       command: "mentor.update"
       requires_binaries: [gh, tar, python3]
-    requires:
-      env:
-        - name: "GOG_ACCOUNT"
-          description: "Gmail account identifier for gog CLI (used by contact-enrichment plan)"
-          required: false
     cron:
       - name: "mentor:update"
         schedule: "0 0 * * *"
