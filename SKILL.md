@@ -17,7 +17,7 @@ metadata:
     category: evolution
     cron:
       - name: "mentor:update"
-        schedule: "0 0 * * *"
+        schedule: "10 7 * * *"
         command: "mentor.update"
   openclaw:
     skill_type: system
@@ -37,7 +37,7 @@ metadata:
       requires_binaries: [gh, tar, python3]
     cron:
       - name: "mentor:update"
-        schedule: "0 0 * * *"
+        schedule: "10 7 * * *"
         command: "mentor.update"
 ---
 
