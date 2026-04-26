@@ -345,6 +345,17 @@ public
 | `references/plans/template.plan.md` | When writing a new plan file |
 | `references/plans/contact-enrichment.plan.md` | When running the contact enrichment workflow |
 
+## Pitfalls — heartbeat execution
+
+Journal schema is inconsistent across skills. Defend against these in heartbeat code:
+
+1. **`outcome`/`status` can be str OR dict.** Always `isinstance(outcome, str)` before using as dict key or comparing to strings. A `TypeError: unhashable type: 'dict'` will crash if you skip this.
+2. **Most journals (~90%) lack explicit outcome fields.** The `orchestration_success_rate` OKR is unreliable when scored from `outcome` fields alone — only ~9% of journals have one. Consider defaulting absent outcomes to "success" when no `error` key is present, or score only on journals that have explicit outcomes (with a caveat about sample size).
+3. **`duration_ms` vs `duration_seconds` naming varies.** Some skills use `duration_ms` (int), others `duration_seconds` (float). Normalize: values < 100 are likely seconds → multiply by 1000.
+4. **`run_id` can be empty string.** Use file path as fallback identifier for ingestion tracking.
+5. **`error` can be str or dict.** Convert to string with `str()` before logging/truncating.
+6. **Config may be incomplete.** On existing installs, `config.json` may lack `heartbeat`, `evaluation`, `retention` fields. Merge defaults on init — don't assume full schema.
+
 ## Update command
 
 This skill self-updates every 24 hours via:
