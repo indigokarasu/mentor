@@ -11,7 +11,7 @@ description: >
 metadata:
   author: Indigo Karasu
   email: mx.indigo.karasu@gmail.com
-  version: "2.6.5"
+  version: "2.6.6"
   hermes:
     tags: [orchestration, evaluation, improvement]
     category: evolution

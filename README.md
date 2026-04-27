@@ -87,6 +87,9 @@ Schedule a daily run against a random contact:
 
 ## Changelog
 
+### v2.6.6 — April 26, 2026
+- Added Pitfalls — heartbeat execution section documenting six journal-schema inconsistencies discovered during deep heartbeat: outcome/status type variance, missing outcome fields (~90% of journals), duration_ms vs duration_seconds naming, empty run_id values, error type variance, incomplete config.json on existing installs
+
 ### v2.6.5 — April 12, 2026
 - Removed stale `GOG_ACCOUNT` environment variable requirement (no longer applicable)
 
@@ -103,17 +106,6 @@ Schedule a daily run against a random contact:
 
 ### v2.3.0 -- March 27, 2026
 - Added `mentor.update` command and midnight cron for automatic version-checked self-updates
-
-### v2.2.0 -- March 22, 2026
-- Routing improvements
-
-### v2.1.0 -- March 22, 2026
-- Run completion with Forge (via journal payload) integration
-- Initialization with cron and heartbeat registration
-- Background task definitions
-
-### v2.0.0 -- March 18, 2026
-- Initial release as part of the unified OCAS skill suite
 
 ---
 

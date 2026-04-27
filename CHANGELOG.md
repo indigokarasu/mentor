@@ -1,3 +1,8 @@
+## [2.6.6] - 2026-04-26
+
+### Added
+- Pitfalls — heartbeat execution section documenting six journal-schema inconsistencies discovered during deep heartbeat: outcome/status type variance, missing outcome fields (~90% of journals), duration_ms vs duration_seconds naming, empty run_id values, error type variance, incomplete config.json on existing installs
+
 ## [2.6.5] - 2026-04-12
 
 ### Removed
