@@ -47,7 +47,6 @@ Mentor is the system's control plane — in runtime mode it decomposes goals int
 
 Mentor and Elephas are parallel journal consumers: Mentor reads journals to evaluate skill performance, Elephas reads them to extract entity knowledge into Chronicle, and neither blocks the other.
 
-
 ## When to use
 
 - Manage a long-running multi-step project
@@ -56,14 +55,12 @@ Mentor and Elephas are parallel journal consumers: Mentor reads journals to eval
 - Compare champion vs challenger variant runs
 - Generate improvement proposals for Forge
 
-
 ## When not to use
 
 - Web research — use Sift
 - Building new skills — use Forge
 - User communication — use Dispatch
 - Behavioral pattern analysis — use Corvus
-
 
 ## Responsibility boundary
 
@@ -73,7 +70,6 @@ Mentor does not own: skill building (Forge), behavioral pattern detection (Corvu
 
 Mentor proposes improvements; Forge builds them. Mentor detects regressions; Praxis extracts behavioral lessons from Corvus signals.
 
-
 ## Ontology types
 
 Mentor observes entity types during orchestration and evaluation:
@@ -82,7 +78,6 @@ Mentor observes entity types during orchestration and evaluation:
 - **Thing/DigitalArtifact** — project state records, task graphs, evaluation reports
 
 Mentor does not emit Signals to Elephas directly. Journal entries may include entity observations for project lineage, but they are not promoted to Chronicle as primary facts. Elephas consumes Mentor journals for reference and evaluates whether entity extractions are warranted from journal metadata.
-
 
 ## Commands
 
@@ -105,7 +100,6 @@ Mentor does not emit Signals to Elephas directly. Journal entries may include en
 - `mentor.plan.resume {plan_run_id}` — continue a paused or failed plan run from the first incomplete step
 - `mentor.plan.history [--plan plan_id] [--limit N]` — recent plan run summaries
 
-
 ## Mode A — Runtime orchestration
 
 Triggered by explicit invocation. Creates a project record, builds a task graph, executes and supervises tasks, dynamically replans when blocked.
@@ -114,13 +108,11 @@ Task states: pending, ready, running, blocked, failed, complete, archived.
 
 Scheduling: execute only tasks with complete dependencies. Prioritize critical path. Bounded parallelism. Bounded retries.
 
-
 ## Mode B — Heartbeat evolution
 
 Triggered periodically. Pipeline: ingest journals → validate schema → aggregate metrics → pair champion/challenger → score OKRs → detect anomalies → evaluate variants → generate proposals → emit decisions → write journal.
 
 Mentor reads journals from all skills at: `{agent_root}/commons/journals/` (recursive scan). It tracks which run_ids have been ingested via `{agent_root}/commons/data/ocas-mentor/ingestion_log.jsonl`.
-
 
 ## Run completion
 
@@ -141,11 +133,9 @@ After every Mentor command (orchestration or heartbeat):
 - **Layer 3 — Strategy** (min-hr): improve active project plan. Reorder, insert, merge, parallelize.
 - **Layer 4 — Evolution** (hr-wk): improve skills and policies. Propose variants, promote/archive.
 
-
 ## Failure repair policy
 
 Order: retry with refined framing → alternate skill → split task → revise ordering → escalate to strategy loop. Never retry indefinitely. Every repair action journaled.
-
 
 ## Safety invariants
 
@@ -154,7 +144,6 @@ Order: retry with refined framing → alternate skill → split task → revise 
 - Malformed journals quarantined, not trusted
 - Promotion requires sufficient evidence over multiple runs
 - Mentor journals its own orchestration decisions
-
 
 ## Inter-skill interfaces
 
@@ -168,7 +157,6 @@ Mentor writes VariantDecision files to: `{agent_root}/commons/data/ocas-forge/{d
 See `spec-ocas-interfaces.md` for schemas and handoff contracts.
 
 Mentor reads journals from: `{agent_root}/commons/journals/` (all skills, recursive). This is a read-only scan parallel to Elephas ingestion.
-
 
 ## Storage layout
 
@@ -194,7 +182,6 @@ Mentor reads journals from: `{agent_root}/commons/journals/` (all skills, recurs
     {run_id}.json
 ```
 
-
 Default config.json:
 ```json
 {
@@ -217,7 +204,6 @@ Default config.json:
   }
 }
 ```
-
 
 ## OKRs
 
@@ -247,7 +233,6 @@ skill_okrs:
     evaluation_window: 30_runs
 ```
 
-
 ## Optional skill cooperation
 
 - Forge — receives VariantProposal and VariantDecision files via journal payload
@@ -256,7 +241,6 @@ skill_okrs:
 - Corvus — Mentor may read Corvus pattern data for anomaly context
 - Elephas — journal entity observations consumed during Chronicle ingestion
 - All skills — Mentor reads journals from all skills for evaluation
-
 
 ## Journal outputs
 
@@ -270,7 +254,6 @@ When entities are encountered during a run, include the following fields in `dec
 
 Each entity observation must include a `user_relevance` field: `user` if the entity is directly related to the user's world, `agent_only` if encountered incidentally during internal operations, `unknown` if unclear. Most Mentor entities are `agent_only` since they concern the system's internal operations, not the user's world. Exception: if Mentor evaluates user-facing skill quality, that context might be `unknown`.
 
-
 ## Initialization
 
 On first invocation of any Mentor command, run `mentor.init`:
@@ -283,7 +266,6 @@ On first invocation of any Mentor command, run `mentor.init`:
 6. Register cron jobs `mentor:deep` and `mentor:update` if not already present (check the platform scheduling registry first)
 7. Register heartbeat entry `mentor:light` in `HEARTBEAT.md` if not already present
 8. Log initialization as a DecisionRecord in `decisions.jsonl`
-
 
 ## Background tasks
 
@@ -305,7 +287,6 @@ Registration during `mentor.init`:
 
 Heartbeat registration: append `mentor:light` entry to `{agent_root}/HEARTBEAT.md` if not already present.
 
-
 ## Self-update
 
 `mentor.update` pulls the latest package from the `source:` URL in this file's frontmatter. Runs silently — no output unless the version changed or an error occurred.
@@ -326,11 +307,9 @@ Heartbeat registration: append `mentor:light` entry to `{agent_root}/HEARTBEAT.m
 6. On failure → retry once. If second attempt fails, report the error and stop.
 7. Output exactly: `I updated Mentor from version {old} to {new}`
 
-
 ## Visibility
 
 public
-
 
 ## Support file map
 
