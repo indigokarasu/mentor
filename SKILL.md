@@ -217,7 +217,7 @@ skill_okrs:
     target: 0.85
     evaluation_window: 30_runs
   - name: evaluation_coverage
-    metric: fraction of skill journals ingested within one heartbeat cycle
+    metric: fraction of installed skills that have emitted at least one journal (skills-with-journals / total-installed-skills)
     direction: maximize
     target: 0.99
     evaluation_window: 30_runs
@@ -334,6 +334,9 @@ Journal schema is inconsistent across skills. Defend against these in heartbeat 
 4. **`run_id` can be empty string.** Use file path as fallback identifier for ingestion tracking.
 5. **`error` can be str or dict.** Convert to string with `str()` before logging/truncating.
 6. **Config may be incomplete.** On existing installs, `config.json` may lack `heartbeat`, `evaluation`, `retention` fields. Merge defaults on init — don't assume full schema.
+7. **`evaluation_coverage` OKR definition is misleading.** The SKILL.md OKR table says "fraction of skill journals ingested within one heartbeat cycle" but the correct metric is `skills-with-journals / total-installed-skills`. Scoring as `journals-ingested / journals-found` always yields ~1.0 and is meaningless. Always use the skills-based denominator.
+8. **Proposal stall loop.** If ≥3 consecutive proposals target the same skill+issue and Fellow has not evaluated any of them (check `fellow_results_ingested.jsonl` for matching cycle_ids), do NOT write another identical proposal. Instead: (a) check if the issue is a low-risk efficiency fix that can be auto-applied — if so, write a VariantDecision with `auto_approved: true` and rationale; (b) if not auto-approvable, write a single escalation note in the decision log and stop re-proposing until Fellow responds or the user intervenes. Track proposal counts per target in `evaluations/proposal_stall_tracking.jsonl`.
+9. **Anomaly staleness.** Track anomalies across heartbeats. If an anomaly has been reported for ≥5 consecutive heartbeats with no state change, add a `stale: true` flag and an escalation note. Do not simply re-report identical anomalies — either escalate or mark as "awaiting external resolution".
 
 ## Update command
 
