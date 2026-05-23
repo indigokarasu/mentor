@@ -158,6 +158,15 @@ See `spec-ocas-interfaces.md` for schemas and handoff contracts.
 
 Mentor reads journals from: `{agent_root}/commons/journals/` (all skills, recursive). This is a read-only scan parallel to Elephas ingestion.
 
+## Recovery Behavior
+
+This skill implements the recovery contract from `spec-ocas-recovery.md`.
+
+- **Evidence**: Every heartbeat/orchestration run writes an evidence record to `{agent_root}/commons/data/ocas-mentor/evidence.jsonl`, including no-op runs. The `not_activity_reason` field is mandatory when no side effects occur.
+- **Gap detection**: On every wake, checks the evidence log. If gap exceeds 15min (light) or 24h (deep), logs `gap_detected` and runs a remedial pass.
+- **Degraded mode**: When Fellow or Forge are unavailable, continues with available inputs and logs `degraded: <dependency>`.
+- **Log compaction**: Evidence and decision logs older than 30 days (no-op) or 90 days (error/gap) compacted. Escalation records never auto-deleted. Last 7 days retained.
+
 ## Storage layout
 
 ```
@@ -166,6 +175,8 @@ Mentor reads journals from: `{agent_root}/commons/journals/` (all skills, recurs
   projects/
   evaluations/
   ingestion_log.jsonl
+  intents.jsonl
+  evidence.jsonl
   decisions.jsonl
   fellow_results_ingested.jsonl
   experiment-requests/
@@ -231,6 +242,16 @@ skill_okrs:
     direction: minimize
     target: 0.10
     evaluation_window: 30_runs
+  - name: schedule_adherence
+    metric: fraction of scheduled heartbeat/cron runs that completed within their expected window
+    direction: maximize
+    target: 0.95
+    evaluation_window: 30_runs
+  - name: data_integrity
+    metric: fraction of evidence records with valid schema and no missing mandatory fields
+    direction: maximize
+    target: 0.99
+    evaluation_window: 30_runs
 ```
 
 ## Optional skill cooperation
@@ -260,7 +281,7 @@ On first invocation of any Mentor command, run `mentor.init`:
 
 1. Create `{agent_root}/commons/data/ocas-mentor/` and subdirectories (`projects/`, `evaluations/`, `experiment-requests/`, `plans/`, `plan-runs/`)
 2. Write default `config.json` with ConfigBase fields if absent
-3. Create empty JSONL files: `ingestion_log.jsonl`, `decisions.jsonl`, `fellow_results_ingested.jsonl`
+3. Create empty JSONL files: `ingestion_log.jsonl`, `intents.jsonl`, `evidence.jsonl`, `decisions.jsonl`, `fellow_results_ingested.jsonl`
 4. Create `{agent_root}/commons/journals/ocas-mentor/`
 5. Copy bundled plans from skill package `references/plans/*.plan.md` to `{agent_root}/commons/data/ocas-mentor/plans/` -- skip any plan file already present (do not overwrite user-modified plans)
 6. Register cron jobs `mentor:deep` and `mentor:update` if not already present (check the platform scheduling registry first)
