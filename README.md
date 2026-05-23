@@ -1,112 +1,84 @@
 # 🎓 Mentor
 
-Mentor is the system's control plane -- in runtime mode it decomposes goals into task graphs, supervises execution across skills, and dynamically repairs failures through a layered escalation policy from local retry up to full strategy replan. In heartbeat mode it reads journals from every skill, scores OKR performance against baselines, and generates improvement proposals that flow to Forge and Fellow for empirical evaluation and promotion.
+> **Multi-skill orchestration and self-improvement engine — the control plane for your agent.**
 
+## Why Mentor?
 
-Skill packages follow the [agentskills.io](https://agentskills.io/specification) open standard and are compatible with OpenClaw, Hermes Agent, and any agentskills.io-compliant client.
+When you have 26+ skills, someone needs to coordinate them. Mentor is the control plane: it decomposes goals into task graphs, supervises execution across skills, and dynamically repairs failures. In heartbeat mode, it reads journals from every skill, scores performance against baselines, and generates improvement proposals. It's the reason the OCAS suite works as a system instead of a pile of disconnected tools.
 
----
+Skill packages follow the [agentskills.io](https://agentskills.io/specification) open standard and are compatible with OpenClaw, Hermes Agent, Claude, and any agentskills.io-compliant client.
 
-## Overview
+## Quick Start
 
-Mentor operates in two modes that share state and telemetry. In runtime mode it acts as an orchestration engine -- decomposing goals into task graphs, supervising execution across skills, and repairing failures through a layered escalation policy from local retry up to full strategy replan. In heartbeat mode it reads journals from every skill, scores OKRs against baselines, generates improvement proposals that go to Forge for building, and routes experiments to Fellow for empirical evaluation. Together these modes form a self-improving control plane. Mentor and Elephas are parallel journal consumers -- neither blocks the other.
+```
+# Create a project
+"Research the competitive landscape for AI calendar tools and write a summary"
 
-Mentor also supports named Workflow Plans -- pre-authored, parameterized task sequences that can be invoked by name with arguments, run on a schedule, or triggered via heartbeat. Plans encode multi-skill workflows (like contact enrichment) so they can be repeated reliably without reconstructing the task graph each time.
+# Check progress
+"What's the status of my research project?"
+
+# Run a workflow plan
+"Run contact-enrichment for person_abc123"
+```
+
+Mentor auto-initializes on first use, including registering heartbeat and cron jobs.
+
+## What It Does
+
+Mentor operates in two modes. In **runtime mode** it decomposes goals into task graphs, supervises execution, and repairs failures through layered escalation. In **heartbeat mode** it reads journals from every skill, scores OKRs against baselines, and generates improvement proposals routed to Forge and Fellow. It also supports named **Workflow Plans** — pre-authored, parameterized task sequences invokable by name.
 
 ## Commands
 
 | Command | Description |
 |---|---|
-| `mentor.project.create` | Create a project with goal, constraints, and requested output |
-| `mentor.project.status` | Current project state, task graph, execution progress |
+| `mentor.project.create` | Create a project with goal and constraints |
+| `mentor.project.status` | Current project state and task graph |
 | `mentor.project.replan` | Trigger strategy-level replan |
-| `mentor.task.list` | Tasks with statuses, dependencies, blocking reasons |
-| `mentor.heartbeat.light` | Lightweight pass: ingest journals, update aggregates, queue work |
+| `mentor.task.list` | Tasks with statuses and dependencies |
+| `mentor.heartbeat.light` | Lightweight pass: ingest journals, queue work |
 | `mentor.heartbeat.deep` | Deep pass: full scoring, trend analysis, proposals |
-| `mentor.variants.list` | Active champion/challenger pairs with evaluation status |
-| `mentor.variants.decide` | Emit promotion decision for a variant |
-| `mentor.proposals.list` | Pending skill improvement proposals |
-| `mentor.proposals.create` | Generate a VariantProposal for a target skill |
-| `mentor.status` | Active projects, pending evaluations, self-improvement metrics |
-| `mentor.journal` | Write journal for the current run |
-| `mentor.update` | Pull latest from GitHub source (preserves journals and data) |
-| `mentor.plan.list` | List available workflow plans with version and description |
-| `mentor.plan.run` | Execute a named workflow plan with optional arguments |
-| `mentor.plan.status` | Current state of a running or recent plan run |
-| `mentor.plan.resume` | Continue a paused or failed plan run from the last incomplete step |
+| `mentor.plan.list` | List available workflow plans |
+| `mentor.plan.run` | Execute a named workflow plan |
+| `mentor.plan.status` | State of a running or recent plan |
+| `mentor.plan.resume` | Continue a paused or failed plan |
 | `mentor.plan.history` | Recent plan run summaries |
-
-## Setup
-
-`mentor.init` runs automatically on first invocation and creates all required directories, config.json, and JSONL files. It registers the `mentor:deep` cron job (daily 5am) and the `mentor:light` heartbeat entry. It also copies bundled workflow plans from the skill package to `{agent_root}/commons/data/ocas-mentor/plans/`. No manual setup is required.
+| `mentor.status` | Active projects, pending evaluations |
+| `mentor.journal` | Write journal for the current run |
+| `mentor.update` | Self-update from GitHub source |
 
 ## Dependencies
 
-**OCAS Skills**
-- [Forge](https://github.com/indigokarasu/forge) -- receives VariantProposal and VariantDecision files via journal payload
-- [Fellow](https://github.com/indigokarasu/fellow) -- invoked to run controlled benchmark experiments
-- [Elephas](https://github.com/indigokarasu/elephas) -- Chronicle read-only for evaluation context
-- [Corvus](https://github.com/indigokarasu/corvus) -- pattern data for anomaly context
-- All skills -- reads journals from all skills for evaluation
-
-**External**
-- None
+- [Forge](https://github.com/indigokarasu/forge) — receives VariantProposal/VariantDecision files
+- [Fellow](https://github.com/indigokarasu/fellow) — runs controlled benchmark experiments
+- [Elephas](https://github.com/indigokarasu/elephas) — Chronicle read-only for evaluation
+- [Corvus](https://github.com/indigokarasu/corvus) — pattern data for anomaly context
+- All skills — reads journals from all skills
 
 ## Workflow Plans
 
-Mentor ships with a bundled plan library. Plans are parameterized, reusable workflows that Mentor can run on demand or on a schedule.
-
 | Plan | Description |
 |---|---|
-| `contact-enrichment` | Enriches a Weave contact by scanning Gmail, running Scout OSINT, and Sift web search |
-
-Run a plan manually:
-
-```
-mentor.plan.run contact-enrichment
-mentor.plan.run contact-enrichment --arg contact_id=person_abc123
-```
-
-Schedule a daily run against a random contact:
-
-```bash
-# Task declared in SKILL.md frontmatter metadata.{platform}.cron
-  --schedule "0 3 * * *" \
-  --command "mentor.plan.run contact-enrichment" \
-  --sessionTarget isolated --lightContext true --wakeMode next-heartbeat \
-  --timezone America/Los_Angeles
-```
+| `contact-enrichment` | Enriches a Weave contact via Gmail + Scout + Sift |
 
 ## Scheduled Tasks
 
-| Job | Mechanism | Schedule | Command |
-|---|---|---|---|
-| `mentor:deep` | cron | `0 5 * * *` (daily 5am) | Full OKR scoring, trend analysis, variant proposals |
-| `mentor:light` | heartbeat | Every heartbeat pass | Ingest journals, update aggregates, queue work |
-| `mentor:update` | cron | `0 0 * * *` (midnight daily) | Self-update from GitHub source |
+| Job | Schedule | Command |
+|---|---|---|
+| `mentor:deep` | `0 5 * * *` | Full OKR scoring, trend analysis, proposals |
+| `mentor:light` | Every heartbeat | Ingest journals, update aggregates |
+| `mentor:update` | `0 0 * * *` | Self-update |
 
 ## Changelog
 
 ### v2.6.6 — April 26, 2026
-- Added Pitfalls — heartbeat execution section documenting six journal-schema inconsistencies discovered during deep heartbeat: outcome/status type variance, missing outcome fields (~90% of journals), duration_ms vs duration_seconds naming, empty run_id values, error type variance, incomplete config.json on existing installs
+- Added Pitfalls — heartbeat execution journal-schema inconsistencies
 
-### v2.6.5 — April 12, 2026
-- Removed stale `GOG_ACCOUNT` environment variable requirement (no longer applicable)
+### v2.3.0 — March 25, 2026
+- Workflow Plans system, bundled contact-enrichment plan
 
-### v2.5.0 -- April 2, 2026
-- Added structured entity observations in journal payloads (`entities_observed`, `relationships_observed`, `preferences_observed`)
-- Added `user_relevance` tagging on journal observations (default `agent_only` for system-internal entities)
-- Added Elephas journal cooperation in skill cooperation section
-
-### v2.3.0 -- March 25, 2026
-- Added Workflow Plans system: named, parameterized task sequences invokable by name or via cron/heartbeat
-- New commands: `mentor.plan.list`, `mentor.plan.run`, `mentor.plan.status`, `mentor.plan.resume`, `mentor.plan.history`
-- Bundled contact-enrichment plan (Gmail + Scout + Sift pipeline)
-- Init now creates `plans/` and `plan-runs/` directories and copies bundled plans
-
-### v2.3.0 -- March 27, 2026
-- Added `mentor.update` command and midnight cron for automatic version-checked self-updates
+### v2.0.0 — March 18, 2026
+- Initial release
 
 ---
 
-*Mentor is part of the [OCAS Agent Suite](https://github.com/indigokarasu) -- a collection of interconnected skills for personal intelligence, autonomous research, and continuous self-improvement. Each skill owns a narrow responsibility and communicates with others through structured signal files, shared journals, and Chronicle, a long-term knowledge graph that accumulates verified facts over time.*
+*Mentor is part of the [OCAS Agent Suite](https://github.com/indigokarasu).*
