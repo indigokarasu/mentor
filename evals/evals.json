@@ -1,0 +1,17 @@
+{
+  "skill": "ocas-mentor",
+  "version": "1.0.0",
+  "description": "Evaluation test cases for ocas-mentor",
+  "evals": [
+    {
+      "input": "Evaluate the quality of a completed workflow",
+      "expected_output": "Returns evaluation report with improvement suggestions",
+      "description": "Workflow evaluation"
+    },
+    {
+      "input": "Propose improvements to a skill based on usage patterns",
+      "expected_output": "Returns structured improvement proposals with evidence",
+      "description": "Skill improvement proposal"
+    }
+  ]
+}
