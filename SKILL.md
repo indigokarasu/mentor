@@ -1,44 +1,18 @@
 ---
 name: ocas-mentor
-description: >
-  Mentor: self-improving orchestration and evaluation engine. Manages
-  long-running multi-skill workflows, analyzes journals from all skills,
-  evaluates champion vs challenger variants, and proposes skill improvements
-  to Forge. Trigger phrases: 'manage this project', 'coordinate a multi-step
-  analysis', 'evaluate skill performance', 'run a heartbeat', 'how are skills
-  performing', 'update mentor'. Do not use for web research (use Sift), skill
-  building (use Forge), or user communication (use Dispatch).
+description: 'Mentor: self-improving orchestration and evaluation engine. Manages
+  long-running multi-skill workflows, analyzes journals from all skills, evaluates
+  champion vs challenger variants, and proposes skill improvements to Forge. Trigger
+  phrases: ''manage this project'', ''coordinate a multi-step analysis'', ''evaluate
+  skill performance'', ''run a heartbeat'', ''how are skills performing'', ''update
+  mentor''. Do not use for web research (use Sift), skill building (use Forge), or
+  user communication (use Dispatch).
+
+  '
+license: MIT
 metadata:
   author: Indigo Karasu
-  email: mx.indigo.karasu@gmail.com
-  version: "2.6.6"
-  hermes:
-    tags: [orchestration, evaluation, improvement]
-    category: evolution
-    cron:
-      - name: "mentor:update"
-        schedule: "10 7 * * *"
-        command: "mentor.update"
-  openclaw:
-    skill_type: system
-    visibility: public
-    filesystem:
-      read:
-        - "{agent_root}/commons/data/ocas-mentor/"
-        - "{agent_root}/commons/journals/ocas-mentor/"
-        - "{agent_root}/commons/journals/*/"
-      write:
-        - "{agent_root}/commons/data/ocas-mentor/"
-        - "{agent_root}/commons/journals/ocas-mentor/"
-    self_update:
-      source: "https://github.com/indigokarasu/mentor"
-      mechanism: "version-checked tarball from GitHub via gh CLI"
-      command: "mentor.update"
-      requires_binaries: [gh, tar, python3]
-    cron:
-      - name: "mentor:update"
-        schedule: "10 7 * * *"
-        command: "mentor.update"
+  version: 2.6.6
 ---
 
 # Mentor
