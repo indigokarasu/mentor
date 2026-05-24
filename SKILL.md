@@ -143,29 +143,7 @@ This skill implements the recovery contract from `spec-ocas-recovery.md`.
 
 ## Storage layout
 
-```
-{agent_root}/commons/data/ocas-mentor/
-  config.json
-  projects/
-  evaluations/
-  ingestion_log.jsonl
-  intents.jsonl
-  evidence.jsonl
-  decisions.jsonl
-  fellow_results_ingested.jsonl
-  experiment-requests/
-    {experiment_id}.json
-  plans/
-    {plan_id}.plan.md
-  plan-runs/
-    {plan_run_id}/
-      state.json
-      decisions.jsonl
-
-{agent_root}/commons/journals/ocas-mentor/
-  YYYY-MM-DD/
-    {run_id}.json
-```
+See `references/schemas.md` for the storage layout.
 
 Default config.json:
 ```json
@@ -194,39 +172,7 @@ Default config.json:
 
 Universal OKRs from spec-ocas-journal.md apply to all runs.
 
-```yaml
-skill_okrs:
-  - name: orchestration_success_rate
-    metric: fraction of projects reaching completion without manual rescue
-    direction: maximize
-    target: 0.85
-    evaluation_window: 30_runs
-  - name: evaluation_coverage
-    metric: fraction of installed skills that have emitted at least one journal (skills-with-journals / total-installed-skills)
-    direction: maximize
-    target: 0.99
-    evaluation_window: 30_runs
-  - name: variant_decision_quality
-    metric: fraction of promotions not rolled back within 30 days
-    direction: maximize
-    target: 0.90
-    evaluation_window: 30_runs
-  - name: repair_escalation_rate
-    metric: fraction of failures requiring strategy-level escalation
-    direction: minimize
-    target: 0.10
-    evaluation_window: 30_runs
-  - name: schedule_adherence
-    metric: fraction of scheduled heartbeat/cron runs that completed within their expected window
-    direction: maximize
-    target: 0.95
-    evaluation_window: 30_runs
-  - name: data_integrity
-    metric: fraction of evidence records with valid schema and no missing mandatory fields
-    direction: maximize
-    target: 0.99
-    evaluation_window: 30_runs
-```
+See `references/schemas.md` for details.
 
 ## Optional skill cooperation
 
@@ -259,7 +205,7 @@ On first invocation of any Mentor command, run `mentor.init`:
 4. Create `{agent_root}/commons/journals/ocas-mentor/`
 5. Copy bundled plans from skill package `references/plans/*.plan.md` to `{agent_root}/commons/data/ocas-mentor/plans/` -- skip any plan file already present (do not overwrite user-modified plans)
 6. Register cron jobs `mentor:deep` and `mentor:update` if not already present (check the platform scheduling registry first)
-7. Register heartbeat entry `mentor:light` in `HEARTBEAT.md` if not already present
+7. Register cron-only trigger for `mentor:light` if not already present (check the platform scheduling registry first)
 8. Log initialization as a DecisionRecord in `decisions.jsonl`
 
 ## Background tasks
@@ -267,7 +213,7 @@ On first invocation of any Mentor command, run `mentor.init`:
 | Job name | Mechanism | Schedule | Command |
 |---|---|---|---|
 | `mentor:deep` | cron | `0 5 * * *` (daily 5am) | `mentor.heartbeat.deep` — full OKR scoring, trend analysis, variant proposals |
-| `mentor:light` | heartbeat | every heartbeat pass | `mentor.heartbeat.light` — ingest journals, update aggregates, queue work |
+|| `mentor:light` | cron | `*/5 * * * *` (every 5 min) | `mentor.heartbeat.light` — ingest journals, update aggregates, queue work |
 | `mentor:update` | cron | `0 0 * * *` (midnight daily) | `mentor.update` |
 
 Cron options for `mentor:deep`: `sessionTarget: isolated`, `lightContext: true`, `wakeMode: next-heartbeat`.
@@ -280,7 +226,7 @@ Registration during `mentor.init`:
 # Task declared in SKILL.md frontmatter metadata.{platform}.cron
 ```
 
-Heartbeat registration: append `mentor:light` entry to `{agent_root}/HEARTBEAT.md` if not already present.
+
 
 ## Self-update
 
@@ -291,14 +237,7 @@ Heartbeat registration: append `mentor:light` entry to `{agent_root}/HEARTBEAT.m
 3. Fetch remote version from SKILL.md frontmatter: `gh api "repos/{owner}/{repo}/contents/SKILL.md" --jq '.content' | base64 -d | grep 'version:' | head -1 | sed 's/.*"\(.*\)".*/\1/'`
 4. If remote version equals local version → stop silently
 5. Download and install:
-   ```bash
-   TMPDIR=$(mktemp -d)
-   gh api "repos/{owner}/{repo}/tarball/main" > "$TMPDIR/archive.tar.gz"
-   mkdir "$TMPDIR/extracted"
-   tar xzf "$TMPDIR/archive.tar.gz" -C "$TMPDIR/extracted" --strip-components=1
-   cp -R "$TMPDIR/extracted/"* ./
-   rm -rf "$TMPDIR"
-   ```
+See `references/okrs.md` for OKR definitions.
 6. On failure → retry once. If second attempt fails, report the error and stop.
 7. Output exactly: `I updated Mentor from version {old} to {new}`
 
