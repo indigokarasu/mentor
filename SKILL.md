@@ -309,15 +309,15 @@ public
 ## Support file map
 
 | File | When to read |
-|---|---|
-| `references/schemas.md` | Before creating projects, tasks, proposals, or decisions |
-| `references/orchestration_engine.md` | Before goal decomposition, scheduling, or failure repair |
-| `references/evaluation_engine.md` | Before journal ingestion, OKR scoring, or champion/challenger pairing |
-| `references/evolution_engine.md` | Before improvement detection, proposal generation, or promotion decisions |
-| `references/journal.md` | Before mentor.journal; at end of every run |
-| `references/workflow_plans.md` | Before any mentor.plan.* command |
-| `references/plans/template.plan.md` | When writing a new plan file |
-| `references/plans/contact-enrichment.plan.md` | When running the contact enrichment workflow |
+|------|-------------|
+| `references/schemas.md` | Before creating projects, tasks, proposals, or decisions; when validating data structures |
+| `references/orchestration_engine.md` | Before goal decomposition, scheduling, or failure repair; when building task graphs |
+| `references/evaluation_engine.md` | Before journal ingestion, OKR scoring, or champion/challenger pairing; when evaluating skill performance |
+| `references/evolution_engine.md` | Before improvement detection, proposal generation, or promotion decisions; when generating variant proposals |
+| `references/journal.md` | Before calling mentor.journal; at end of every run |
+| `references/workflow_plans.md` | Before any mentor.plan.* command; when selecting a workflow template |
+| `references/plans/template.plan.md` | When writing a new plan file; plan structure reference |
+| `references/plans/contact-enrichment.plan.md` | When running the contact enrichment workflow; step-by-step procedure |
 
 ## Pitfalls — heartbeat execution
 
