@@ -6,14 +6,30 @@ description: 'Mentor: self-improving orchestration and evaluation engine. Manage
   phrases: ''manage this project'', ''coordinate a multi-step analysis'', ''evaluate
   skill performance'', ''run a heartbeat'', ''how are skills performing'', ''update
   mentor''. Do not use for web research (use Sift), skill building (use Forge), or
-  user communication (use Dispatch).
-
-  '
+  user communication (use Dispatch).'
+source: https://github.com/indigokarasu/mentor
 license: MIT
+includes:
+  - references/**
+  - scripts/**
+
 metadata:
   author: Indigo Karasu
   version: 2.6.6
 ---
+## When to Use
+
+- OKR evaluation across all OCAS skills
+- Skill performance scoring and improvement recommendations
+- Post-major-session learning synthesis
+- Skill library health assessment
+- When Critique identifies issues needing Mentor follow-up
+## When NOT to Use
+
+- Real-time skill execution or task routing
+- Content generation or research
+- System health monitoring (use Custodian)
+- Skill building (use Forge)
 
 # Mentor
 
@@ -178,9 +194,8 @@ See `references/schemas.md` for details.
 
 - Forge — receives VariantProposal and VariantDecision files via journal payload
 - Fellow — invoked by Mentor; reads ExperimentRequests from Mentor's `experiment-requests/` directory; returns results to `fellow/results/` for Mentor to read (cooperative read both ways)
-- Elephas — Mentor may read Chronicle (read-only) for evaluation context
+- Elephas — Mentor may read Chronicle (read-only) for evaluation context; Mentor journal entity observations are consumed during Chronicle ingestion
 - Corvus — Mentor may read Corvus pattern data for anomaly context
-- Elephas — journal entity observations consumed during Chronicle ingestion
 - All skills — Mentor reads journals from all skills for evaluation
 
 ## Journal outputs
@@ -237,7 +252,11 @@ Registration during `mentor.init`:
 3. Fetch remote version from SKILL.md frontmatter: `gh api "repos/{owner}/{repo}/contents/SKILL.md" --jq '.content' | base64 -d | grep 'version:' | head -1 | sed 's/.*"\(.*\)".*/\1/'`
 4. If remote version equals local version → stop silently
 5. Download and install:
-See `references/okrs.md` for OKR definitions.
+   ```bash
+   # From the skill directory, pull latest
+   bash scripts/update.sh
+   ```
+   The update script runs `git pull` in the skill directory to fetch and apply the latest version. Journals and data under `commons/` are preserved (not tracked in git).
 6. On failure → retry once. If second attempt fails, report the error and stop.
 7. Output exactly: `I updated Mentor from version {old} to {new}`
 
@@ -245,7 +264,7 @@ See `references/okrs.md` for OKR definitions.
 
 public
 
-## Support file map
+## Support File Map
 
 | File | When to read |
 |------|-------------|
@@ -258,7 +277,7 @@ public
 | `references/plans/template.plan.md` | When writing a new plan file; plan structure reference |
 | `references/plans/contact-enrichment.plan.md` | When running the contact enrichment workflow; step-by-step procedure |
 
-## Pitfalls — heartbeat execution
+## Gotchas — heartbeat execution
 
 Journal schema is inconsistent across skills. Defend against these in heartbeat code:
 
@@ -272,12 +291,3 @@ Journal schema is inconsistent across skills. Defend against these in heartbeat 
 8. **Proposal stall loop.** If ≥3 consecutive proposals target the same skill+issue and Fellow has not evaluated any of them (check `fellow_results_ingested.jsonl` for matching cycle_ids), do NOT write another identical proposal. Instead: (a) check if the issue is a low-risk efficiency fix that can be auto-applied — if so, write a VariantDecision with `auto_approved: true` and rationale; (b) if not auto-approvable, write a single escalation note in the decision log and stop re-proposing until Fellow responds or the user intervenes. Track proposal counts per target in `evaluations/proposal_stall_tracking.jsonl`.
 9. **Anomaly staleness.** Track anomalies across heartbeats. If an anomaly has been reported for ≥5 consecutive heartbeats with no state change, add a `stale: true` flag and an escalation note. Do not simply re-report identical anomalies — either escalate or mark as "awaiting external resolution".
 
-## Update command
-
-This skill self-updates every 24 hours via:
-
-```bash
-mentor.update
-```
-
-This pulls the latest version from GitHub and restarts the skill's background tasks if applicable.
