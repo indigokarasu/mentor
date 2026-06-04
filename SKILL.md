@@ -1,22 +1,37 @@
 ---
 name: ocas-mentor
-description: 'Mentor: self-improving orchestration and evaluation engine. Manages
-  long-running multi-skill workflows, analyzes journals from all skills, evaluates
-  champion vs challenger variants, and proposes skill improvements to Forge. Trigger
-  phrases: ''manage this project'', ''coordinate a multi-step analysis'', ''evaluate
-  skill performance'', ''run a heartbeat'', ''how are skills performing'', ''update
-  mentor''. Do not use for web research (use Sift), skill building (use Forge), or
-  user communication (use Dispatch).'
-source: https://github.com/indigokarasu/mentor
+description: >
+  Mentor: self-improving orchestration and evaluation engine. Manages long-running
+  multi-skill workflows, analyzes journals from all skills, evaluates champion vs
+  challenger variants, and proposes skill improvements to Forge. Use when managing
+  multi-step projects, running heartbeats, evaluating skill performance, or coordinating
+  multi-skill workflows. Trigger phrases: "manage this project", "coordinate a
+  multi-step analysis", "evaluate skill performance", "run a heartbeat", "how are
+  skills performing", "update mentor". Do not use for web research (use Sift),
+  skill building (use Forge), user communication (use Dispatch), real-time skill
+  execution, content generation, system health monitoring (use Custodian), or
+  skill evaluation scoring.
 license: MIT
+source: https://github.com/indigokarasu/mentor
 includes:
-  - references/**
-  - scripts/**
-
+- references/**
+- scripts/**
 metadata:
-  author: Indigo Karasu
-  version: 2.6.6
+  author: Indigo Karasu (indigokarasu)
+  version: 2.8.0
+triggers:
+- self-improving orchestration
+- multi-skill workflow
+- skill evaluation engine
+- mentor orchestration
 ---
+
+# Mentor
+
+Mentor is the system's control plane — in runtime mode it decomposes goals into task graphs, supervises execution across skills, and dynamically repairs failures through layered escalation. In heartbeat mode it reads journals from every skill, scores OKR performance against baselines, and generates improvement proposals that flow to Forge and Fellow.
+
+Mentor and Elephas are parallel journal consumers: Mentor reads journals to evaluate skill performance, Elephas reads them to extract entity knowledge into Chronicle.
+
 ## When to Use
 
 - OKR evaluation across all OCAS skills
@@ -24,6 +39,7 @@ metadata:
 - Post-major-session learning synthesis
 - Skill library health assessment
 - When Critique identifies issues needing Mentor follow-up
+
 ## When NOT to Use
 
 - Real-time skill execution or task routing
@@ -31,43 +47,19 @@ metadata:
 - System health monitoring (use Custodian)
 - Skill building (use Forge)
 
-# Mentor
-
-Mentor is the system's control plane — in runtime mode it decomposes goals into task graphs, supervises execution across skills, and dynamically repairs failures through a layered escalation policy from local retry up to full strategy replan. In heartbeat mode it reads journals from every skill, scores OKR performance against baselines, and generates improvement proposals that flow to Forge and Fellow for empirical evaluation and promotion.
-
-Mentor and Elephas are parallel journal consumers: Mentor reads journals to evaluate skill performance, Elephas reads them to extract entity knowledge into Chronicle, and neither blocks the other.
-
-## When to use
-
-- Manage a long-running multi-step project
-- Coordinate work across multiple skills
-- Evaluate skill performance from journal data
-- Compare champion vs challenger variant runs
-- Generate improvement proposals for Forge
-
-## When not to use
-
-- Web research — use Sift
-- Building new skills — use Forge
-- User communication — use Dispatch
-- Behavioral pattern analysis — use Corvus
-
-## Responsibility boundary
+## Responsibility Boundary
 
 Mentor owns orchestration, evaluation, and the improvement loop.
 
 Mentor does not own: skill building (Forge), behavioral pattern detection (Corvus), behavioral refinement (Praxis), knowledge graph (Elephas), web research (Sift), communications (Dispatch), experimentation execution (Fellow).
 
-Mentor proposes improvements; Forge builds them. Mentor detects regressions; Praxis extracts behavioral lessons from Corvus signals.
+## Ontology Types
 
-## Ontology types
-
-Mentor observes entity types during orchestration and evaluation:
 - **Concept/Event** — projects, tasks, skill performance evaluations, OKR cycles
-- **Concept/Idea** — improvement proposals, behavioral patterns detected
+- **Concept/Idea** — improvement proposals, behavioral patterns
 - **Thing/DigitalArtifact** — project state records, task graphs, evaluation reports
 
-Mentor does not emit Signals to Elephas directly. Journal entries may include entity observations for project lineage, but they are not promoted to Chronicle as primary facts. Elephas consumes Mentor journals for reference and evaluates whether entity extractions are warranted from journal metadata.
+Mentor does not emit Signals to Elephas directly. Elephas consumes Mentor journals for reference.
 
 ## Commands
 
@@ -78,19 +70,15 @@ Mentor does not emit Signals to Elephas directly. Journal entries may include en
 - `mentor.heartbeat.light` — lightweight pass: ingest journals, update aggregates, queue work
 - `mentor.heartbeat.deep` — deep pass: full scoring, trend analysis, proposals
 - `mentor.variants.list` — active champion/challenger pairs with evaluation status
-- `mentor.variants.decide` — emit promotion decision for a variant (writes VariantDecision to Forge (via journal payload))
+- `mentor.variants.decide` — emit promotion decision for a variant
 - `mentor.proposals.list` — pending skill improvement proposals
-- `mentor.proposals.create` — generate a VariantProposal for a target skill (writes to Forge (via journal payload))
+- `mentor.proposals.create` — generate a VariantProposal for a target skill
 - `mentor.status` — active projects, pending evaluations, self-improvement metrics
 - `mentor.journal` — write journal for the current run; called at end of every run
 - `mentor.update` — pull latest from GitHub source; preserves journals and data
-- `mentor.plan.list` — list available plans with plan_id, version, and description
-- `mentor.plan.run {plan_id} [--arg name=value ...]` — execute a named workflow plan
-- `mentor.plan.status {plan_run_id}` — current state of a running or recent plan run
-- `mentor.plan.resume {plan_run_id}` — continue a paused or failed plan run from the first incomplete step
-- `mentor.plan.history [--plan plan_id] [--limit N]` — recent plan run summaries
+- `mentor.plan.list` / `mentor.plan.run` / `mentor.plan.status` / `mentor.plan.resume` / `mentor.plan.history` — workflow plan management
 
-## Mode A — Runtime orchestration
+## Mode A — Runtime Orchestration
 
 Triggered by explicit invocation. Creates a project record, builds a task graph, executes and supervises tasks, dynamically replans when blocked.
 
@@ -98,36 +86,24 @@ Task states: pending, ready, running, blocked, failed, complete, archived.
 
 Scheduling: execute only tasks with complete dependencies. Prioritize critical path. Bounded parallelism. Bounded retries.
 
-## Mode B — Heartbeat evolution
+## Mode B — Heartbeat Evolution
 
 Triggered periodically. Pipeline: ingest journals → validate schema → aggregate metrics → pair champion/challenger → score OKRs → detect anomalies → evaluate variants → generate proposals → emit decisions → write journal.
 
-Mentor reads journals from all skills at: `{agent_root}/commons/journals/` (recursive scan). It tracks which run_ids have been ingested via `{agent_root}/commons/data/ocas-mentor/ingestion_log.jsonl`.
+Mentor reads journals from all skills at: `{agent_root}/commons/journals/` (recursive scan). Tracks ingested run_ids via `ingestion_log.jsonl`.
 
-## Run completion
-
-After every Mentor command (orchestration or heartbeat):
-
-1. Read CycleResult files from `{agent_root}/commons/data/ocas-fellow/results/`. Track consumed `cycle_id` values in `fellow_results_ingested.jsonl` to avoid reprocessing.
-2. Persist project state, evaluation results, or proposals to local files
-3. For experiment requests: write ExperimentRequest file to `{agent_root}/commons/data/ocas-mentor/experiment-requests/{experiment_id}.json`, then invoke `fellow.experiment.run`
-4. For variant proposals: write VariantProposal file to `{agent_root}/commons/data/ocas-forge/{proposal_id}.json`
-5. For variant decisions: write VariantDecision file to `{agent_root}/commons/data/ocas-forge/{decision_id}.json`
-6. Log material decisions to `decisions.jsonl`
-7. Write journal via `mentor.journal`
-
-## Layered evaluation loops
+## Layered Evaluation Loops
 
 - **Layer 1 — Micro Action** (ms-sec): validate single outputs. Retry, local repair, fallback.
 - **Layer 2 — Task Execution** (sec-min): ensure task completion. Retry, switch skill, split task.
 - **Layer 3 — Strategy** (min-hr): improve active project plan. Reorder, insert, merge, parallelize.
 - **Layer 4 — Evolution** (hr-wk): improve skills and policies. Propose variants, promote/archive.
 
-## Failure repair policy
+## Failure Repair Policy
 
-Order: retry with refined framing → alternate skill → split task → revise ordering → escalate to strategy loop. Never retry indefinitely. Every repair action journaled.
+Order: retry with refined framing → alternate skill → split task → revise ordering → escalate to strategy loop. Never retry indefinitely.
 
-## Safety invariants
+## Safety Invariants
 
 - Challenger variants never execute side effects
 - Comparisons only on identical normalized inputs
@@ -135,159 +111,147 @@ Order: retry with refined framing → alternate skill → split task → revise 
 - Promotion requires sufficient evidence over multiple runs
 - Mentor journals its own orchestration decisions
 
-## Inter-skill interfaces
+## Inter-skill Interfaces
 
-**Mentor → Fellow (cooperative read):** Mentor writes ExperimentRequest files to `{agent_root}/commons/data/ocas-mentor/experiment-requests/{experiment_id}.json`, then invokes `fellow.experiment.run`. Fellow reads from Mentor's directory. Mentor does not write to Fellow's directories.
+**Mentor → Fellow:** Writes ExperimentRequest files, then invokes `fellow.experiment.run`.
 
-**Fellow → Mentor (cooperative read):** Fellow writes CycleResult files to `{agent_root}/commons/data/ocas-fellow/results/{cycle_id}.json`. Mentor reads from this directory, tracking consumed `cycle_id` values in `fellow_results_ingested.jsonl`. Fellow does not write to Mentor's directories. On `decision: promote`, Mentor emits a VariantDecision to Forge.
+**Fellow → Mentor:** Fellow writes CycleResult files; Mentor reads and tracks consumed `cycle_ids`.
 
-Mentor writes VariantProposal files to: `{agent_root}/commons/data/ocas-forge/{proposal_id}.json`
-Mentor writes VariantDecision files to: `{agent_root}/commons/data/ocas-forge/{decision_id}.json`
+**Mentor → Forge:** Writes VariantProposal and VariantDecision files via journal payload.
 
 See `spec-ocas-interfaces.md` for schemas and handoff contracts.
 
-Mentor reads journals from: `{agent_root}/commons/journals/` (all skills, recursive). This is a read-only scan parallel to Elephas ingestion.
+## Run Completion
 
-## Recovery Behavior
+After every Mentor command (orchestration or heartbeat):
 
-This skill implements the recovery contract from `spec-ocas-recovery.md`.
+1. Read CycleResult files. Track consumed `cycle_id` values in `fellow_results_ingested.jsonl`.
+2. Persist project state, evaluation results, or proposals
+3. For experiment requests: write ExperimentRequest file, invoke `fellow.experiment.run`
+4. For variant proposals: write VariantProposal file
+5. For variant decisions: write VariantDecision file
+6. Log material decisions to `decisions.jsonl`
+7. Write journal via `mentor.journal`
 
-- **Evidence**: Every heartbeat/orchestration run writes an evidence record to `{agent_root}/commons/data/ocas-mentor/evidence.jsonl`, including no-op runs. The `not_activity_reason` field is mandatory when no side effects occur.
-- **Gap detection**: On every wake, checks the evidence log. If gap exceeds 15min (light) or 24h (deep), logs `gap_detected` and runs a remedial pass.
-- **Degraded mode**: When Fellow or Forge are unavailable, continues with available inputs and logs `degraded: <dependency>`.
-- **Log compaction**: Evidence and decision logs older than 30 days (no-op) or 90 days (error/gap) compacted. Escalation records never auto-deleted. Last 7 days retained.
+## Cran-Mode Constraint
 
-## Storage layout
+**Cron-mode constraint:** `execute_code` is blocked in cron-triggered jobs. All heartbeat, update, and plan runs triggered by cron must use `terminal()` with inline `python3 << 'PYEOF'` heredocs for multi-stage logic.
 
-See `references/schemas.md` for the storage layout.
+## Background Tasks
 
-Default config.json:
-```json
-{
-  "skill_id": "ocas-mentor",
-  "skill_version": "2.4.0",
-  "config_version": "1",
-  "created_at": "",
-  "updated_at": "",
-  "heartbeat": {
-    "light_interval_minutes": 15,
-    "deep_interval_hours": 24
-  },
-  "evaluation": {
-    "minimum_runs_for_promotion": 20,
-    "non_regression_required": true
-  },
-  "retention": {
-    "days": 0,
-    "max_records": 10000
-  }
-}
-```
+| Job | Schedule | Command |
+|-----|----------|---------|
+| `mentor:deep` | `0 5 * * *` | `mentor.heartbeat.deep` |
+| `mentor:light` | `*/5 * * * *` | `mentor.heartbeat.light` |
+| `mentor:update` | `0 0 * * *` | `mentor.update` |
 
-## OKRs
+## Storage Layout and Configuration
 
-Universal OKRs from spec-ocas-journal.md apply to all runs.
+See `references/schemas.md` for storage layout and data schemas.
 
-See `references/schemas.md` for details.
+See `references/default-config.md` for default config.json.
 
-## Optional skill cooperation
+See `references/workflow_plans.md` for available workflow plan templates.
 
-- Forge — receives VariantProposal and VariantDecision files via journal payload
-- Fellow — invoked by Mentor; reads ExperimentRequests from Mentor's `experiment-requests/` directory; returns results to `fellow/results/` for Mentor to read (cooperative read both ways)
-- Elephas — Mentor may read Chronicle (read-only) for evaluation context; Mentor journal entity observations are consumed during Chronicle ingestion
-- Corvus — Mentor may read Corvus pattern data for anomaly context
-- All skills — Mentor reads journals from all skills for evaluation
+## Journal Outputs
 
-## Journal outputs
-
-Action Journal — every orchestration run, heartbeat pass, variant evaluation, and proposal emission.
-
-When entities are encountered during a run, include the following fields in `decision.payload`:
-
-- `entities_observed` — entities encountered (e.g. Entity/AI for skills being evaluated, Concept/Action for improvement actions taken, Concept/Idea for patterns in skill behavior)
-- `relationships_observed` — relationships between observed entities
-- `preferences_observed` — any preferences inferred from observations
-
-Each entity observation must include a `user_relevance` field: `user` if the entity is directly related to the user's world, `agent_only` if encountered incidentally during internal operations, `unknown` if unclear. Most Mentor entities are `agent_only` since they concern the system's internal operations, not the user's world. Exception: if Mentor evaluates user-facing skill quality, that context might be `unknown`.
+Action Journal — every orchestration run, heartbeat pass, variant evaluation, and proposal emission. Include `entities_observed`, `relationships_observed`, `preferences_observed` with `user_relevance` field.
 
 ## Initialization
 
-On first invocation of any Mentor command, run `mentor.init`:
+On first invocation, run `mentor.init`:
 
-1. Create `{agent_root}/commons/data/ocas-mentor/` and subdirectories (`projects/`, `evaluations/`, `experiment-requests/`, `plans/`, `plan-runs/`)
-2. Write default `config.json` with ConfigBase fields if absent
-3. Create empty JSONL files: `ingestion_log.jsonl`, `intents.jsonl`, `evidence.jsonl`, `decisions.jsonl`, `fellow_results_ingested.jsonl`
-4. Create `{agent_root}/commons/journals/ocas-mentor/`
-5. Copy bundled plans from skill package `references/plans/*.plan.md` to `{agent_root}/commons/data/ocas-mentor/plans/` -- skip any plan file already present (do not overwrite user-modified plans)
-6. Register cron jobs `mentor:deep` and `mentor:update` if not already present (check the platform scheduling registry first)
-7. Register cron-only trigger for `mentor:light` if not already present (check the platform scheduling registry first)
-8. Log initialization as a DecisionRecord in `decisions.jsonl`
+1. Create data directories and subdirectories
+2. Write default `config.json` if absent
+3. Create empty JSONL files
+4. Create journal directory
+5. Copy bundled plans to `plans/` directory
+6. Register cron jobs if not already present
+7. Log initialization as DecisionRecord
 
-## Background tasks
+## OKRs
 
-| Job name | Mechanism | Schedule | Command |
-|---|---|---|---|
-| `mentor:deep` | cron | `0 5 * * *` (daily 5am) | `mentor.heartbeat.deep` — full OKR scoring, trend analysis, variant proposals |
-|| `mentor:light` | cron | `*/5 * * * *` (every 5 min) | `mentor.heartbeat.light` — ingest journals, update aggregates, queue work |
-| `mentor:update` | cron | `0 0 * * *` (midnight daily) | `mentor.update` |
+See `references/okrs-mentor.md` for full OKR definitions and targets.
 
-Cron options for `mentor:deep`: `sessionTarget: isolated`, `lightContext: true`, `wakeMode: next-heartbeat`.
+Key OKRs: `orchestration_success_rate` (≥0.95), `evaluation_coverage` (≥0.90), `promotion_accuracy` (≥0.80).
 
-Registration during `mentor.init`:
+## Recovery Behavior
+
+Implements the recovery contract from `spec-ocas-recovery.md`.
+
+- **Evidence**: Every run writes an evidence record, including no-op runs. `not_activity_reason` mandatory.
+- **Gap detection**: If gap exceeds 15min (light) or 24h (deep), logs `gap_detected`.
+- **Degraded mode**: When Fellow or Forge unavailable, logs `degraded: <dependency>`.
+- **Log compaction**: 30 days (no-op) / 90 days (error/gap). Last 7 days retained.
+
+## Self-Update
+
+See `references/self-update-mentor.md`.
+
+## Gotchas — Critical
+
+See `references/gotchas-mentor.md` for the full gotcha catalog.
+
+Key gotchas:
+
+- **`outcome`/`status` can be str or dict** — Always check `isinstance()` before comparing
+- **Most journals (80-90%) lack explicit `outcome` fields** — Default absent outcomes to `success` when no `error` key present
+- **`duration_ms` vs `duration_seconds` naming varies** — Normalize: values < 100 are likely seconds
+- **`run_id` can be empty string** — Use file path as fallback identifier
+- **Proposal stall loop** — If ≥3 consecutive proposals target same skill+issue without Fellow evaluation, escalate instead of re-proposing
+- **Anomaly staleness** — Mark anomalies unchanged for ≥5 consecutive heartbeats as `stale: true`
+- **`execute_code` is blocked in cron mode** — Use `terminal()` with heredoc for all heartbeat processing
+- **Cron-mode config merge** — Existing `config.json` may lack fields; merge defaults on init
+- **Safe timestamp parsing** — Always use a centralized `parse_dt()` helper; never call `datetime.fromisoformat()` inline
+
+## Safe Timestamp Parsing
+
+```python
+def parse_dt(ts_str):
+    """Parse any OCAS journal timestamp → tz-aware datetime or None."""
+    if ts_str is None:
+        return None
+    s = str(ts_str).strip()
+    if not s or s in ("0", "null", "None"):
+        return None
+    try:
+        if isinstance(ts_str, (int, float)):
+            ts = float(ts_str)
+            return datetime.fromtimestamp(ts / 1000 if ts > 1e12 else ts, tz=timezone.utc)
+        dt = datetime.fromisoformat(s.replace("Z", "+00:00").replace("z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except (ValueError, TypeError, OSError):
+        return None
 ```
-# Check platform scheduling registry for existing tasks
-# Task declared in SKILL.md frontmatter metadata.{platform}.cron
-# If mentor:update absent:
-# Task declared in SKILL.md frontmatter metadata.{platform}.cron
+
+## Cron-Mode Script Structure
+
+When writing multi-step heartbeat scripts, define ALL helpers at the top before `main`:
+
+```python
+# Helpers first
+def parse_dt(ts_str): ...
+def normalize_duration(raw_ms): ...
+
+# Then init, then main logic
+if __name__ == "__main__":
+    main()
 ```
-
-
-
-## Self-update
-
-`mentor.update` pulls the latest package from the `source:` URL in this file's frontmatter. Runs silently — no output unless the version changed or an error occurred.
-
-1. Read `source:` from frontmatter → extract `{owner}/{repo}` from URL
-2. Read local version from SKILL.md frontmatter `metadata.version`
-3. Fetch remote version from SKILL.md frontmatter: `gh api "repos/{owner}/{repo}/contents/SKILL.md" --jq '.content' | base64 -d | grep 'version:' | head -1 | sed 's/.*"\(.*\)".*/\1/'`
-4. If remote version equals local version → stop silently
-5. Download and install:
-   ```bash
-   # From the skill directory, pull latest
-   bash scripts/update.sh
-   ```
-   The update script runs `git pull` in the skill directory to fetch and apply the latest version. Journals and data under `commons/` are preserved (not tracked in git).
-6. On failure → retry once. If second attempt fails, report the error and stop.
-7. Output exactly: `I updated Mentor from version {old} to {new}`
-
-## Visibility
-
-public
 
 ## Support File Map
 
 | File | When to read |
 |------|-------------|
-| `references/schemas.md` | Before creating projects, tasks, proposals, or decisions; when validating data structures |
-| `references/orchestration_engine.md` | Before goal decomposition, scheduling, or failure repair; when building task graphs |
-| `references/evaluation_engine.md` | Before journal ingestion, OKR scoring, or champion/challenger pairing; when evaluating skill performance |
-| `references/evolution_engine.md` | Before improvement detection, proposal generation, or promotion decisions; when generating variant proposals |
-| `references/journal.md` | Before calling mentor.journal; at end of every run |
-| `references/workflow_plans.md` | Before any mentor.plan.* command; when selecting a workflow template |
-| `references/plans/template.plan.md` | When writing a new plan file; plan structure reference |
-| `references/plans/contact-enrichment.plan.md` | When running the contact enrichment workflow; step-by-step procedure |
-
-## Gotchas — heartbeat execution
-
-Journal schema is inconsistent across skills. Defend against these in heartbeat code:
-
-1. **`outcome`/`status` can be str OR dict.** Always `isinstance(outcome, str)` before using as dict key or comparing to strings. A `TypeError: unhashable type: 'dict'` will crash if you skip this.
-2. **Most journals (~90%) lack explicit outcome fields.** The `orchestration_success_rate` OKR is unreliable when scored from `outcome` fields alone — only ~9% of journals have one. Consider defaulting absent outcomes to "success" when no `error` key is present, or score only on journals that have explicit outcomes (with a caveat about sample size).
-3. **`duration_ms` vs `duration_seconds` naming varies.** Some skills use `duration_ms` (int), others `duration_seconds` (float). Normalize: values < 100 are likely seconds → multiply by 1000.
-4. **`run_id` can be empty string.** Use file path as fallback identifier for ingestion tracking.
-5. **`error` can be str or dict.** Convert to string with `str()` before logging/truncating.
-6. **Config may be incomplete.** On existing installs, `config.json` may lack `heartbeat`, `evaluation`, `retention` fields. Merge defaults on init — don't assume full schema.
-7. **`evaluation_coverage` OKR definition is misleading.** The SKILL.md OKR table says "fraction of skill journals ingested within one heartbeat cycle" but the correct metric is `skills-with-journals / total-installed-skills`. Scoring as `journals-ingested / journals-found` always yields ~1.0 and is meaningless. Always use the skills-based denominator.
-8. **Proposal stall loop.** If ≥3 consecutive proposals target the same skill+issue and Fellow has not evaluated any of them (check `fellow_results_ingested.jsonl` for matching cycle_ids), do NOT write another identical proposal. Instead: (a) check if the issue is a low-risk efficiency fix that can be auto-applied — if so, write a VariantDecision with `auto_approved: true` and rationale; (b) if not auto-approvable, write a single escalation note in the decision log and stop re-proposing until Fellow responds or the user intervenes. Track proposal counts per target in `evaluations/proposal_stall_tracking.jsonl`.
-9. **Anomaly staleness.** Track anomalies across heartbeats. If an anomaly has been reported for ≥5 consecutive heartbeats with no state change, add a `stale: true` flag and an escalation note. Do not simply re-report identical anomalies — either escalate or mark as "awaiting external resolution".
-
+| `references/schemas.md` | Before creating projects, tasks, proposals, or decisions |
+| `references/default-config.md` | During `mentor.init` |
+| `references/orchestration_engine.md` | Before goal decomposition or failure repair |
+| `references/evaluation_engine.md` | Before journal ingestion or OKR scoring |
+| `references/evolution_engine.md` | Before improvement detection or proposal generation |
+| `references/workflow_plans.md` | Before any mentor.plan.* command |
+| `references/gotchas-mentor.md` | Before any heartbeat or orchestration run |
+| `references/heartbeat-gap-debugging.md` | When evidence log shows gaps >2h |
+| `references/okrs-mentor.md` | During OKR evaluation |
+| `references/self-update-mentor.md` | Before running `mentor.update` |
+| `scripts/cron-heartbeat-deep.py` | Reference implementation for deep heartbeat journal ingestion — use when building or debugging heartbeat scripts; contains `load_journal_entries()` (multi-format parser) and `normalize_outcome()` helpers |
