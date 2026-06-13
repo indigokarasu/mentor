@@ -67,7 +67,7 @@ wc -l /root/.hermes/commons/data/mentor/evidence.jsonl
 |--------|-----------|-------|
 | `python3 -c "with open(...)"` | ❌ | Silent failure |
 | `find \| python3 script.py` | ❌ | Silent failure |
-| `python3 /path/to/script.py` | ❌ | Silent failure, even without pipe |
+| `python3 /path/to/script.py` | ⚠️ Intermittent | Sometimes persists, sometimes silently fails. No pipe makes it MORE reliable than piped variants, but still not guaranteed. Verify with `wc -l` after every run. |
 | `echo >> file` | ✅ | Reliable |
 | `cat > file << 'EOF'` | ✅ | Reliable |
 | `cat tmpfile >> file` | ✅ | Reliable |
@@ -118,7 +118,9 @@ wc -l /root/.hermes/commons/data/mentor/evidence.jsonl
    tail -1 ingestion_log.jsonl | python3 -c "import sys,json; json.loads(sys.stdin.read()); print('OK')"
    ```
 
-**Critical:** The light-heartbeat script attempts to write its own evidence record via Python `with open()`, but this write can silently fail (confirmed pattern: script reports N new files but evidence.jsonl and ingestion_log.jsonl both show 0 delta). **Partial success is possible (confirmed 2026-06-06T21:34Z):** evidence and ingestion writes can succeed while the journal write fails in the same run. The caller MUST verify persistence of ALL THREE files after the script exits AND must correct the `active_skills_30d` field. **As of 2026-06-08, the dual failure (evidence + ingestion both 0 delta) is the DEFAULT expectation across 4+ consecutive runs — plan for it every time, not as an exception.**
+**CRITICAL: The light-heartbeat script attempts to write its own evidence record via Python `with open()`, but this write can silently fail (confirmed pattern: script reports N new files but evidence.jsonl and ingestion_log.jsonl both show 0 delta). **Partial success is possible (confirmed 2026-06-06T21:34Z):** evidence and ingestion writes can succeed while the journal write fails in the same run. The caller MUST verify persistence of ALL THREE files after the script exits AND must correct the `active_skills_30d` field.
+
+**UPDATE 2026-06-13:** As of recent runs (2026-06-12 through 2026-06-13), multiple consecutive runs have succeeded on **first try** — all three writes (evidence, ingestion, journal) persisted without needing backup. The verify-and-backup workflow remains **mandatory** but the expected outcome has shifted from "dual failure is default" to "success on first try is now common." Do NOT skip verification — failure can return without warning. The pattern change appears to correlate with the cron sandbox stabilizing after the gateway outage resolution (2026-06-12).
 
 **CRITICAL: ALL steps below MUST execute in a SINGLE `terminal()` call.** Shell variables (`EVIDENCE_BEFORE`, etc.) do not persist across `terminal()` calls — each call is a fresh shell. Splitting the workflow into multiple `terminal()` calls loses the pre-run baselines and makes delta verification impossible. Use a single compound shell block with `;` between steps or one heredoc. See gotcha #49.
 
