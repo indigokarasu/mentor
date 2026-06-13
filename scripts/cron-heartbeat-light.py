@@ -99,6 +99,9 @@ def load_journal_file(path):
 
 
 def main():
+    # Ensure data directory exists (including after fresh state / data loss)
+    os.makedirs(MENTOR_DATA, exist_ok=True)
+
     ingested_files = set()
     if os.path.exists(INGESTION_LOG):
         with open(INGESTION_LOG, "r") as f:
