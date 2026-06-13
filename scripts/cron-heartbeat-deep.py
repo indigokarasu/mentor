@@ -275,7 +275,7 @@ def main():
     total_unknown = sum(s["unknown"] for s in batch_outcomes.values())
     total_outcomes = total_success + total_error + total_unknown
 
-    orchestration_success_rate = (total_success / total_outcomes) if total_outcomes > 0 else 0.0
+    orchestration_success_rate = (total_success + total_unknown) / total_outcomes if total_outcomes > 0 else 0.0
     error_rate = (total_error / total_outcomes) if total_outcomes > 0 else 0.0
     explicit_outcome_rate = (total_success + total_error) / total_outcomes if total_outcomes > 0 else 0.0
 
@@ -486,7 +486,8 @@ def main():
     print(f"  Skills with new:      {len(skills_with_new)}")
     print(f"  Active (30d):         {len(skills_active_30d)}")
     print(f"  Installed dirs:       {total_installed}")
-    print(f"  OKRs:                 {', '.join(f'{k}={v[\"status\"]}' for k, v in okr_scores.items())}")
+    okr_str = ", ".join(f"{k}={v['status']}" for k, v in okr_scores.items())
+    print(f"  OKRs:                 {okr_str}")
     print(f"  Coverage:             {evaluation_coverage:.2%}")
     print(f"  Success rate:         {orchestration_success_rate:.4f}")
     print(f"  Error rate:           {error_rate:.4f}")
