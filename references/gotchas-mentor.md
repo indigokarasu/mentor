@@ -42,8 +42,221 @@
 
 16b. **File-mtime dedup means re-ingestion on file touch** — The dedup key `md5(filepath)_mtime` means touching or moving a journal file triggers re-ingestion. Acceptable for correctness, but bulk operations (like `find -exec touch`) will inflate counts.
 
+## Cron Mode — Python Writes
+
+23. **Python `with open()` writes are UNRELIABLE, not universally broken** — The blanket claim "ALL Python `with open()` writes silently fail in cron" is overstated. In practice, writes to canonical paths (`commons/data/mentor/`, `commons/journals/`) via `python3 /path/to/script.py` (no pipe) have persisted successfully in some runs (confirmed 2026-06-06: evidence 139→140, ingestion 6280→6284). However, writes DO fail unpredictably — the same `python3 /path/to/script.py` pattern that succeeded on one run failed on the very next run (confirmed 2026-06-06T18:52 and 2026-06-06T18:57: script reported 3-4 new files but evidence.jsonl and ingestion_log.jsonl both had zero delta). **Full dual failure confirmed 2026-06-08T18:58Z AND 2026-06-08T22:17Z**: Two separate heartbeats on the same day both showed 0 delta on evidence.jsonl AND ingestion_log.jsonl despite the script reporting new files ingested. At 22:17Z, script reported 1 new file but true count was 5 (cross-referenced). The dual failure pattern is now confirmed across 4+ consecutive runs — treat it as the default expectation, not an anomaly. Piped `find | python3` and inline `python3 -c` are most likely to fail. **Safest pattern: always use shell-level `echo >>` / `cat >` / `printf >>` for critical evidence/journal writes, and always verify with `wc -l` after.** Do not assume Python writes always fail, but never assume they always succeed either — verify every time. When the script's internal evidence/ingestion writes fail, the caller must write backup records via shell (see `references/shell-write-pattern.md` for the mandatory verify-and-backup workflow).
+
+24. **Profile-scoped journal paths resolve to `..` skill name** — `cron-heartbeat-light.py` computes skill name via `os.path.relpath(fpath, JOURNALS_DIR)` where `JOURNALS_DIR = "/root/.hermes/commons/journals"`. Files under `/root/.hermes/profiles/indigo/commons/journals/` resolve to `..` as the skill name. This is cosmetic (the absolute path in the ingestion log is correct) but produces misleading `skill_name` values. Fix: detect profile-scoped paths and use a second `relpath` against the profile journals root, or extract skill name from the path parts after `/journals/`.
+
+25. **Gap detection false negative chain** — When evidence writes silently fail across multiple consecutive heartbeats, the evidence log's last entry becomes stale. Each new run computes `gap_minutes` from that stale entry, which can be small (e.g., 0–5 min) even though the true gap since the last SUCCESSFUL write is much larger (e.g., 54+ min). The script reports `gap_detected: false` because it only reads the evidence log — it has no way to know intermediate runs existed. **Mitigation**: gap detection should also check the OKR state's `last_light_timestamp` as a secondary signal, or compare against expected cron interval. A gap >15 min when the cron runs every 5 min always means evidence writes are failing, not that the system is quiet.
+
+25. **`active_skills_30d` in the script output reflects only the piped 3-day file set** — The script receives only `-mtime -3` files via stdin, so its `active_skills_30d` count (e.g., 15) is NOT the true 30-day active skill count (e.g., 35). The true count must be computed separately via a dual-path 30-day `find`. The evidence record's `active_skills_30d` field will undercount unless overridden by the caller.
+
+26. **`MENTOR_ACTIVE_SKILLS_30D` env var is for the CALLER only — the script ignores it** — `cron-heartbeat-light.py` does NOT read or consume the `MENTOR_ACTIVE_SKILLS_30D` environment variable. Setting it via `cat file | MENTOR_ACTIVE_SKILLS_30D=35 python3 script.py` has zero effect on the script's behavior. The env var is only useful as a shell variable for the caller's own logic (e.g., writing corrected evidence). The script computes `active_skills_30d` solely from its stdin file list. Do not set this env var expecting the script to use it.
+
 ## Scalability
 
 17. **`os.walk` on journals directory is unreliable at scale** — With 5000+ journal files across 100+ skill dirs, `os.walk` can silently produce wrong counts or hit timeouts. Use `subprocess.run(["find", journals_dir, "-name", "*.json", "-mtime", "-30"])` for active-skill counting. It's faster and doesn't load every inode into Python memory.
 18. **Active-skill counting must exclude `.archive`** — The `.archive/` directory under journals/ contains stale skill journals. Always filter `skill != ".archive"` when computing coverage denominators and active-skill sets.
 19. **Anomaly dedup must not resolve same-run entries** — When deduplicating anomalies by `(type, skill)`, only resolve entries from *previous* runs. Entries written in the current heartbeat pass are new data, not duplicates. Check `timestamp` against the current run timestamp before resolving.
+
+## Cron Mode — Ingestion Count Accuracy
+
+26. **`cron-heartbeat-light.py` stdin pipe can silently drop files** — The script reads file paths from stdin (piped from shell `find`), but the pipe can silently truncate or drop entries, causing the script to under-count new files (e.g., reported 3 but actual 8). After every heartbeat, cross-reference the script's `new_files_ingested` count against a manual check: `find ... -mtime -3 | sort -u` minus paths already in `ingestion_log.jsonl`. If counts differ, use the manual count and write corrected evidence via shell `printf >>`. See run 2026-06-06T174830Z for an example.
+
+27. **Script self-journaling via Python `with open()` is best-effort** — `cron-heartbeat-light.py` writes its own evidence record via Python `with open(evidence_log, 'a')`. This sometimes persists and sometimes silently fails (confirmed pattern across multiple runs: sometimes evidence grows, sometimes it doesn't). The caller must always verify evidence persistence via `wc -l` after the script exits, and write a backup evidence entry via shell `printf >>` if the count didn't change. Do NOT assume the script's own journaling succeeded. See gotcha #23 for the broader pattern and `references/shell-write-pattern.md` for the verify-and-backup workflow.
+
+    **Partial success is possible (confirmed 2026-06-06T21:34Z):** Evidence and ingestion writes can succeed (evidence 177→178, ingestion 6419→6423) while the journal write fails in the *same run*. The three writes are independent — the verify-and-backup workflow must check all three files (`evidence.jsonl`, `ingestion_log.jsonl`, and the journal directory) independently. Do NOT assume that because evidence grew, the journal was also written.
+
+28. **Script-reported `new_files_ingested` is an upper bound, not exact** — The script's dedup uses absolute path normalization that can differ from how paths were stored in the ingestion log by prior runs (especially profile-scoped paths with `..` skill names, see gotcha #24). A manual cross-reference (`find ... -mtime -3 | sort -u` minus paths already in `ingestion_log.jsonl`) gives the ground truth. If the script reports N but manual check shows M≠N, use M and note the discrepancy. Re-ingestions from path normalization mismatches are harmless (idempotent) — they re-parse already-known entries but don't corrupt state.
+
+    **Zero truly new files (confirmed 2026-06-06T21:34Z):** When cross-reference shows 0 truly new files but the script reports N ingestions, all N are idempotent re-ingestions. This happens when the script's canonical path normalization differs from the ingestion log's stored paths. The script will still parse and re-record entries for already-known files — this is harmless but inflates the `new_files_ingested` count. The corrected evidence record should note this.
+
+## Heredoc and File Naming
+
+31. **Heredoc journal file naming — `${VAR}.json` in heredoc path can produce `.json` literal** — When writing journal files via `cat > "$DIR/${RUN_ID}.json" << 'EOF'`, the braces can be consumed by the shell's heredoc or variable expansion logic, producing a file literally named `.json`. **Fix: compose the filename in a separate variable FIRST, then reference it without braces:**
+    ```bash
+    JOURNAL_FILE="$JOURNAL_DIR/${RUN_ID}.json"  # compose first
+    cat > "$JOURNAL_FILE" << 'EOF'               # then reference
+    {"run_id": "$RUN_ID", ...}
+    EOF
+    ls -la "$JOURNAL_FILE"                        # verify immediately
+    ```
+    Always `ls` the output file after writing to confirm the name is correct. If you see `.json` as the filename, rename immediately: `mv "$JOURNAL_DIR/.json" "$JOURNAL_FILE"`. Confirmed 2026-06-06T18:57Z — the heredoc consumed the variable, producing `.json`.
+
+## Self-Referential Journal Ingestion
+
+35. **Heartbeat discovers its own prior journal files as "new"** — When `cron-heartbeat-light.py` writes its own journal to `commons/journals/ocas-mentor/YYYY-MM-DD/`, that file appears in the next run's `find -mtime -3` scan as a "new" file (since it was created after the last ingestion log entry). The script ingests it, parses it, and records it — producing a misleading `new_files_ingested` count (e.g., 2) when truly new skill journals = 0. **This is harmless** (idempotent re-ingestion) but the corrected evidence record should note it. The cross-reference step (`find ... -mtime -3` minus `ingestion_log.jsonl`) catches these: they show up as "new" to the script but are actually self-referential. Confirmed 2026-06-06T22:17Z: script reported 2 new files, both were ocas-mentor's own journals from prior runs today; true new skill journals = 0.
+
+## Anomaly Counting
+
+36. **Anomaly `timestamp` field mismatch — `active_anomalies` always reports 0** — ~~The light heartbeat script (`cron-heartbeat-light.py`, line ~218) reads anomalies using `a.get("timestamp")`, but anomalies created by the deep heartbeat and older detection logic use `detected_at` as their date field. Since `timestamp` is `None` on these entries, `parse_dt(None)` returns `None`, the `if a_ts` guard skips them, and `active_anomalies` is always 0 regardless of how many anomalies exist. This means the evidence record and heartbeat output always show 0 anomalies even when stale or active anomalies are present.~~ **FIXED 2026-06-08:** Line 218 changed from `a.get("timestamp")` to `a.get("timestamp") or a.get("detected_at")`. The script now correctly reads both field names.
+
+37. **Stale anomalies never purged from `anomalies.jsonl`** — The light heartbeat counts anomalies within a 7-day window but never filters out entries with `stale: true`, and the timestamp mismatch (gotcha #36) means it doesn't see them anyway. Stale anomalies accumulate indefinitely with no cleanup. The deep heartbeat can mark anomalies stale after 5+ unchanged heartbeats, but no process archives or removes them. **Mitigation:** Either (a) add a periodic compaction step that moves `stale: true` entries older than 30 days to an archive file, or (b) filter `stale: true` out of the active count and add a separate `stale_anomalies` metric to evidence records.
+
+38. **Script journal filename missing `mentor-light-` prefix** — ~~`cron-heartbeat-light.py` line 264 writes to `f"{run_id}.json"` where `run_id = now.strftime("%Y%m%dT%H%M%SZ")`, producing e.g. `20260607T045155Z.json`. But the journal's `run_id` field (line 249) is `f"mentor-light-{run_id}"` = `mentor-light-20260607T045155Z`. The filename doesn't match the `run_id` inside the file, breaking tools or humans that expect consistency.~~ **FIXED 2026-06-08:** Line 264 changed from `f"{run_id}.json"` to `f"mentor-light-{run_id}.json"`. The filename now matches the `run_id` field inside the journal.
+
+    **Compounding effect:** When the caller writes a corrected backup journal (e.g., `mentor-light-20260608T155703Z.json`) to the same directory, the next heartbeat's `find -mtime -3` discovers BOTH the script's malformed file and the caller's backup as "new" files. Both get ingested as ocas-mentor journals, inflating `new_files_ingested` and triggering the self-referential ingestion pattern (gotcha #35) twice per heartbeat cycle.
+
+## JSON and Float Formatting in Shell
+
+39. **Never use `bc -l` for float values inside JSON strings** — `bc -l` produces floats without leading zeros (e.g., `.0285` instead of `0.0285`), which is invalid JSON. When embedding computed floats in JSON via shell `printf`, always use Python for the float-to-string conversion:
+    ```bash
+    # BAD — produces invalid JSON:
+    "evaluation_coverage": $(echo "scale=4; 1 / 35" | bc -l)
+    # Result: "evaluation_coverage": .0285  ← missing leading zero → JSON parse error
+
+    # GOOD — compute the float in Python, write full JSON via Python:
+    python3 -c "
+    import json, datetime
+    record = {..., 'metrics': {'evaluation_coverage': round(1/35, 4), ...}}
+    with open('/tmp/evidence_backup.json', 'w') as f:
+        json.dump(record, f)
+    "
+    cat /tmp/evidence_backup.json >> evidence.jsonl
+    ```
+    Confirmed 2026-06-08: two separate heartbeats (lines 207 and 219) produced corrupt evidence.jsonl entries because `bc -l` output `.0285` was embedded directly in JSON. Both required manual repair. The same issue affects any shell-constructed JSON with computed numeric values.
+
+40. **Evidence.jsonl corrupt-line repair during heartbeat** — When a heartbeat's own backup evidence write has produced a corrupt line (detected via `tail -1 | python3 -c "json.loads(...)"` failing), repair it within the same heartbeat before writing the new entry:
+    ```bash
+    # Check last line validity
+    if ! tail -1 /root/.hermes/commons/data/mentor/evidence.jsonl | python3 -c "import sys,json; json.loads(sys.stdin.read())" 2>/dev/null; then
+        # Remove corrupt tail — scan for last valid JSONL line (may be multiple corrupt lines)
+        VALID_LINES=$(python3 -c "
+import json
+lines = open('/root/.hermes/commons/data/mentor/evidence.jsonl').readlines()
+for i in range(len(lines)-1, -1, -1):
+    try:
+        json.loads(lines[i].strip())
+        print(i+1)
+        break
+    except: continue
+")
+        head -n "$VALID_LINES" /root/.hermes/commons/data/mentor/evidence.jsonl > /tmp/evidence_repair.jsonl
+        cp /tmp/evidence_repair.jsonl /root/.hermes/commons/data/mentor/evidence.jsonl
+        echo "Repaired evidence.jsonl: kept $VALID_LINES lines"
+    fi
+    ```
+    This prevents corrupt entries from persisting and confusing future heartbeats' gap detection and metrics. Scan the full file periodically: `python3 -c "import json; [json.loads(l) for l in open('evidence.jsonl')]"`. Confirmed 2026-06-08: lines 207 and 219 were both corrupt from different prior heartbeats and required inline repair.
+
+## Deep Heartbeat — Single-Path Scan Gap
+
+41. **Python heredoc to `/tmp/` then `cat >>` can corrupt JSONL with multi-line output** — When writing evidence backup via `python3 << 'PYEOF' > /tmp/evidence_backup.json` followed by `cat /tmp/evidence_backup.json >> evidence.jsonl`, the Python heredoc may produce multi-line output. This happens if `json.dump(record, f)` is called with an `indent` parameter, or if `print(json.dumps(record, indent=2))` is used. Multi-line output appended to a JSONL file corrupts it — every JSONL parser expects exactly one JSON object per line. **The file written to `/tmp/` must contain exactly ONE line.** Safe patterns:
+    ```bash
+    # SAFEST: Use printf with inline Python — guarantees single-line output
+    printf '%s\n' "$(python3 -c "
+    import json
+    from datetime import datetime, timezone
+    record = {
+        'schema': 'mentor-evidence-v2',
+        'run_id': 'mentor-light-' + datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ'),
+        'timestamp': datetime.now(timezone.utc).isoformat(),
+        'heartbeat_type': 'light',
+        'metrics': {'total_files_3d': 935, 'new_files_ingested': 3, 'active_skills_30d': 35,
+                    'evaluation_coverage': round(2/35, 4), 'gap_detected': False, 'active_anomalies': 0},
+        'outcome': 'success',
+        'notes': 'Backup via shell.'
+    }
+    print(json.dumps(record))
+    ")" >> /root/.hermes/commons/data/mentor/evidence.jsonl
+
+    # ALSO SAFE: Write to /tmp/ with json.dumps (no indent), validate line count BEFORE appending
+    python3 -c "
+    import json
+    record = {...}
+    with open('/tmp/evidence_backup.json', 'w') as f:
+        f.write(json.dumps(record) + '\n')
+    "
+    # Validate: file must be exactly 1 line
+    if [ "$(wc -l < /tmp/evidence_backup.json)" -eq 1 ]; then
+        cat /tmp/evidence_backup.json >> /root/.hermes/commons/data/mentor/evidence.jsonl
+    else
+        echo "ERROR: /tmp/evidence_backup.json has multiple lines — JSONL would be corrupted. Abort."
+    fi
+    ```
+    **NEVER use `json.dump(record, f)` with `indent` when the output will be appended to a JSONL file.** Even `indent=2` produces multi-line output that breaks every downstream JSONL parser.
+    Confirmed 2026-06-08: evidence.jsonl grew from 223 to 239 lines (+16) because a Python heredoc wrote multi-line JSON to `/tmp/` which was then `cat >>`'d into the JSONL. Required truncating 16 corrupt lines and rewriting the entry as single-line JSON.
+    **Root cause:** The Python heredoc `python3 << 'PYEOF' > /tmp/evidence_backup.json` can produce multi-line output if the script uses `json.dump(record, indent=2)`, `print(json.dumps(record, indent=2))`, or multiple `print()` statements. Always validate with `wc -l` before appending to any JSONL file.
+
+42. **Ingestion log uses TWO path formats — naive `comm` shows false "new" files** — The ingestion log stores paths in two formats: (a) relative `ocas-xxx/YYYY-MM-DD/file.json` (from early heartbeats) and (b) absolute `/root/.hermes/commons/journals/ocas-xxx/...` (from later heartbeats). Profile-scoped paths use `/root/.hermes/profiles/indigo/commons/journals/ocas-xxx/...`. A naive `comm -23 <(sort find_output) <(sort ingestion_log)` will show 800+ "new" files when only ~6 are truly new, because the relative paths from the ingestion log don't match the absolute paths from `find`. **Fix:** Extract and normalize all paths to absolute before comparison:
+    ```bash
+    python3 -c "
+    import json
+    paths = set()
+    with open('/root/.hermes/commons/data/mentor/ingestion_log.jsonl') as f:
+        for line in f:
+            try:
+                d = json.loads(line)
+                src = d.get('source') or d.get('file', '')
+                if src:
+                    if not src.startswith('/'):
+                        src = '/root/.hermes/commons/journals/' + src
+                    paths.add(src)
+            except: pass
+    for p in sorted(paths):
+        print(p)
+    " > /tmp/ingested_paths.txt
+    # Now comm works correctly:
+    comm -23 <(sort /tmp/mentor_files_3d.txt) <(sort /tmp/ingested_paths.txt) > /tmp/new_files_3d.txt
+    ```
+    Confirmed 2026-06-08: 882 false "new" files reduced to 6 true new files after normalization.
+
+42b. **Ingestion log accumulates massive duplicate entries — periodic dedup required** — Even after path normalization, the ingestion log accumulates duplicate entries over time. Path format mismatches (relative vs. absolute vs. profile-scoped) mean the same journal file gets ingested multiple times under different path representations. Confirmed 2026-06-08: ingestion_log.jsonl grew to 8,067 lines but only 1,751 were unique — 6,314duplicate entries (78% bloat). This inflates file counts, slows heartbeat processing, and wastes tokens. **Fix during heartbeat when delta seems excessive:** Parse the full file, deduplicate by the `file` field (keeping the last occurrence), and rewrite:
+    ```bash
+    python3 -c "
+    import json
+    seen = {}
+    lines = []
+    with open('/root/.hermes/commons/data/mentor/ingestion_log.jsonl') as f:
+        for line in f:
+            line = line.strip()
+            if not line: continue
+            try:
+                d = json.loads(line)
+                fp = d.get('file', '')
+                if fp: seen[fp] = line
+            except: pass
+    with open('/root/.hermes/commons/data/mentor/ingestion_log.jsonl', 'w') as f:
+        for v in seen.values():
+            f.write(v + '\n')
+    print(f'Deduped: {len(seen)} unique entries')
+    "
+    ```
+    This is a safe periodic maintenance operation — the ingestion log is a pure function of file paths, so deduping never loses information. Run it when `wc -l` exceeds 3,000 lines or when the heartbeat reports a suspiciously high `new_files_ingested` count. **After dedup, update the pre-run count baseline** so the next heartbeat's delta check works correctly.
+
+43. **Caller backup journal must NOT double-prefix filename** — When writing a backup journal via shell, if the `RUN_ID` variable already contains the `mentor-light-` prefix (e.g., `RUN_ID="mentor-light-20260608T175904Z"`), the filename must be `"$RUN_ID.json"`, NOT `"mentor-light-${RUN_ID}.json"`. Double-prefixing produces `mentor-light-mentor-light-20260608T175904Z.json`. Confirmed 2026-06-08T17:59Z — required manual `mv` to rename.
+
+44. **`active_skills_30d` from dual-path `find` counts ALL skill dirs, not just OCAS** — The dual-path 30-day `find` returns 289 unique directories, but many are non-OCAS skills (api-integration, csv-parsing, database-operations, etc.). The true OCAS skill count is ~25-30. The inflated number makes `evaluation_coverage` misleading (6/289 ≈ 0.02 instead of 6/30 ≈ 0.20). **Fix:** Filter to ocas-* prefixes when computing the denominator:
+    ```bash
+    ACTIVE_OCAS_30D=$(find /root/.hermes/commons/journals/ /root/.hermes/profiles/indigo/commons/journals/ -name "*.json" -mtime -30 2>/dev/null | grep -oP 'ocas-[a-z]+' | sort -u | wc -l)
+    ```
+    This gives the true OCAS active skill count for evaluation_coverage denominator.
+
+46. **`ocas_skills_30d` should be tracked as a separate metric in evidence records** — In addition to `active_skills_30d` (all skills) and `evaluation_coverage` (which uses the OCAS-only denominator), record `ocas_skills_30d` as a separate field in the evidence metrics. This makes the OCAS-specific activity visible at a glance without requiring the reader to derive it. Example: `"active_skills_30d": 35, "ocas_skills_30d": 21`. The dual-path 30-day find with `grep -oP 'ocas-[a-z]+'` gives the OCAS count; pipe it through `sort -u | wc -l`.
+
+## Caller Workflow — Duplicate Journal Prevention
+
+47. **`comm -23` requires sorted input — unsorted pipe produces false positives** — When cross-referencing `find` output against ingested paths using `comm -23`, both inputs must be sorted. Piping `find` directly to `comm` (or using `sort -u` that outputs in non-deterministic order) causes `comm` to report "input is not in sorted order" and produce wildly inflated false-positive counts (e.g., 38 instead of 3). **Fix:** Always sort both files before `comm`: `sort /tmp/mentor_files_3d.txt > /tmp/mentor_files_3d_sorted.txt` and `sort /tmp/ingested_paths.txt > /tmp/ingested_paths_sorted.txt`, then `comm -23 /tmp/mentor_files_3d_sorted.txt /tmp/ingested_paths_sorted.txt`. Confirmed 2026-06-08T21:58Z: unsorted comm reported 38 new files, properly sorted comm showed 3.
+
+48. **Script-reported `new_files_ingested` consistently undercounts — always cross-reference** — The script's `new_files_ingested` is not just an upper bound (gotcha #28) — it can also UNDERCOUNT. Confirmed 2026-06-08T22:17Z: script reported 1 new file, cross-reference showed 5 truly new files. The script's internal dedup logic can miss files that the ingestion log has under different path representations. **Always cross-reference via `find` minus ingestion_log (with path normalization) regardless of what the script reports.** The cross-reference ground truth supersedes the script's count in all cases.
+
+49. **Shell variables don't persist across `terminal()` calls** — Pre-run counts (`EVIDENCE_BEFORE`, `INGESTION_BEFORE`) set via `VAR=$(wc -l < file)` in one `terminal()` block are GONE in the next block. The verify-and-backup workflow MUST read pre-run counts AND run the script AND verify post-run counts all in the SAME `terminal()` call. Splitting into separate `terminal()` calls loses the baselines and makes delta verification impossible. The SKILL.md code example shows the blocks sequentially for readability, but in cron mode they MUST be one compound shell block (use `;` or `&&` between steps, or a single heredoc). Confirmed 2026-06-08T23:39Z: pre-run counts from first `terminal()` were empty strings in the fourth `terminal()` because each call is a fresh shell.
+
+50. **`evidence.jsonl` uses FLAT schema — no `metrics` wrapper** — The `cron-heartbeat-light.py` script and all shell-backup evidence writes use a flat schema where `new_files_ingested`, `active_skills_30d`, `evaluation_coverage`, etc. are top-level keys. There is NO nested `metrics` dict. When reading evidence entries, use `d.get('new_files_ingested')` directly, NOT `d.get('metrics', {}).get('new_files_ingested')`. The flat schema has been confirmed consistently from v2.8.10 onward (2026-06-09). Mixed schema in the file is a confirmed pattern: some very old entries may use a nested `metrics` wrapper, but all entries written since 2026-06-09 are flat.
+
+45. **Caller MUST NOT write two journal files for the same run** — When the script self-journaling fails and the caller writes a backup journal, it is tempting to use both a heredoc write AND a Python write "to be safe." This produces two journal files with different `run_id` values (e.g., `mentor-light-20260608T183959Z.json` and `mentor-light-20260608T184059Z.json`) for the same heartbeat run. Both get discovered as "new" by the next heartbeat's `find -mtime -3`, ingested as separate ocas-mentor entries, and inflate the `new_files_ingested` count. **Rule: write the backup journal exactly ONCE, via ONE method.** If using heredoc, verify the file exists and is valid before considering "maybe I should also write via Python." If using Python-to-/tmp then `cat >>`, that's the single write. After writing, `ls` the journal directory to confirm exactly one new file. Confirmed 2026-06-08: two journals written for same run (heredoc + Python), required manual `rm` to deduplicate.
+
+51. **Extended cron gaps amplify self-journaling failure rate** — After a prolonged gap (e.g., 46+ hours), multiple consecutive heartbeats all fail to self-journal via Python writes. Confirmed 2026-06-11: after a 46-hour gap (last heartbeat 2026-06-09T07:59Z), this heartbeat's script also showed 0 delta on evidence and ingestion. The dual failure pattern persisted across 5+ consecutive runs before this session. The caller's backup write pattern (python3 -c to /tmp/, validate wc -l, cat >> to JSONL) remains the only reliable persistence method after gaps. The gap itself is an operational concern (check gateway/cron status) but does not change the backup write workflow.
+
+## Deep Heartbeat — Single-Path Scan Gap
+
+32. **`cron-heartbeat-deep.py` only scans `JOURNALS_ROOT` (commons), misses profile-scoped journals**
+    ```python
+    okr_str = ", ".join(f"{k}={v['status']}" for k, v in okr_scores.items())
+    print(f"  OKRs:                 {okr_str}")
+    ```
+    Confirmed 2026-06-06T19:01Z — script crashed on first run, fixed in-place.
+
+## OKR Measurement
+
+34. **`orchestration_success_rate` OKR scoring deflates by counting `unknown` as non-success** — The OKR computes `success / (success + error + unknown)`, but `unknown` outcomes are journals that lack an explicit outcome field AND have no `error` key — they are effectively successful runs (per `normalize_outcome()` which defaults to `success` when no error is present). The OKR should either: (a) count `unknown` as success: `(success + unknown) / total`, or (b) use `success / (success + error)` as the denominator. Current behavior: with 81% success and 19% unknown, the OKR reports FAIL at 0.81 even though error_rate is 0.0000. This is a measurement artifact, not a real failure. Confirmed 2026-06-06: orchestration_success_rate=FAIL (0.8122) while error_rate=PASS (0.0000).
