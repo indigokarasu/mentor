@@ -186,9 +186,11 @@ PYEOF
 
 NEVER use `printf '%s\n' "${VAR}" >> ${PATH}` where PATH contains shell variables.
 
+**CONFIRMED 2026-06-14:** The commons sync gap accumulates after every heartbeat. Profile evidence was 31 lines ahead of commons, ingestion 33 lines ahead. The line-level Python set-difference sync (not `cp -f`) is the only reliable method. After every heartbeat, run the sync workflow in `references/gotchas-mentor.md` gotcha #59 to append only new lines from profile to commons. This is a normal operational step, not an error condition.
+
 **UPDATE 2026-06-14:** The "success on first try" pattern observed 2026-06-12 through 2026-06-13 was NOT stable. This run (2026-06-14T00:32Z) showed dual failure again — both evidence and ingestion logs had 0 delta despite the script reporting 3 new files ingested. The "success on first try" pattern can revert without warning. **Always run the full verify-and-backup workflow. Never skip verification.** The backup write pattern remains the only reliable persistence method for evidence and ingestion records.
 
-**CONFIRMED 2026-06-13 (this run):** The script's self-journaling silently failed again — both evidence and ingestion logs showed 0 delta. Backup evidence and ingestion records were written via shell-level `printf >>` / `cat >>` after verifying deltas. The "success on first try" pattern is not stable; it can revert without warning. Always run the full verify-and-backup workflow.
+**CONFIRMED 2026-06-14 (this run):** The script's self-journaling for ingestion_log **succeeded** (5 entries persisted) but evidence.jsonl **failed** (0 delta) — partial success pattern confirmed again. The script's journal write also succeeded (file created at `mentor-light-20260614T112519Z.json`). This confirms: **all three writes (evidence, ingestion, journal) are independent and can succeed/fail in any combination**. The verify-and-backup workflow must check ALL THREE independently. Do NOT assume that because ingestion grew, evidence also grew.
 
 **CRITICAL: ALL steps below MUST execute in a SINGLE `terminal()` call.** Shell variables (`EVIDENCE_BEFORE`, etc.) do not persist across `terminal()` calls — each call is a fresh shell. Splitting the workflow into multiple `terminal()` calls loses the pre-run baselines and makes delta verification impossible. Use a single compound shell block with `;` between steps or one heredoc. See gotcha #49.
 
@@ -296,6 +298,26 @@ fi
 # === MANDATORY: Verify final state ===
 tail -1 /root/.hermes/commons/data/mentor/evidence.jsonl | python3 -c "import sys,json; json.loads(sys.stdin.read()); print('Evidence OK')" || echo "EVIDENCE CORRUPT"
 tail -1 /root/.hermes/commons/data/mentor/ingestion_log.jsonl | python3 -c "import sys,json; json.loads(sys.stdin.read()); print('Ingestion OK')" || echo "INGESTION CORRUPT"
+
+# === MANDATORY: Commons sync (profile → commons) ===
+# Line-level Python set-difference append ONLY new lines. cp -f / cp -n DO NOT WORK for JSONL.
+python3 << 'PYEOF'
+for src, dst in [
+    ("/root/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl", "/root/.hermes/commons/data/mentor/evidence.jsonl"),
+    ("/root/.hermes/profiles/indigo/commons/data/mentor/ingestion_log.jsonl", "/root/.hermes/commons/data/mentor/ingestion_log.jsonl"),
+]:
+    with open(src) as f: profile_lines = {line.rstrip('\n') for line in f}
+    with open(dst) as f: commons_lines = {line.rstrip('\n') for line in f}
+    new = profile_lines - commons_lines
+    if new:
+        with open(dst, 'a') as f:
+            for line in sorted(new):
+                f.write(line + '\n')
+        print(f"Synced {len(new)} lines to {dst}")
+    else:
+        print(f"No new lines for {dst}")
+PYEOF
+
 echo "Final: evidence=$EVIDENCE_AFTER ingestion=$INGESTION_AFTER active_skills_30d=$TRUE_ACTIVE_30D"
 ```
 
@@ -334,8 +356,14 @@ comm -23 <(sort /tmp/mentor_files_3d.txt) <(sort /tmp/ingested_paths.txt) > /tmp
 
 The dual-path 30-day `find` returns ALL skill directories (289+), not just OCAS skills. For `evaluation_coverage` denominator, filter to ocas-* prefixes:
 
+**Preferred method (confirmed 2026-06-14):** Use `grep -oP` to extract unique skill names from journal file paths — avoids all edge cases of `awk -F/` on absolute paths:
+
 ```bash
+# OCAS-only count (fastest, most reliable)
 ACTIVE_OCAS_30D=$(find /root/.hermes/commons/journals/ /root/.hermes/profiles/indigo/commons/journals/ -name "*.json" -mtime -30 2>/dev/null | grep -oP 'ocas-[a-z]+' | sort -u | wc -l)
+
+# All skills count (OCAS + non-OCAS)
+ACTIVE_ALL_30D=$(find /root/.hermes/commons/journals/ /root/.hermes/profiles/indigo/commons/journals/ -name "*.json" -mtime -30 2>/dev/null | grep -oP 'commons/journals/([a-z][a-z0-9_-]+)' | sed 's|commons/journals/||' | sort -u | wc -l)
 ```
 
 ## Pipe Truncation Cross-Reference
