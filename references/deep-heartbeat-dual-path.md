@@ -1,71 +1,35 @@
-# Mentor — Deep Heartbeat Dual-Path Script (2026-06-08)
+# Deep Heartbeat Dual-Path Fix (2026-06-13)
 
-## Purpose
-Documents the custom deep heartbeat approach that properly handles dual-path journal scanning, replacing the stock `cron-heartbeat-deep.py` which only scans the commons path (gotcha #32).
+## Problem
+`cron-heartbeat-deep.py` uses `os.walk("/root/.hermes/commons/journals/")` which only scans **168 files** across 9 skill dirs. The real data lives under `/root/.hermes/profiles/indigo/commons/journals/` with **6,597 files** across 41 skill dirs. This caused:
+- `evaluation_coverage` to report ~0.19 instead of 1.0
+- Skill health stats based on <3% of actual journals
+- OKR scores meaningless due to tiny sample size
 
-## Stock Script Limitations
-1. **Single-path scan** — only walks `/root/.hermes/commons/journals/`, missing ~50% of journals under `/root/.hermes/profiles/indigo/commons/journals/`
-2. **`os.walk` unreliable in cron** — silently returns 0 results in cron `terminal()` heredocs (gotcha #17)
+## Solution
+Use the dual-path wrapper script `scripts/cron-heartbeat-deep-dualpath.py` which:
+1. Scans both `/root/.hermes/commons/journals/` AND `/root/.hermes/profiles/indigo/commons/journals/`
+2. Uses absolute paths for dedup keys (works across both roots)
+3. Writes evidence/OKR data to BOTH commons and profile-scoped data dirs
+4. Caps `active_coverage` at 1.0 (raw >1.0 indicates historical ingestion, not an error)
 
-## Dual-Path Dedup Pattern
-```python
-COMMONS_JOURNALS = "/root/.hermes/commons/journals/"
-PROFILE_JOURNALS = "/root/.hermes/profiles/indigo/commons/journals/"
+## Key Metrics from First Dual-Path Run (2026-06-13 19:05Z)
+| Metric | Stock Script | Dual-Path Wrapper |
+|--------|-------------|-------------------|
+| Journals scanned | 168 | 6,781 |
+| Skills evaluated | 9 | 41 |
+| evaluation_coverage | ~0.19 | 1.0 |
+| orchestration_success_rate | N/A | 0.9978 |
+| error_rate | N/A | 0.0022 |
 
-def compute_dedup_key(fp):
-    for root in [COMMONS_JOURNALS, PROFILE_JOURNALS]:
-        if fp.startswith(root):
-            rel = os.path.relpath(fp, root)
-            mtime = os.path.getmtime(fp)
-            file_hash = hashlib.md5(rel.encode()).hexdigest()[:12]
-            return f"{file_hash}_{int(mtime)}"
-    return None
-
-def get_skill_name(fp):
-    for root in [COMMONS_JOURNALS, PROFILE_JOURNALS]:
-        if fp.startswith(root):
-            rel = os.path.relpath(fp, root)
-            parts = rel.split(os.sep)
-            if parts and not parts[0].startswith('.'):
-                return parts[0]
-    return "unknown"
+## Usage
+The cron job `mentor:deep` should be updated to:
+```
+python3 /root/.hermes/profiles/indigo/skills/ocas-mentor/scripts/cron-heartbeat-deep-dualpath.py
 ```
 
-## Shell-Level Dual-Path Discovery (MUST use parentheses for -o)
-```bash
-find /root/.hermes/commons/journals/ \
-    \( -name "*.json" -o -name "*.jsonl" \) \
-    -not -path "*/.archive/*" -not -path "*/.quarantine/*" \
-  > /tmp/deep_files_commons.txt
+## Evidence Schema Difference
+The evidence record includes `"dual_path": true` and `"active_coverage_raw"` fields not present in stock script output. Display code should handle both schemas.
 
-find /root/.hermes/profiles/indigo/commons/journals/ \
-    \( -name "*.json" -o -name "*.jsonl" \) \
-    -not -path "*/.archive/*" -not -path "*/.quarantine/*" \
-  > /tmp/deep_files_profile.txt
-
-cat /tmp/deep_files_commons.txt /tmp/deep_files_profile.txt | sort -u > /tmp/deep_files_all.txt
-```
-
-## Results (2026-06-08 Run)
-- Total files: 11,988 (commons: 6,046 + profile: 5,942)
-- New entries ingested: 472 across 16 skills
-- Parse errors/quarantined: 15
-- OKRs: All passing (orchestration_success_rate=0.9979, error_rate=0.0021)
-- Anomalies: 0 new, 3 stale from prior runs
-
-## New Gotchas Discovered This Session
-
-### Gotcha #47: `find -o` Precedence
-`find ... -name "*.json" -o -name "*.jsonl" -not -path "*/.archive/*"` does NOT filter `.archive` from `.json` files. `-not -path` only applies to the `-name "*.jsonl"` branch. **Always use parentheses:** `\( -name "*.json" -o -name "*.jsonl" \) -not -path "*/.archive/*"`.
-
-### Gotcha #48: Dedup Key Must Try Both Roots
-Using only `COMMONS_JOURNALS` as root makes profile paths resolve to `..` (skipped). Files appear "new" every heartbeat. **Fix:** Try both roots, skip if relpath starts with `..`.
-
-### Gotcha #49: Null-Key Anomaly Accumulation
-Anomaly entries with `key: null` are never cleaned up. **Fix:** Filter them during each deep heartbeat pass:
-```bash
-python3 -c "import json; lines=[l for l in open('anomalies.jsonl') if json.loads(l.strip()).get('key')]; open('anomalies.jsonl','w').writelines(lines)"
-```
-
-## Recommendation
-The stock `scripts/cron-heartbeat-deep.py` single-path `os.walk` has been confirmed broken across 5+ runs. Replace with this dual-path approach.
+## Profile-Scoped Data Sync
+After each deep heartbeat run, the wrapper writes evidence + OKR state to `/root/.hermes/profiles/indigo/commons/data/mentor/` so the profile-scoped evidence log stays in sync with commons. This is needed because light heartbeats read from both locations.

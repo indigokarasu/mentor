@@ -111,6 +111,44 @@ wc -l /root/.hermes/commons/data/mentor/evidence.jsonl
     fi
     ```
     Then verify: `tail -1 evidence.jsonl | python3 -c "import sys,json; json.loads(sys.stdin.read()); print('OK')"`
+
+**CRITICAL: Do NOT use `os.environ.get()` for metric values in backup evidence Python heredocs** — Shell variables set in the same `terminal()` block (e.g., `TOTAL_3D=959`) are NOT visible to `os.environ.get()` inside `python3 << 'PYEOF'` because single-quoted heredocs prevent shell expansion and non-exported vars don't propagate to subprocesses. The evidence record will have all-zero metrics. **Fix:** Compute values inside Python using subprocess:
+    ```python
+    python3 << 'PYEOF'
+    import json, os, subprocess
+    from datetime import datetime, timezone
+
+    # Compute values from filesystem instead of env vars
+    total_3d = int(subprocess.check_output(['wc', '-l', '/tmp/mentor_files_3d.txt']).split()[0])
+    true_new = int(subprocess.check_output(['wc', '-l', '/tmp/mentor_truly_new.txt']).split()[0])
+    active_30d = int(subprocess.check_output(
+        "cat /tmp/active_shared.txt /tmp/active_profile.txt 2>/dev/null | grep -oP 'ocas-[a-z]+' | sort -u | wc -l",
+        shell=True).split()[0])
+
+    record = {
+        'schema': 'mentor-evidence-v2',
+        'run_id': 'mentor-light-' + datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ'),
+        'timestamp': datetime.now(timezone.utc).isoformat(),
+        'heartbeat_type': 'light',
+        'total_files_3d': total_3d,
+        'new_files_ingested': true_new,
+        'active_skills_30d': active_30d,
+        'evaluation_coverage': round(true_new / active_30d, 4) if active_30d > 0 else 0,
+        'gap_detected': False,
+        'active_anomalies': 0,
+        'outcome': 'success',
+        'notes': 'Backup via shell. Values computed via subprocess (not env vars).'
+    }
+    tmp_path = '/tmp/evidence_backup.json'
+    with open(tmp_path, 'w') as f:
+        f.write(json.dumps(record) + '\n')
+    if os.path.getsize(tmp_path) > 0:
+        with open('/root/.hermes/commons/data/mentor/evidence.jsonl', 'a') as f:
+            with open(tmp_path) as tmp:
+                f.write(tmp.read())
+        print(f'Evidence persisted: total_3d={total_3d}, new={true_new}, skills={active_30d}')
+    PYEOF
+    ```
 6. **Write journal:** `cat > journals/ocas-mentor/YYYY-MM-DD/run.json << 'EOF'`
 7. **Verify:** `wc -l` all persistent files to confirm deltas, then validate last line is parseable JSON:
    ```bash
@@ -120,21 +158,51 @@ wc -l /root/.hermes/commons/data/mentor/evidence.jsonl
 
 **CRITICAL: The light-heartbeat script attempts to write its own evidence record via Python `with open()`, but this write can silently fail (confirmed pattern: script reports N new files but evidence.jsonl and ingestion_log.jsonl both show 0 delta). **Partial success is possible (confirmed 2026-06-06T21:34Z):** evidence and ingestion writes can succeed while the journal write fails in the same run. The caller MUST verify persistence of ALL THREE files after the script exits AND must correct the `active_skills_30d` field.
 
-**UPDATE 2026-06-13:** As of recent runs (2026-06-12 through 2026-06-13), multiple consecutive runs have succeeded on **first try** — all three writes (evidence, ingestion, journal) persisted without needing backup. The verify-and-backup workflow remains **mandatory** but the expected outcome has shifted from "dual failure is default" to "success on first try is now common." Do NOT skip verification — failure can return without warning. The pattern change appears to correlate with the cron sandbox stabilizing after the gateway outage resolution (2026-06-12).
+**UPDATE 2026-06-14: Use Python heredocs for backup writes, NOT shell variable interpolation** — Shell `${VAR}` expansion inside heredocs can produce stray braces (e.g., `${DATA_DIR}}` → path ends with `}`). This silently breaks file operations. The safest backup write pattern is a `python3 << 'PYEOF'` heredoc with hardcoded paths:
+
+```bash
+python3 << 'PYEOF'
+import json, os
+from datetime import datetime, timezone
+
+DATA_DIR = "/root/.hermes/commons/data/mentor"
+record = {...}
+
+# Write to /tmp first, validate, then append to persistent log
+tmp_path = "/tmp/evidence_backup.json"
+with open(tmp_path, "w") as f:
+    f.write(json.dumps(record) + "\n")
+
+# Validate
+if os.path.getsize(tmp_path) > 0:
+    with open(DATA_DIR + "/evidence.jsonl", "a") as f:
+        with open(tmp_path) as tmp:
+            f.write(tmp.read())
+    print("Evidence persisted")
+else:
+    print("ERROR: /tmp write failed")
+PYEOF
+```
+
+NEVER use `printf '%s\n' "${VAR}" >> ${PATH}` where PATH contains shell variables.
+
+**UPDATE 2026-06-14:** The "success on first try" pattern observed 2026-06-12 through 2026-06-13 was NOT stable. This run (2026-06-14T00:32Z) showed dual failure again — both evidence and ingestion logs had 0 delta despite the script reporting 3 new files ingested. The "success on first try" pattern can revert without warning. **Always run the full verify-and-backup workflow. Never skip verification.** The backup write pattern remains the only reliable persistence method for evidence and ingestion records.
+
+**CONFIRMED 2026-06-13 (this run):** The script's self-journaling silently failed again — both evidence and ingestion logs showed 0 delta. Backup evidence and ingestion records were written via shell-level `printf >>` / `cat >>` after verifying deltas. The "success on first try" pattern is not stable; it can revert without warning. Always run the full verify-and-backup workflow.
 
 **CRITICAL: ALL steps below MUST execute in a SINGLE `terminal()` call.** Shell variables (`EVIDENCE_BEFORE`, etc.) do not persist across `terminal()` calls — each call is a fresh shell. Splitting the workflow into multiple `terminal()` calls loses the pre-run baselines and makes delta verification impossible. Use a single compound shell block with `;` between steps or one heredoc. See gotcha #49.
 
 ```bash
 # === MANDATORY: Pre-run counts ===
-EVIDENCE_BEFORE=$(wc -l < /root/.hermes/commons/data/mentor/evidence.jsonl)
-INGESTION_BEFORE=$(wc -l < /root/.hermes/commons/data/mentor/ingestion_log.jsonl)
+EVIDENCE_BEFORE=$(wc -l < /root/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl)
+INGESTION_BEFORE=$(wc -l < /root/.hermes/profiles/indigo/commons/data/mentor/ingestion_log.jsonl)
 
 # === Run the heartbeat script (with 3-day file list) ===
 cat /tmp/mentor_files_3d.txt | python3 scripts/cron-heartbeat-light.py
 
 # === MANDATATE: Post-run verification ===
-EVIDENCE_AFTER=$(wc -l < /root/.hermes/commons/data/mentor/evidence.jsonl)
-INGESTION_AFTER=$(wc -l < /root/.hermes/commons/data/mentor/ingestion_log.jsonl)
+EVIDENCE_AFTER=$(wc -l < /root/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl)
+INGESTION_AFTER=$(wc -l < /root/.hermes/profiles/indigo/commons/data/mentor/ingestion_log.jsonl)
 
 # === MANDATORY: Compute TRUE active_skills_30d (dual-path) ===
 # The script's active_skills_30d reflects only its stdin (3-day files), NOT the true 30-day count.
@@ -163,7 +231,35 @@ if [ "$EVIDENCE_AFTER" -eq "$EVIDENCE_BEFORE" ]; then
     if [ "$TRUE_NEW" -eq 0 ] && [ -f /tmp/mentor_truly_new.txt ]; then
         TRUE_NEW=$(wc -l < /tmp/mentor_truly_new.txt)
     fi
-    printf '%s\\n' "{\"schema\":\"mentor-evidence-v2\",\"run_id\":\"$RUN_ID\",\"timestamp\":\"$TIMESTAMP\",\"heartbeat_type\":\"light\",\"metrics\":{\"total_files_3d\":$TOTAL_3D,\"new_files_ingested\":$TRUE_NEW,\"active_skills_30d\":$TRUE_ACTIVE_30D,\"ocas_skills_30d\":$TRUE_OCAS_30D,\"evaluation_coverage\":0,\"gap_detected\":false,\"active_anomalies\":0},\"outcome\":\"success\",\"notes\":\"Script self-journaling failed (0 delta); backup written via shell. active_skills_30d corrected from stdin-count to true dual-path 30d count.\"}" >> /root/.hermes/commons/data/mentor/evidence.jsonl
+    python3 << 'PYEOF'
+import json, os
+from datetime import datetime, timezone
+DATA_DIR = "/root/.hermes/profiles/indigo/commons/data/mentor"
+record = {
+    "schema": "mentor-evidence-v2",
+    "run_id": os.environ.get("RUN_ID", ""),
+    "timestamp": datetime.now(timezone.utc).isoformat(),
+    "heartbeat_type": "light",
+    "total_files_3d": int(os.environ.get("TOTAL_3D", 0)),
+    "new_files_ingested": int(os.environ.get("TRUE_NEW", 0)),
+    "active_skills_30d": int(os.environ.get("TRUE_ACTIVE_30D", 0)),
+    "evaluation_coverage": 0,
+    "gap_detected": False,
+    "active_anomalies": 0,
+    "outcome": "success",
+    "notes": "Script self-journaling failed (0 delta); backup written via shell. active_skills_30d corrected from stdin-count to true dual-path 30d count."
+}
+tmp_path = "/tmp/evidence_backup.json"
+with open(tmp_path, "w") as f:
+    f.write(json.dumps(record) + "\n")
+if os.path.getsize(tmp_path) > 0:
+    with open(DATA_DIR + "/evidence.jsonl", "a") as f:
+        with open(tmp_path) as tmp:
+            f.write(tmp.read())
+    print("Evidence persisted via Python heredoc")
+else:
+    print("ERROR: /tmp write failed")
+PYEOF
 fi
 
 # === MANDATORY: If ingestion_log also didn't grow but we have truly new files ===

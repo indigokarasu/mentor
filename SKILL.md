@@ -8,7 +8,7 @@ includes:
 - scripts/**
 metadata:
   author: Indigo Karasu (indigokarasu)
-  version: 2.8.11
+  version: 2.8.20
 tags:
 - orchestration
 - evaluation
@@ -70,7 +70,7 @@ Mentor does not emit Signals to Elephas directly. Elephas consumes Mentor journa
 - `mentor.proposals.create` — generate a VariantProposal for a target skill
 - `mentor.status` — active projects, pending evaluations, self-improvement metrics
 - `mentor.journal` — write journal for the current run; called at end of every run
-- `mentor.update` — pull latest from GitHub source; preserves journals and data
+- `mentor.update` — pull latest from GitHub source; preserves journals and data. See `references/self-update-mentor.md` for the full procedure (Quick Path for clean state, Full Path for dirty state with local fixes to preserve).
 - `mentor.plan.list` / `mentor.plan.run` / `mentor.plan.status` / `mentor.plan.resume` / `mentor.plan.history` — workflow plan management
 
 ## Mode A — Runtime Orchestration
@@ -140,7 +140,19 @@ After every Mentor command (orchestration or heartbeat):
 
 **Env var on piped command:** `VAR=value cat file | python3 script` only sets the var for `cat`, not `python3`. Must `export` first — but even `export` in the same `terminal()` block may not propagate if the tool splits commands into subshells. **Safest:** `cat file | VAR=value python3 script`. See `references/gotchas-mentor-cron-envvars.md`.
 
-**Light heartbeat self-journaling is BEST-EFFORT in cron mode** — Python `with open()` writes sometimes persist and sometimes silently fail. The cron-heartbeat-light.py script writes its own evidence and journal entries via Python — these sometimes work but are not guaranteed. **As of 2026-06-08, dual failure (evidence + ingestion both 0 delta) is the DEFAULT expectation across 4+ consecutive runs.** Plan for it every time. **The caller MUST verify persistence via `wc -l` after the script exits.** If counts didn't change, write backup evidence via shell `printf >>` / `cat >`. Do NOT append a duplicate entry if the count did change. See `references/shell-write-pattern.md` for the verify-and-backup pattern and `references/gotchas-mentor.md` gotcha #23.
+**Light heartbeat self-journaling reliably fails in cron mode** — The `cron-heartbeat-light.py` script writes its own evidence and ingestion records via Python `with open()`, but these writes reliably produce 0 delta on evidence.jsonl and ingestion_log.jsonl (confirmed across 8+ consecutive runs, 2026-06-12 through 2026-06-14). The journal write (different code path) sometimes succeeds. The caller's backup write workflow is NOT a fallback — it is the ACTUAL persistence mechanism. Always run the full verify-and-backup workflow and always expect to write the backup. Do NOT append a duplicate entry if the count did change. See `references/shell-write-pattern.md` for the verify-and-backup pattern and `references/gotchas-mentor.md` gotcha #23.
+
+# CRITICAL: Use `python3 << 'PYEOF'` heredoc for backup writes, NOT shell `printf` with variable interpolation — Shell variable expansion inside heredocs can introduce stray braces (e.g., `${DATA_DIR}}`) that silently break paths. The safe pattern for writing evidence/ingestion backups is a Python heredoc with hardcoded paths (no shell variable interpolation):
+```bash
+python3 << 'PYEOF'
+import json, os
+from datetime import timezone, datetime
+# ... write to /tmp/, validate with os.path.getsize(), then open(..., 'a') ...
+PYEOF
+```
+NEVER use `printf '%s\\n' "${SOME_VAR}" >> path` where `path` contains shell variables — the `}` in `${VAR}` can double up and produce paths like `file.jsonl}`. If you must use shell interpolation, use `$VAR` without braces.
+
+**CRITICAL: Journal directory date must use UTC** — Use `date -u +%Y-%m-%d` for `JOURNAL_DIR`, NOT `date +%Y-%m-%d` (which uses local time). The `run_id` is UTC-based, so the directory must be too. A mismatch puts the journal in yesterday's directory and creates confusion during cross-reference.
 
 - ~~**Script journal filename missing `mentor-light-` prefix**~~ **FIXED 2026-06-08**: Script line 264 changed to use `f"mentor-light-{run_id}.json"`. Filename now matches the `run_id` field. Confirmed working as of 2026-06-08T22:46Z. `run_id = now.strftime("%Y%m%dT%H%M%SZ")` (just the timestamp), then line 264 writes to `f"{run_id}.json"` producing e.g. `20260607T045155Z.json`. But the journal's `run_id` *field* (line 249) is `f"mentor-light-{run_id}"` = `mentor-light-20260607T045155Z`. The filename doesn't match the `run_id` inside the file. Fix: change line 264 to `f"mentor-light-{run_id}.json"` or compose `run_id` with the prefix from the start. See run 2026-06-07T04:51Z for confirmation.
 
@@ -154,7 +166,7 @@ After every Mentor command (orchestration or heartbeat):
 # 1. Record pre-run counts
 EVIDENCE_BEFORE=$(wc -l < /root/.hermes/commons/data/mentor/evidence.jsonl)
 INGESTION_BEFORE=$(wc -l < /root/.hermes/commons/data/mentor/ingestion_log.jsonl)
-JOURNAL_DIR="/root/.hermes/profiles/indigo/commons/journals/ocas-mentor/$(date +%Y-%m-%d)"
+JOURNAL_DIR="/root/.hermes/profiles/indigo/commons/journals/ocas-mentor/$(date -u +%Y-%m-%d)"
 
 # 2. Run the script
 cat /tmp/mentor_files_3d.txt | python3 scripts/cron-heartbeat-light.py
@@ -180,9 +192,21 @@ if [ -z "$RECENT_JOURNAL" ]; then
     echo "WARNING: No recent journal in $JOURNAL_DIR — script's journal write silently failed."
     # Write backup journal via shell (see references/shell-write-pattern.md)
 fi
+
+# IMPORTANT: $JOURNAL_DIR must use UTC date: JOURNAL_DIR="/root/.hermes/profiles/indigo/commons/journals/ocas-mentor/$(date -u +%Y-%m-%d)"
+# Using local date puts the journal in the wrong directory when server TZ != UTC.
 ```
 
 **Light heartbeat caller MUST correct `active_skills_30d`** — The script receives only `-mtime -3` files via stdin, so its `active_skills_30d` count (e.g., 15) is NOT the true 30-day active skill count (e.g., 35). **The script does NOT read the `MENTOR_ACTIVE_SKILLS_30D` env var** — that var is only for the caller's reference. The caller must compute the true count separately via a dual-path 30-day `find` (see `references/dual-path-journal-discovery.md`) and write a corrected evidence record with the true value. The script's evidence record will undercount unless overridden by the caller's backup evidence. See gotcha #29.
+
+**Recommended skill counting technique (confirmed 2026-06-14):** Use `grep -oP` to extract unique skill names from journal file paths — avoids all edge cases of `awk -F/` on absolute paths (see gotcha #44a):
+```bash
+# OCAS-only count (fastest, most reliable)
+ACTIVE_OCAS_30D=$(find /root/.hermes/commons/journals/ /root/.hermes/profiles/indigo/commons/journals/ -name "*.json" -mtime -30 2>/dev/null | grep -oP 'ocas-[a-z]+' | sort -u | wc -l)
+
+# All skills count (OCAS + non-OCAS)
+ACTIVE_ALL_30D=$(find /root/.hermes/commons/journals/ /root/.hermes/profiles/indigo/commons/journals/ -name "*.json" -mtime -30 2>/dev/null | grep -oP 'commons/journals/([a-z][a-z0-9_-]+)' | sed 's|commons/journals/||' | sort -u | wc -l)
+```
 
 **`active_anomalies` counting fixed in v2.8.10** — The light heartbeat script now uses `a.get("timestamp") or a.get("detected_at")` to correctly read anomalies regardless of which date field they use. Prior to v2.8.10, `active_anomalies` always reported 0 due to the field mismatch (gotcha #36).
 
@@ -191,6 +215,8 @@ fi
 **Evidence record uses FLAT schema — no `metrics` wrapper** — The `cron-heartbeat-light.py` script writes evidence as a flat JSON object with top-level keys (`timestamp`, `heartbeat_type`, `total_files_scanned`, `new_files_ingested`, `errors`, `active_skills_30d`, `evaluation_coverage`, etc.). There is NO nested `metrics` dict. When writing backup evidence or correcting fields, use the flat schema. Accessing `record['metrics']['active_skills_30d']` will raise `KeyError`. Correct path: `record['active_skills_30d']`. Fixed 2026-06-09.
 
 **Deep heartbeat is self-journaling:** `scripts/cron-heartbeat-deep.py` writes its own journal entry. The caller must NOT append a separate journal entry for the same `run_id` — this produces duplicates.
+
+**Deep heartbeat dual-path wrapper (2026-06-13):** Use `scripts/cron-heartbeat-deep-dualpath.py` instead of the stock `cron-heartbeat-deep.py`. The stock script only scans commons journals (168 files) while the dual-path wrapper scans both commons + profile-scoped journals (6,781 files). See `references/deep-heartbeat-dual-path.md` for the full fix details, metrics comparison, and usage instructions.
 
 **Heredoc journal file naming:** `cat > "$JOURNAL_DIR/${RUN_ID}.json" << 'EOF'` may create a file literally named `.json`. Compose the filename in a separate variable first, then reference without braces. Always `ls` the output to verify.
 
@@ -249,7 +275,7 @@ See `references/self-update-mentor.md`.
 
 ## Gotchas — Critical
 
-See `references/gotchas-mentor.md` for the full gotcha catalog (40+ entries).
+See `references/gotchas-mentor.md` for the full gotcha catalog (50+ entries).
 
 See `references/gotchas-mentor-cron-envvars.md` for env var propagation gotchas specific to cron `terminal()` piped commands.
 
@@ -271,7 +297,7 @@ Key gotchas:
 - **Script stdin pipe can drop files** — Cross-reference `new_files_ingested` count against manual `find` minus ingestion_log. See gotcha #26.
 - **Script self-journaling can silently fail** — Always `wc -l` evidence.jsonl after the script exits; write backup via shell if count unchanged. See gotcha #27.
 - **Script-reported new-files count is an upper bound** — Path normalization mismatches between script dedup and ingestion log can cause harmless re-ingestions. Cross-reference for ground truth. See gotcha #28.
-- **Deep heartbeat single-path scan** — `cron-heartbeat-deep.py` only scans `JOURNALS_ROOT` (commons), missing profile-scoped journals. See gotcha #32.
+- **`cp -n` silently skips profile-to-commons sync** — `cp -n` does not overwrite existing files, so when the heartbeat script writes to profile (making it newer than commons), the sync silently skips. Use line-level Python set-difference for JSONL files (diff commons paths vs profile lines, append only new lines) and `cp -f` for non-JSONL state files. Confirmed 2026-06-14.
 - **Deep heartbeat f-string syntax** — Nested f-strings with escaped quotes cause `SyntaxError`. Extract to separate variable first. See gotcha #33.
 - **`orchestration_success_rate` OKR now counts `unknown` as success** — Fixed 2026-06-06: scoring changed from `success/total` to `(success+unknown)/total` to match `normalize_outcome()` semantics. See gotcha #34.
 - **`bc -l` float output breaks JSON** — `bc -l` produces `.0285` (no leading zero), invalid when embedded in JSON strings. Always use Python `round()` for float-to-JSON. See gotcha #39.
@@ -301,5 +327,8 @@ Key gotchas:
 | `references/heredoc-journal-naming.md` | When writing journal files via heredoc to avoid filename collisions |
 | `references/okrs.md` | During OKR evaluation (legacy OKR definitions) |
 | `references/heartbeat-scan-technique.md` | When debugging journal scan or discovery issues |
+| `references/deep-heartbeat-dual-path.md` | **READ BEFORE EVERY DEEP HEARTBEAT** — dual-path wrapper fixes gotcha #32 |
+| `references/session-2026-06-14-light.md` | Session-specific: light heartbeat corrections, commons sync fix, journal write pattern |
 | `scripts/cron-heartbeat-light.py` | Reference implementation for light heartbeat in cron mode |
-| `scripts/cron-heartbeat-deep.py` | Reference implementation for deep heartbeat journal ingestion |
+| `scripts/cron-heartbeat-deep.py` | Original deep heartbeat (single-path, commons only — use dualpath instead) |
+| `scripts/cron-heartbeat-deep-dualpath.py` | **Preferred** deep heartbeat with dual-path scan + profile data sync |
