@@ -8,7 +8,7 @@ includes:
 - scripts/**
 metadata:
   author: Indigo Karasu (indigokarasu)
-  version: 2.8.20
+  version: 2.8.23
 tags:
 - orchestration
 - evaluation
@@ -140,7 +140,7 @@ After every Mentor command (orchestration or heartbeat):
 
 **Env var on piped command:** `VAR=value cat file | python3 script` only sets the var for `cat`, not `python3`. Must `export` first — but even `export` in the same `terminal()` block may not propagate if the tool splits commands into subshells. **Safest:** `cat file | VAR=value python3 script`. See `references/gotchas-mentor-cron-envvars.md`.
 
-**Light heartbeat self-journaling is INTERMITENT in cron mode** — The `cron-heartbeat-light.py` script writes its own evidence and ingestion records via Python `with open()`, but these writes are intermittent. As of 2026-06-14, a run succeeded on all 3 files simultaneously (evidence +1, ingestion +4, journal written) — the first full-success run after 8+ consecutive partial-failure runs. The pattern is shifting from "reliably fails" to "intermittent." The caller's backup write workflow is NOT a fallback — it is the ACTUAL persistence mechanism. Always run the full verify-and-backup workflow. Never skip verification even when prior runs succeeded. See `references/shell-write-pattern.md` and gotcha #23.
+**Light heartbeat self-journaling is the EXPECTED DEFAULT failure pattern in cron mode** — As of 2026-06-16, the script's Python `with open()` writes to commons have failed 3+ consecutive times. The caller's backup write workflow is NOT a fallback — it is the ACTUAL persistence mechanism. Always run the full verify-and-backup workflow. Never skip verification even when prior runs succeeded. See `references/shell-write-pattern.md` and gotcha #23.
 
 # CRITICAL: Use `python3 << 'PYEOF'` heredoc for backup writes, NOT shell `printf` with variable interpolation — Shell variable expansion inside heredocs can introduce stray braces (e.g., `${DATA_DIR}}`) that silently break paths. The safe pattern for writing evidence/ingestion backups is a Python heredoc with hardcoded paths (no shell variable interpolation):
 ```bash
@@ -156,7 +156,11 @@ NEVER use `printf '%s\\n' "${SOME_VAR}" >> path` where `path` contains shell var
 
 - ~~**Script journal filename missing `mentor-light-` prefix**~~ **FIXED 2026-06-08**: Script line 264 changed to use `f"mentor-light-{run_id}.json"`. Filename now matches the `run_id` field. Confirmed working as of 2026-06-08T22:46Z. `run_id = now.strftime("%Y%m%dT%H%M%SZ")` (just the timestamp), then line 264 writes to `f"{run_id}.json"` producing e.g. `20260607T045155Z.json`. But the journal's `run_id` *field* (line 249) is `f"mentor-light-{run_id}"` = `mentor-light-20260607T045155Z`. The filename doesn't match the `run_id` inside the file. Fix: change line 264 to `f"mentor-light-{run_id}.json"` or compose `run_id` with the prefix from the start. See run 2026-06-07T04:51Z for confirmation.
 
-**Partial success is possible (confirmed 2026-06-06T21:34Z and 2026-06-07T03:38Z):** Evidence and ingestion writes can succeed while the journal write fails in the same run — or vice versa. The three writes are independent. The verify-and-backup workflow must check ALL THREE files (`evidence.jsonl`, `ingestion_log.jsonl`, and the journal directory) independently. Do NOT assume that because evidence grew, the journal was also written.
+- **Partial success is possible (confirmed 2026-06-06T21:34Z and 2026-06-07T03:38Z):** Evidence and ingestion writes can succeed while the journal write fails in the same run — or vice versa. The three writes are independent. The verify-and-backup workflow must check ALL THREE files (`evidence.jsonl`, `ingestion_log.jsonl`, and the journal directory) independently. Do NOT assume that because evidence grew, the journal was also written.
+
+- **Verify current live state before acting on escalated issues.** Custodian journals flag `escalation_needed: true` but the underlying issue may have already been resolved (user re-authorized, plugin bug fixed, transient error self-resolved). Before executing any fix: (1) check the job's current `last_status` in jobs.json, (2) check the latest esc-run journal, (3) verify the error still appears in logs. Do not trust the escalation flag alone. Confirmed 2026-06-17: 3 out of 4 escalated issues were already resolved.
+
+- **Verify current live state before acting on escalated issues.** Custodian journals flag `escalation_needed: true` but the underlying issue may have already been resolved (user re-authorized, plugin bug fixed, transient error self-resolved). Before executing any fix: (1) check the job's current `last_status` in jobs.json, (2) check the latest esc-run journal, (3) verify the error still appears in logs. Do not trust the escalation flag alone. Confirmed 2026-06-17: 3 out of 4 escalated issues were already resolved.
 
 **MANDATORY verify-and-backup workflow after every light heartbeat (SINGLE terminal() call):**
 ```bash
@@ -197,7 +201,9 @@ fi
 # Using local date puts the journal in the wrong directory when server TZ != UTC.
 ```
 
-**Light heartbeat caller MUST correct `active_skills_30d` AND write a complete evidence record** — The script receives only `-mtime -3` files via stdin, so its `active_skills_30d` count (e.g., 15) is NOT the true 30-day active skill count (e.g., 35). **The script does NOT read the `MENTOR_ACTIVE_SKILLS_30D` env var** — that var is only for the caller's reference. The caller must compute the true count separately via a dual-path 30-day `find` (see `references/dual-path-journal-discovery.md`) and write a corrected evidence record with the true value. The script's evidence record will undercount unless overridden by the caller's backup evidence. Additionally, the script's evidence record may have `run_id: null` and lack an `outcome` field (see gotcha #58). The caller's backup evidence record is NOT a duplicate — it is a correction. Two evidence lines per heartbeat is the expected pattern. See gotcha #29 and #58.
+**Light heartbeat caller MUST correct `active_skills_30d` AND write a complete evidence record — EVERY TIME, regardless of script success.** The script receives only `-mtime -3` files via stdin, so its `active_skills_30d` count (e.g., 12) is NEVER the true 30-day active skill count (e.g., 19). This is not a failure condition — it is the expected behavior. The script does NOT read the `MENTOR_ACTIVE_SKILLS_30D` env var — that var is only for the caller's reference. The caller must compute the true count separately via a dual-path 30-day `find` (see `references/dual-path-journal-discovery.md`) and write a corrected evidence record with the true value. The script's evidence record will ALWAYS undercount. The caller's correction evidence record is NOT a backup or duplicate — it is the PRIMARY evidence. Two evidence lines per heartbeat is the expected pattern. See gotcha #29 and #58. Confirmed 2026-06-19: script can succeed on all 3 writes (evidence, ingestion, journal) and STILL produce a wrong `active_skills_30d`. The correction is mandatory, not conditional.
+
+**CRITICAL: Caller backup writes MUST target the profile path, NOT commons** — All caller-written evidence and ingestion records MUST be written to the profile-scoped data directory (`/root/.hermes/profiles/indigo/commons/data/mentor/`), NOT directly to `/root/.hermes/commons/data/mentor/`. The profile path is the authoritative source; commons is a lagging copy that receives data only via the line-level set-difference sync. Writing directly to commons creates duplicate or offset evidence lines — the script's version (with wrong `active_skills_30d`) gets synced from profile, then the caller's corrected version gets written directly to commons, producing two lines for the same run. See `references/session-2026-06-16-light-7.md` and gotcha #62.
 
 **Recommended skill counting technique (confirmed 2026-06-14):** Use `grep -oP` to extract unique skill names from journal file paths — avoids all edge cases of `awk -F/` on absolute paths (see gotcha #44a):
 ```bash
@@ -212,6 +218,8 @@ ACTIVE_ALL_30D=$(find /root/.hermes/commons/journals/ /root/.hermes/profiles/ind
 
 **Light heartbeat caller MUST cross-reference ingestion counts** — The script's `new_files_ingested` is an upper bound. Pipe truncation (gotcha #26) and path normalization mismatches (gotcha #24) mean the script can report N while the true new-file count differs. After every heartbeat, cross-reference: `find ... -mtime -3 | sort -u` minus paths in `ingestion_log.jsonl`. If counts differ, note the discrepancy in the evidence record. Re-ingestions are harmless (idempotent).
 
+**`cron-heartbeat-light.py` does NOT accept CLI arguments for file list — stdin pipe is the ONLY input method** — Invoking the script with `--files-from file.txt` or any other CLI argument silently produces 0 files scanned. Write file list to `/tmp/mentor_files_3d.txt` first, then pipe: `find ... | sort -u > /tmp/mentor_files_3d.txt && cat /tmp/mentor_files_3d.txt | python3 script.py`. See `references/gotcha-60-light-stdin.md`.
+
 **Evidence record uses FLAT schema — no `metrics` wrapper** — The `cron-heartbeat-light.py` script writes evidence as a flat JSON object with top-level keys (`timestamp`, `heartbeat_type`, `total_files_scanned`, `new_files_ingested`, `errors`, `active_skills_30d`, `evaluation_coverage`, etc.). There is NO nested `metrics` dict. When writing backup evidence or correcting fields, use the flat schema. Accessing `record['metrics']['active_skills_30d']` will raise `KeyError`. Correct path: `record['active_skills_30d']`. Fixed 2026-06-09.
 
 **Deep heartbeat is self-journaling:** `scripts/cron-heartbeat-deep.py` writes its own journal entry. The caller must NOT append a separate journal entry for the same `run_id` — this produces duplicates.
@@ -220,13 +228,27 @@ ACTIVE_ALL_30D=$(find /root/.hermes/commons/journals/ /root/.hermes/profiles/ind
 
 **Heredoc journal file naming:** `cat > "$JOURNAL_DIR/${RUN_ID}.json" << 'EOF'` may create a file literally named `.json`. Compose the filename in a separate variable first, then reference without braces. Always `ls` the output to verify.
 
-## Background Tasks
+## Dispatch / Cron Integration
 
-| Job | Schedule | Command |
-|-----|----------|---------|
-| `mentor:deep` | `0 5 * * *` | `mentor.heartbeat.deep` |
-| `mentor:light` | `*/5 * * * *` | `mentor.heartbeat.light` |
-| `mentor:update` | `0 0 * * *` | `mentor.update` |
+When triggered by the dispatcher (`dispatcher.py`) or a cron job:
+
+1. **Build file list**: `find /root/.hermes/commons/journals/ /root/.hermes/profiles/indigo/commons/journals/ -name "*.json" -mtime -3 | sort -u > /tmp/mentor_files_3d.txt`
+2. **Record pre-run counts**: `wc -l < /root/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl`
+3. **Run script**: `cat /tmp/mentor_files_3d.txt | python3 {skill_dir}/scripts/cron-heartbeat-light.py`
+4. **Verify all three writes independently** (evidence, ingestion, journal) — partial success is possible
+5. **Correct `active_skills_30d`**: Run `python3 {skill_dir}/scripts/correct_active_skills_30d.py` (or compute manually — see `references/shell-write-pattern.md` § Active Skills Counting). Write the corrected evidence record to the **profile-scoped** path (`/root/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl`), NOT commons.
+6. **Cross-reference ingestion counts** against `find ... -mtime -3 | sort -u` minus `ingestion_log.jsonl`
+7. **Write journal**: Compose journal JSON and write to `{journal_dir}/mentor-light-{run_id}.json`
+
+**CRITICAL: `active_skills_30d` correction is MANDATORY on every dispatch run.** The script receives only `-mtime -3` files via stdin, so its `active_skills_30d` (typically 12–13) is NEVER the true 30-day count (typically 18–21). The caller must always compute the dual-path 30-day count and write a corrected evidence record. This is confirmed 12+ times (2026-06-19 through 2026-06-21). Two evidence lines per heartbeat is the expected pattern — the script's version (undercount) and the caller's corrected version. See gotcha #29 and #58.
+
+**Multi-skill dispatch pattern:** When the dispatcher triggers multiple skills in one dispatch (e.g., Forge + Mentor + Praxis), each pipeline runs independently and writes its own journal. No cross-pipeline dependencies. See `references/multi-skill-dispatch-pattern.md` for the full Forge → Mentor → Praxis pipeline.
+
+**CRITICAL: Dispatch-triggered heartbeats MUST correct `active_skills_30d`** — The script receives only `-mtime -3` files via stdin, so its `active_skills_30d` (typically 12–13) is NEVER the true 30-day count (typically 18–21). The caller must ALWAYS compute the dual-path 30-day count and write a corrected evidence record. This applies to dispatch-triggered heartbeats just as much as cron-triggered ones. Confirmed 12+ times (2026-06-19 through 2026-06-21). Two evidence lines per heartbeat is the expected pattern — the script's version (undercount) and the caller's corrected version. See gotcha #29 and #58.
+
+**CRITICAL: Mentor heartbeat updates Praxis ingest state** — The `cron-heartbeat-light.py` script updates `ingest_state.json:last_ingest_run` when it writes evidence. If Praxis dispatch runs immediately after in the same multi-skill dispatch, its mtime-based journal discovery may find 0 new journals because the state timestamp moved forward. The dispatcher must capture `last_ingest_run` BEFORE running Mentor and pass it to Praxis. See Praxis SKILL.md § Dispatch / Cron Integration.
+
+The script's `active_skills_30d` is the stdin-based count (3-day window, single path) — NOT the true 30-day active skill count. The correction is MANDATORY every time, not just when the script's write fails.
 
 ## Storage and Configuration
 
@@ -296,6 +318,8 @@ Key gotchas:
 - **`find -exec sh -c` with complex quoting silently fails** — Write scan logic to `/tmp/script.py` instead.
 - **Script stdin pipe can drop files** — Cross-reference `new_files_ingested` count against manual `find` minus ingestion_log. See gotcha #26.
 - **Script self-journaling can silently fail** — Always `wc -l` evidence.jsonl after the script exits; write backup via shell if count unchanged. See gotcha #27.
+
+- **Evidence write can silently fail while script reports `new_files_ingested: N`** — Confirmed 2026-06-21: script stdout reported "New files ingested: 2" but `wc -l` on evidence.jsonl showed zero delta. The script's internal counter incremented but the disk write failed silently. This is distinct from gotcha #27 (journal write failure) — evidence writes can fail independently of journal writes. **Always `wc -l` evidence.jsonl before and after, regardless of what the script stdout says.** If delta is 0, write backup evidence via the caller's Python heredoc. See `references/shell-write-pattern.md`.
 - **Script-reported new-files count is an upper bound** — Path normalization mismatches between script dedup and ingestion log can cause harmless re-ingestions. Cross-reference for ground truth. See gotcha #28.
 - **`cp -n` silently skips profile-to-commons sync** — `cp -n` does not overwrite existing files, so when the heartbeat script writes to profile (making it newer than commons), the sync silently skips. Use line-level Python set-difference for JSONL files (diff commons paths vs profile lines, append only new lines) and `cp -f` for non-JSONL state files. Confirmed 2026-06-14.
 - **Deep heartbeat f-string syntax** — Nested f-strings with escaped quotes cause `SyntaxError`. Extract to separate variable first. See gotcha #33.
@@ -303,6 +327,20 @@ Key gotchas:
 - **`bc -l` float output breaks JSON** — `bc -l` produces `.0285` (no leading zero), invalid when embedded in JSON strings. Always use Python `round()` for float-to-JSON. See gotcha #39.
 - **Ingestion log path format mismatch** — Log stores both relative and absolute paths. Naive `comm` shows 800+ false "new" files. Extract+normalize via Python before dedup. See gotcha #42.
 - **Backup journal double-prefix** — If RUN_ID already contains `mentor-light-`, filename is `"$RUN_ID.json"` not `"mentor-light-${RUN_ID}.json"`. See gotcha #43.
+- **Error grep false positives** — `grep -q '"error"'` on journal files matches finch/custodian journals that mention "error" in content but are successful runs. Parse JSON and check `outcome` field instead. See gotcha #63 and `references/gotcha-error-grep-false-positives.md`.
+- **Heredoc ampersand** — `&` inside heredoc content triggers terminal background detection (exit_code=-1). Use Python heredocs (`python3 << 'PYEOF'`) with `json.dump()` for all JSON file writes. See gotcha #64. Inline `python3 << 'PYEOF'` heredoc writes to profile paths can also silently fail — for critical writes, use a `/tmp/script.py` file invoked as `python3 /tmp/script.py`. See gotcha #64a.
+- **Sed template substitution for JSON** — `sed -i "s|PLACEHOLDER|$VAR|g"` silently produces `.json` when `$VAR` is empty or inconsistently named (e.g., `RUN_ID` vs `RUNID`). Never use sed for JSON file construction — use Python heredocs with `json.dump()` and hardcoded paths. See gotcha #68.
+- **Script can succeed on all 3 writes AND still produce wrong `active_skills_30d`** — Confirmed 2026-06-19 (4th confirmation), 2026-06-20 ×2 (5th–6th), 2026-06-21 (7th): the script wrote evidence (delta +1), ingestion (delta +5), and journal successfully, but `active_skills_30d` was 12–13 (stdin-count) instead of the true 18–42 (dual-path 30d). The correction is MANDATORY every time, not just when the script's write fails. Two evidence lines per heartbeat is the expected pattern — the script's version (undercount) and the caller's corrected version. See gotcha #29 and #58.
+
+- **Evidence write can silently fail while script reports `new_files_ingested: N`** — Confirmed 2026-06-21: script stdout reported "New files ingested: 2" but `wc -l` on evidence.jsonl showed zero delta. The script's internal counter incremented but the disk write failed silently. This is distinct from gotcha #27 (journal write failure) — evidence writes can fail independently of journal writes. **Always `wc -l` evidence.jsonl before and after, regardless of what the script stdout says.** If delta is 0, write backup evidence via the caller's Python heredoc. See `references/shell-write-pattern.md`.
+
+- **Dual-path journal distribution is roughly 60/40** — As of 2026-06-20, the 3-day window showed 1,086 files in shared (`/root/.hermes/commons/journals/`) vs 673 in profile (`/root/.hermes/profiles/indigo/commons/journals/`). The profile path contains ~62% as many recent journals as shared. Both paths MUST be scanned — scanning only shared misses 38% of recent activity. This ratio can shift over time as more skills migrate to profile-scoped journals.
+
+- **Custodian `escalation_needed` is always-true by design** — The custodian skill flags `escalation_needed: true` on virtually every scan (light and deep) as part of its tiered escalation model. When Mentor's journal scan picks up custodian escalation journals during urgent-issue checks, these are NOT new incidents requiring action. Verify by checking mtime: if all escalation journals are >48h old and from ocas-custodian, they are historical operational noise, not fresh alerts. This prevents the 140-journal false-alarm investigation pattern repeated 2026-06-19. See gotcha #63.
+
+- **`orchestration_success_rate` OKR scoring** — Script evidence records have `outcome` field entirely missing (`None`), not the string `"unknown"`. Check `r.get("outcome") in ("success", None) and "error" not in r`. See gotcha #34.
+
+- **Custodian `escalation_needed` is always-true by design (false-alarm pattern)** — The ocas-custodian skill flags `escalation_needed: true` on virtually every scan as part of its tiered escalation model (it surfaces tier-2 issues for planning regardless of whether user action is needed). When Mentor's urgent-issue scan picks up custodian escalation journals, check mtime: if all are >48h old and from `ocas-custodian/`, they are historical operational noise, not fresh alerts. This prevents repeated false-alarm investigations (confirmed 2026-06-19: 140 escalation journals, all historical). See gotcha #63 and `references/gotcha-error-grep-false-positives.md`.
 
 ## Support File Map
 
@@ -327,8 +365,21 @@ Key gotchas:
 | `references/heredoc-journal-naming.md` | When writing journal files via heredoc to avoid filename collisions |
 | `references/okrs.md` | During OKR evaluation (legacy OKR definitions) |
 | `references/heartbeat-scan-technique.md` | When debugging journal scan or discovery issues |
+| `references/session-2026-06-16-light.md` | Session-specific: large ingestion catch-up (562 future-dated files), gotcha #61 |
+| `references/gotcha-error-grep-false-positives.md` | **READ DURING URGENT-ISSUE SCANS** — grep for "error" in journal content produces false positives; parse JSON and check `outcome` field instead |
 | `references/deep-heartbeat-dual-path.md` | **READ BEFORE EVERY DEEP HEARTBEAT** — dual-path wrapper fixes gotcha #32 |
-| `references/session-2026-06-14-light.md` | Session-specific: light heartbeat corrections, commons sync fix, journal write pattern |
-| `scripts/cron-heartbeat-light.py` | Reference implementation for light heartbeat in cron mode |
+| `references/session-2026-06-14-light.md` | Session-specific: light heartbeat corrections, commons sync fix, journal write pattern |\n| `references/session-2026-06-15-light-3.md` | Session-specific: verified light heartbeat with corrected active_skills_30d, commons sync |\n| `references/session-2026-06-17-light-13.md` | Session-specific: gotcha #64 (heredoc ampersand), OKR None-outcome fix |
+| `references/session-2026-06-18-light.md` | Session-specific: gotcha #67 (commons ingestion 2.4x bloat), full-success run, commons gap reversal 2nd confirmation |
+| `references/session-2026-06-18-light-2.md` | Session-specific: gotcha #64a (inline heredoc write failure), /tmp/script.py file pattern, full-success run #2 |\\n| `references/session-2026-06-19-light-2.md` | Session-specific: gotcha #68 (sed template substitution failure), full-success run, commons gap reversal 3rd confirmation |
+| `references/session-2026-06-19-light-3.md` | Session-specific: full-success run #2, corrected active_skills_30d, commons sync, system health check |
+|| `references/session-2026-06-19-light-11.md` | Session-specific: full-success run #11, 4th active_skills_30d correction confirmation, commons gap reversal #3, custodian escalation false-alarm pattern |
+| `references/session-20260621-light.md` | Session-specific: dispatch-triggered heartbeat, 8th active_skills_30d correction (13→18), all pipelines clean |
+| `references/session-20260621-dispatch-5.md` | Session-specific: 5th dispatch heartbeat 2026-06-21, all 3 script writes failed silently, evidence-write independent failure pattern |
+| `references/session-20260621-light-3.md` | Session-specific: 3rd dispatch heartbeat 2026-06-21, 9th active_skills_30d correction (13→18), all pipelines clean |
+| `references/session-20260621-dispatch-4.md` | Session-specific: 4th dispatch heartbeat 2026-06-21, 10th active_skills_30d correction (13→18), shell corruption bug, cross-pipeline timing |
+| `references/multi-skill-dispatch-pattern.md` | When triggered by dispatcher with multi-skill dispatch (Forge+Mentor+Praxis) |
+| `scripts/correct_active_skills_30d.py` | After every light heartbeat — compute true dual-path 30d count and write corrected evidence |
+| `references/session-2026-06-20-light-2.md` | Session-specific: 6th active_skills_30d correction (12→18), script succeeded on all 3 writes AND STILL wrong |
+| `references/session-2026-06-20-light.md` | Session-specific: light heartbeat with active_skills_30d correction (1→19), two-evidence-lines pattern confirmed |
 | `scripts/cron-heartbeat-deep.py` | Original deep heartbeat (single-path, commons only — use dualpath instead) |
 | `scripts/cron-heartbeat-deep-dualpath.py` | **Preferred** deep heartbeat with dual-path scan + profile data sync |

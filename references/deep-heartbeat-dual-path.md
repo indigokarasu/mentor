@@ -22,6 +22,18 @@ Use the dual-path wrapper script `scripts/cron-heartbeat-deep-dualpath.py` which
 | orchestration_success_rate | N/A | 0.9978 |
 | error_rate | N/A | 0.0022 |
 
+## Second Dual-Path Run (2026-06-14 19:01Z)
+| Metric | Value |
+|--------|-------|
+| Journals scanned | 7,341 |
+| New ingested | 7,340 |
+| Skills evaluated | 41 |
+| evaluation_coverage | 1.0 |
+| orchestration_success_rate | 0.9980 |
+| error_rate | 0.0020 |
+| Parse errors | 15 |
+| Proposals | 2 (ocas-taste, ocas-dispatch — both auth-related, see gotcha #37a) |
+
 ## Usage
 The cron job `mentor:deep` should be updated to:
 ```
