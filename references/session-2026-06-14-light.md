@@ -25,3 +25,32 @@
 
 ### Active skills (30d)
 21 OCAS skills confirmed via dual-path `find ... -mtime -30 | grep -oP 'ocas-[a-z]+' | sort -u`
+
+---
+
+## Run: mentor-light-20260614T160901Z (script + caller journal, single run)
+
+### What happened
+- Script (`cron-heartbeat-light.py`) reported 4 new files ingested, 4 new entries, all `success`
+- Cross-reference confirmed 4 truly new files (skills: `ocas-custodian`, `ocas-fellow`, `ocas-mentor`)
+- Script self-journaling **succeeded on first try** for all three writes:
+  - Evidence log: +1 line (923→924)
+  - Ingestion log: +4 lines (8,743→8,747)
+  - Journal written to `2026-06-14/mentor-light-20260614T160901Z.json`
+- Gap detected: 31.6 min (confirms gap detection works)
+- Active anomalies: 0, Parse failures: 0
+
+### Metrics comparison
+| Metric | Script (3-day stdin) | True (30-day dual-path) |
+|--------|---------------------|-------------------------|
+| Active skills | 10 | **21** |
+| Evaluation coverage | 0.30 | 0.143 (3/21) |
+
+The script's `active_skills_30d` still reflects only skills active in the last 3 days (its stdin window). The true 30-day count requires dual-path scan. This evidence record undercounts the denominator — next deep heartbeat will compute correct OKR coverage.
+
+### Commons sync
+- Line-level Python set-difference propagated 1 evidence + 4 ingestion lines from profile → commons
+- Confirmed: `cp -n` silently skips when profile is newer (script writes to profile first)
+
+### Key observation
+The "success on first try" pattern observed 2026-06-12 through 2026-06-13 was NOT stable per `shell-write-pattern.md` — but this run succeeded again. Pattern remains intermittent. **Always run full verify-and-backup workflow. Never skip verification.**
