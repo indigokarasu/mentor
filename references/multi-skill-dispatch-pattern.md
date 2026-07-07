@@ -48,14 +48,17 @@ Each pipeline runs independently. No cross-pipeline dependencies block execution
 **Purpose:** Scan skill journals for behavioral signals, extract events/lessons/shifts.
 
 **Steps:**
+0. **Second-wave check (mandatory first step):** Before any mtime-based discovery, grep `journals_evaluated.jsonl` for each of the dispatcher's `new_files`. If ALL are already in the eval file → **fast no-op** (update `last_ingest_run`, write no-op dispatch journal, exit). Do NOT run discovery or gap backfill.
 1. Determine unevaluated journals (using mtime-based discovery as workaround for broken dedup)
 2. For each unevaluated journal, apply signal extraction with noise filters:
    - **Mentor-light success filter:** if `outcome in ("success", "", None)` and no failure indicators (`gap_detected: true`, `metrics.errors > 0`), skip entirely
    - **Mentor-light gap_detected filter:** if `gap_detected: true` with `outcome: "success"`, skip (cron cadence, not real failure)
    - **Mentor-light low_coverage filter:** skip (measurement artifact, not behavioral signal)
    - **Mentor-light failure_keyword filter:** if outcome is success and no explicit failure indicators, skip ALL generic signal extraction (summary text false positives)
+   - **Taste journals:** Taste consumption signals (DoorDash, Instacart, etc.) are self-contained. Mark as `action_taken: "taste_signal_skip"` — Praxis does NOT process these.
 3. Record events to `events.jsonl` with dedup by `(source_journal, signal_type)`
 4. Write evidence record and update ingest state
+5. **Third-wave mitigation:** Add dispatch-output journals (forge-scan, mentor-light) to eval file with `action_taken: "third_wave_mitigation"` to prevent re-detection.
 
 **Output:** `praxis-ingest-{timestamp}.json` journal in `{agent_root}/commons/journals/ocas-praxis/`
 

@@ -45,3 +45,12 @@ The evidence record includes `"dual_path": true` and `"active_coverage_raw"` fie
 
 ## Profile-Scoped Data Sync
 After each deep heartbeat run, the wrapper writes evidence + OKR state to `/root/.hermes/profiles/indigo/commons/data/mentor/` so the profile-scoped evidence log stays in sync with commons. This is needed because light heartbeats read from both locations.
+
+## Silent Write Failure Pattern (confirmed 2026-06-24)
+The script's Python `with open()` writes to decisions.jsonl and proposals-{date}.json **silently fail** in cron mode — same pattern as light heartbeat gotcha #27. Evidence and journal writes can succeed while decisions/proposals writes fail. The caller MUST verify all 4 write targets (evidence, decisions, journal, proposals file) and back up via shell if missing. See the "Deep heartbeat caller verify-and-backup workflow" in the main SKILL.md.
+
+## Evidence Schema Note
+The evidence record does NOT include `orchestration_success_rate` or `error_rate` fields, even though the script computes them for OKR scoring. These values live in `okr_state.json` and the journal entry's `okr_scores` section. When parsing deep heartbeat evidence records, do not expect these fields in the flat evidence JSON.
+
+## Journal Filename Double-Prefix Bug (unfixed)
+`cron-heartbeat-deep-dualpath.py` line 263 composes `f"mentor-deep-{run_id}.json"` where `run_id = f"deep-{timestamp}"`. Result: `mentor-deep-deep-2026-06-24T190342Z.json`. The `run_id` field inside the file is correct (`deep-2026-06-24T190342Z`). This is cosmetic but causes the filename to not match the canonical `run_id` pattern used by light heartbeats. Fix: change line 263 to `f"{run_id}.json"`.
