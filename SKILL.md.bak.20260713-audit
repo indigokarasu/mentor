@@ -560,7 +560,7 @@ This prevents the dispatcher from re-detecting these journals as "new" in wave N
 
 1. **One-wave lag:** Journal mtime > `last_ingest_run`. The journal is genuinely new but wasn't found by the current wave's mtime scan because `last_ingest_run` hadn't been updated yet. Self-correcting: the next wave's mtime scan will find it. Do NOT mark as `second_wave_no_op` — the work is pending.
 
-2. **Concurrent Praxis race:** Journal mtime < `last_ingest_run` (a sibling Praxis cron updated `last_ingest_run` AFTER evaluating the journal). The journal is already in `journals_evaluated.jsonl` with an `evaluated_at` timestamp AFTER the journal's mtime. NOT self-correcting — the mtime-based scan will never find it again. Skip Praxis ingest for this journal, log `action: "concurrent_evaluation_detected"` in evidence. See `ocas-dispatch` skill's  for the full timeline and evidence structure.
+2. **Concurrent Praxis race:** Journal mtime < `last_ingest_run` (a sibling Praxis cron updated `last_ingest_run` AFTER evaluating the journal). The journal is already in `journals_evaluated.jsonl` with an `evaluated_at` timestamp AFTER the journal's mtime. NOT self-correcting — the mtime-based scan will never find it again. Skip Praxis ingest for this journal, log `action: "concurrent_evaluation_detected"` in evidence. See `ocas-dispatch` skill's `references/session-20260624-dispatch-concurrent-praxis-race.md` for the full timeline and evidence structure.
 
 Check both sources before running Praxis ingest. If found, mark as `already_ingested` in evidence and skip silently. This is NOT a second-wave false positive — the journal was genuinely new but already processed by a sibling pipeline.
 
@@ -625,6 +625,7 @@ See `references/self-update-mentor.md`.
 | `references/shell-write-pattern.md` | **READ BEFORE EVERY CRON HEARTBEAT** — the only reliable write method in cron |
 | `templates/mentor-dispatch-quick-ref.md` | Before running Mentor in dispatch mode — canonical 7-step workflow |
 | `references/mandatory-correction-workflow.md` | **READ AFTER EVERY LIGHT HEARTBEAT** — the mandatory `active_skills_30d` correction procedure, field naming, and two-evidence-lines-per-heartbeat pattern |
+| `references/heredoc-journal-naming.md` | When writing journal files via heredoc to avoid filename collisions |
 | `references/okrs.md` | During OKR evaluation (legacy OKR definitions) |
 | `references/heartbeat-scan-technique.md` | When debugging journal scan or discovery issues |
 | `references/gotcha-error-grep-false-positives.md` | **READ DURING URGENT-ISSUE SCANS** — grep for "error" in journal content produces false positives; parse JSON and check `outcome` field instead |
@@ -641,4 +642,4 @@ See `references/self-update-mentor.md`.
 | `references/gap-backfill-auto-correct.md` | **When you discover a phantom filename entry in the eval file** — gap backfill auto-corrects wrong filenames from script stdout rollover; the phantom entry is inert and harmless |
 | `references/ingestion-cross-reference-technique.md` | **READ DURING INGESTION CROSS-REFERENCE** — naive `comm -23` is misleading; use Python set difference instead |
 | `references/cron-execution-patterns.md` | **READ BEFORE RUNNING MENTOR HEARTBEATS IN CRON** — critical patterns for script execution, verification workflows, and common pitfalls in cron-triggered heartbeats |
-| `references/dispatch-bridge-script-reality.md` | **When a dispatch wave needs eval bridging** — the documented `bridge_eval_both_stores.py` / `close_dispatch_gap*.py` / `robust_eval_reconcile.py` / `reconcile_dispatch_eval_today.py` / `scan_eval_missing_journals.py` helpers DO NOT EXIST on disk. Use `scripts/bridge_eval_inline.py` (idempotent, in-process, both eval stores) instead. |
+| `references/session-20260701-light-cron-commons-sync-fix.md` | **When commons sync pipe-to-python pattern is blocked** — alternative `/tmp/script.py` approach confirmed working |

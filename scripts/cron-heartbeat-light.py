@@ -98,6 +98,16 @@ def load_journal_file(path):
     return entries
 
 
+def extract_skill_from_journal_path(fpath):
+    """Return skill directory name from either shared or profile-scoped journal paths."""
+    parts = os.path.abspath(fpath).split(os.sep)
+    for i, part in enumerate(parts):
+        if part == "journals" and i + 1 < len(parts):
+            return parts[i + 1]
+    rel = os.path.relpath(fpath, JOURNALS_DIR)
+    return rel.split(os.sep)[0]
+
+
 def main():
     # Ensure data directory exists (including after fresh state / data loss)
     os.makedirs(MENTOR_DATA, exist_ok=True)
@@ -137,8 +147,7 @@ def main():
     parse_failures = 0
 
     for fpath in new_files:
-        rel = os.path.relpath(fpath, JOURNALS_DIR)
-        skill = rel.split(os.sep)[0]
+        skill = extract_skill_from_journal_path(fpath)
         if skill in (".archive", ".quarantine"):
             continue
 
