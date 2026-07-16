@@ -15,6 +15,11 @@ import json, os, hashlib, sys
 from datetime import datetime, timezone, timedelta
 from collections import defaultdict
 
+_HELP_ARGS = {"--help", "-h"}
+if set(sys.argv[1:]) & _HELP_ARGS:
+    print((__doc__ or "").strip() or "Usage: python3 cron-heartbeat-deep.py")
+    sys.exit(0)
+
 # === HELPERS ===
 
 def parse_dt(ts_str):

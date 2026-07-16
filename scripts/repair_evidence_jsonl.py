@@ -20,6 +20,11 @@ import json
 import sys
 import os
 
+_HELP_ARGS = {"--help", "-h"}
+if set(sys.argv[1:]) & _HELP_ARGS:
+    print((__doc__ or "").strip() or "Usage: python3 repair_evidence_jsonl.py")
+    sys.exit(0)
+
 PATHS = [
     ("profile", "<hermes-home>/commons/data/mentor/evidence.jsonl"),
     ("commons", "<hermes-root>/commons/data/mentor/evidence.jsonl"),
