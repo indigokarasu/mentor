@@ -15,6 +15,12 @@ Output:
 """
 import os, json, subprocess
 from datetime import datetime, timezone
+import sys
+
+_HELP_ARGS = {"--help", "-h"}
+if set(sys.argv[1:]) & _HELP_ARGS:
+    print((__doc__ or "").strip() or "Usage: python3 correct_active_skills_30d.py")
+    sys.exit(0)
 
 AGENT_ROOT = "/root/.hermes/profiles/indigo"
 MENTOR_DATA = os.path.join(AGENT_ROOT, "commons", "data", "mentor")

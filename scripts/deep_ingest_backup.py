@@ -10,6 +10,12 @@ Usage: python3 /tmp/mentor_deep_backup.py
 import json
 import os
 from datetime import datetime, timezone
+import sys
+
+_HELP_ARGS = {"--help", "-h"}
+if set(sys.argv[1:]) & _HELP_ARGS:
+    print((__doc__ or "").strip() or "Usage: python3 deep_ingest_backup.py")
+    sys.exit(0)
 
 DATA_DIR = "/root/.hermes/profiles/indigo/commons/data/mentor"
 INGESTION_LOG = os.path.join(DATA_DIR, "ingestion_log.jsonl")

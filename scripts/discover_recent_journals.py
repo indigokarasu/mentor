@@ -40,6 +40,11 @@ import re
 import sys
 from datetime import datetime, timezone, timedelta
 
+_HELP_ARGS = {"--help", "-h"}
+if set(sys.argv[1:]) & _HELP_ARGS:
+    print((__doc__ or "").strip() or "Usage: python3 discover_recent_journals.py")
+    sys.exit(0)
+
 
 def parse_ts(value):
     """Parse an ISO timestamp or a run_id-embedded timestamp."""

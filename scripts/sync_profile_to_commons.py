@@ -17,6 +17,11 @@ import json
 import os
 import sys
 
+_HELP_ARGS = {"--help", "-h"}
+if set(sys.argv[1:]) & _HELP_ARGS:
+    print((__doc__ or "").strip() or "Usage: python3 sync_profile_to_commons.py")
+    sys.exit(0)
+
 PROFILE_DIR = '/root/.hermes/profiles/indigo/commons/data/mentor'
 COMMONS_DIR = '/root/.hermes/commons/data/mentor'
 

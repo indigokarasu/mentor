@@ -12,6 +12,11 @@ Usage:
 import os, json, sys
 from datetime import datetime, timezone
 
+_HELP_ARGS = {"--help", "-h"}
+if set(sys.argv[1:]) & _HELP_ARGS:
+    print((__doc__ or "").strip() or "Usage: python3 cron-heartbeat-light.py")
+    sys.exit(0)
+
 AGENT_ROOT = "/root/.hermes/profiles/indigo"
 JOURNALS_DIR = "/root/.hermes/commons/journals"
 # Canonical Mentor data lives under commons/data/mentor/ (not ocas-mentor/).

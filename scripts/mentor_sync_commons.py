@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 """Timestamp-based set-difference sync: profile -> commons for evidence and ingestion."""
 import json
+import sys
+
+_HELP_ARGS = {"--help", "-h"}
+if set(sys.argv[1:]) & _HELP_ARGS:
+    print((__doc__ or "").strip() or "Usage: python3 mentor_sync_commons.py")
+    sys.exit(0)
 
 PROFILE_EVIDENCE = "/root/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl"
 COMMONS_EVIDENCE = "/root/.hermes/commons/data/mentor/evidence.jsonl"

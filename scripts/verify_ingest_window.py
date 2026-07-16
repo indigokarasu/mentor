@@ -17,6 +17,11 @@ Invoke WITHOUT a pipe (cron `tirith:pipe_to_interpreter` blocks `cmd | python3`)
 import os, json, sys
 from datetime import datetime, timezone
 
+_HELP_ARGS = {"--help", "-h"}
+if set(sys.argv[1:]) & _HELP_ARGS:
+    print((__doc__ or "").strip() or "Usage: python3 verify_ingest_window.py")
+    sys.exit(0)
+
 WINDOW = int(sys.argv[1]) if len(sys.argv) > 1 else 5
 MTIME_COVER = int(sys.argv[2]) if len(sys.argv) > 2 else 450
 
