@@ -40,6 +40,8 @@ The cron job `mentor:deep` should be updated to:
 python3 /root/.hermes/profiles/indigo/skills/ocas-mentor/scripts/cron-heartbeat-deep-dualpath.py
 ```
 
+> ⚠️ **The deep script IGNORES stdin.** Unlike the light heartbeat (`cron-heartbeat-light.py < file`), `cron-heartbeat-deep-dualpath.py` does NOT read a file list from stdin — `main()` calls `os.walk()` over both `JOURNALS_PATHS` internally (confirmed 2026-07-16: 30,740 journals scanned with no stdin fed). The main SKILL.md deep recipe's `... < /tmp/mentor_deep_files.txt` redirect is a **no-op for the run** (harmless, discarded). Still build `/tmp/mentor_deep_files.txt` because `scripts/deep_ingest_backup.py` (the ingestion-backup fallback) reads it — but do NOT expect it to scope the scan. Invoke the deep script as a plain standalone process: `python3 /path/to/cron-heartbeat-deep-dualpath.py`. After the run, reconcile the two stores with `scripts/mentor_deep_sync.py`.
+
 ## Evidence Schema Difference
 The evidence record includes `"dual_path": true` and `"active_coverage_raw"` fields not present in stock script output. Display code should handle both schemas.
 

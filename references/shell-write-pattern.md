@@ -17,7 +17,8 @@ In cron-triggered `terminal()` calls, Python `with open()` writes to persistent 
 | `cat tmpfile >> file` | ✅ | Reliable |
 | Python write to `/tmp/` | ✅ | /tmp is exempt |
 | `write_file` tool + `python3 /tmp/script.py` | ✅ | **Most reliable for cron mode** |
-| Heredoc with nested single quotes | ❌ **FAILS** | `terminal()` heredoc containing Python dicts with apostrophes (e.g., `reason: 'Self-sent (sender = mx.indigo.karasu@gmail.com).'`) breaks shell quoting. Even `<< 'EOF'` (no-expand) fails because the shell still tracks quote boundaries across heredoc content. **Fix:** `write_file` → `/tmp/script.py` → `python3 /tmp/script.py`. Bypasses shell quoting entirely. Confirmed 2026-06-24 dispatch #54. |
+
+> ⚠️ **HEREDOC WARNING (corrected 2026-07-16):** The `python3 << 'PYEOF'` blocks shown in the examples below are ILLUSTRATIVE ONLY. In a cron `terminal()` call, ANY `<<` heredoc (including `python3 << 'PYEOF'`) triggers the terminal's foreground/background detector and returns `exit_code=-1` — the same trap as `cat > file << 'EOF'` at the row above. **Never paste a heredoc into a cron `terminal()` call.** Always `write_file` the script body to `/tmp/` first (via the write_file tool), then run `python3 /tmp/script.py` as its own `terminal()` call. This is the only pattern that reliably persists writes in cron mode. | Heredoc with nested single quotes | ❌ **FAILS** | `terminal()` heredoc containing Python dicts with apostrophes (e.g., `reason: 'Self-sent (sender = mx.indigo.karasu@gmail.com).'`) breaks shell quoting. Even `<< 'EOF'` (no-expand) fails because the shell still tracks quote boundaries across heredoc content. **Fix:** `write_file` → `/tmp/script.py` → `python3 /tmp/script.py`. Bypasses shell quoting entirely. Confirmed 2026-06-24 dispatch #54. |
 
 ## Core Patterns
 
@@ -37,10 +38,10 @@ EOF
 
 ### Write evidence via Python (compute values via subprocess, not env vars)
 
-Shell variables set in the same `terminal()` block are NOT visible inside `python3 << 'PYEOF'` — compute values from filesystem:
+> ⚠️ In cron `terminal()`, do NOT use `python3 << 'PYEOF'` — heredocs return `exit_code=-1`. Instead `write_file` the body below to `/tmp/evidence_write.py` (via the write_file tool), then run `python3 /tmp/evidence_write.py` as its own `terminal()` call. Shell variables are NOT visible inside the script; compute everything from the filesystem. This is the only pattern that reliably persists the write.
 
-```bash
-python3 << 'PYEOF'
+```python
+# /tmp/evidence_write.py  (written via write_file tool, then: python3 /tmp/evidence_write.py)
 import json, os, subprocess
 from datetime import datetime, timezone
 
@@ -56,7 +57,7 @@ record = {
     "run_id": "mentor-light-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ"),
     "timestamp": datetime.now(timezone.utc).isoformat(),
     "heartbeat_type": "light",
-    "total_files_3d": total_3d,
+    "total_files_scanned": total_3d,
     "new_files_ingested": true_new,
     "active_skills_30d": active_30d,
     "evaluation_coverage": round(true_new / active_30d, 4) if active_30d > 0 else 0,
@@ -73,17 +74,16 @@ if os.path.getsize(tmp_path) > 0:
         with open(tmp_path) as tmp:
             f.write(tmp.read())
     print("Evidence persisted")
-PYEOF
 ```
 
 **CRITICAL: Validate before appending to JSONL** — `/tmp` file must be exactly 1 line. `json.dump(record, indent=2)` produces multi-line output that corrupts JSONL.
 
 ### Commons sync (profile → commons)
 
-Line-level Python set-difference — `cp -f` silently skips when profile is newer:
+Line-level Python set-difference — `cp -f` silently skips when profile is newer. **In cron `terminal()`, do NOT use `python3 << 'PYEOF'`** (heredoc → `exit_code=-1`). `write_file` the body below to `/tmp/mentor_sync.py`, then run `python3 /tmp/mentor_sync.py`.
 
-```bash
-python3 << 'PYEOF'
+```python
+# /tmp/mentor_sync.py  (written via write_file tool, then: python3 /tmp/mentor_sync.py)
 for src, dst in [
     ("/root/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl", "/root/.hermes/commons/data/mentor/evidence.jsonl"),
     ("/root/.hermes/profiles/indigo/commons/data/mentor/ingestion_log.jsonl", "/root/.hermes/commons/data/mentor/ingestion_log.jsonl"),
@@ -96,7 +96,6 @@ for src, dst in [
             for line in sorted(new):
                 f.write(line + '\n')
         print(f"Synced {len(new)} lines to {dst}")
-PYEOF
 ```
 
 ## Active Skills Counting
