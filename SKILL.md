@@ -139,8 +139,8 @@ heartbeat or commons-sync. Summary of the mandatory caller workflow:
 **Deep heartbeat — verify-and-backup (SINGLE `terminal()` call):**
 
 - [ ] `mkdir -p` proposals dir before running
-- [ ] Build dual-path file list (commons + profile), `sort -u`
-- [ ] Run `cron-heartbeat-deep-dualpath.py < /tmp/mentor_deep_files.txt` (stdin redirect)
+- [ ] Build dual-path file list (commons + profile), `sort -u` → `/tmp/mentor_deep_files.txt` (needed by `deep_ingest_backup.py`, NOT by the run itself)
+- [ ] Run `cron-heartbeat-deep-dualpath.py` (standalone — **it IGNORES stdin**; `main()` calls `os.walk()` over both `JOURNALS_PATHS` internally. The `< /tmp/mentor_deep_files.txt` redirect is a harmless no-op, not a scoping input. Confirmed 2026-07-16: 30,740 journals scanned with no stdin fed.)
 - [ ] Verify evidence, ingestion, decisions, journal independently
 - [ ] Back up via `/tmp/mentor_deep_backup.py` if ingestion delta = 0
 - [ ] Run `correct_active_skills_30d.py` (reports `script=None` for deep — expected)
@@ -341,6 +341,7 @@ See `references/self-update-mentor.md`.
 | `scripts/cron-heartbeat-deep.py` | Original deep heartbeat (single-path, commons only — use dualpath instead) |
 | `scripts/cron-heartbeat-deep-dualpath.py` | **Preferred** deep heartbeat with dual-path scan + profile data sync |
 | `scripts/deep_ingest_backup.py` | Deep heartbeat ingestion backup — run when `wc -l` shows delta=0 after deep heartbeat |
+| `scripts/mentor_deep_sync.py` | Bidirectional profile↔commons sync (evidence + ingestion) via line-level set-difference — run after any heartbeat to reconcile the two stores |
 | `references/gap-backfill-auto-correct.md` | **When you discover a phantom filename entry in the eval file** — gap backfill auto-corrects wrong filenames from script stdout rollover; the phantom entry is inert and harmless |
 | `references/ingestion-cross-reference-technique.md` | **READ DURING INGESTION CROSS-REFERENCE** — naive `comm -23` is misleading; use Python set difference instead |
 | `references/cron-execution-patterns.md` | **READ BEFORE RUNNING MENTOR HEARTBEATS IN CRON** — critical patterns for script execution, verification workflows, and common pitfalls in cron-triggered heartbeats |
