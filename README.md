@@ -1,26 +1,12 @@
 # mentor
 
 <p align="center">
-<img src="./assets/readme/hero.jpg" width="100%" alt="Mentor: multi-skill orchestration and self-improvement engine — decomposes goals, supervises execution, analyzes outcomes.">
+  <img src="./assets/readme/hero.jpg" width="100%" alt="Mentor: orchestrates multi-skill goal execution, supervises outcomes, and proposes improvements">
 </p>
 
-mentor — Mentor: multi-skill orchestration and self-improvement engine — decomposes goals, supervises execution, analyzes outcomes.
+Mentor decomposes goals into task graphs, supervises execution across skills, and analyzes outcomes to propose improvements. In runtime mode it routes, escalates, and repairs failures. In heartbeat mode it reads journals from every skill, scores performance against baselines, and sends improvement proposals to Forge.
 
-
-> Tell it what you need. It does the work.
-
-## What it does
-
-Mentor operates in two modes. In **runtime mode** it decomposes goals into task graphs, supervises execution, and repairs failures through layered escalation. In **heartbeat mode** it reads journals from every skill, scores OKRs against baselines, and generates improvement proposals routed to Forge and Fellow. It also supports named **Workflow Plans** — pre-authored, parameterized task sequences invokable by name.
-
-## Dependencies
-
-- [Forge](https://github.com/indigokarasu/forge) — receives VariantProposal/VariantDecision files
-- [Fellow](https://github.com/indigokarasu/fellow) — runs controlled benchmark experiments
-- [Elephas](https://github.com/indigokarasu/elephas) — Chronicle read-only for evaluation
-- [Corvus](https://github.com/indigokarasu/corvus) — pattern data for anomaly context
-- All skills — reads journals from all skills
-
----
-
-*mentor is part of the [OCAS Agent Suite](https://github.com/indigokarasu).*
+**Capabilities:**
+- Goal decomposition into supervised task graphs
+- Layered failure escalation and repair
+- Weekly self-improvement proposals routed to Forge
