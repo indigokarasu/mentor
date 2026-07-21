@@ -1,7 +1,7 @@
 # mentor
 
 <p align="center">
-<img src="./assets/readme/hero.svg" width="100%" alt="Mentor: multi-skill orchestration and self-improvement engine — decomposes goals, supervises execution, analyzes outcomes.">
+<img src="./assets/readme/hero.jpg" width="100%" alt="Mentor: multi-skill orchestration and self-improvement engine — decomposes goals, supervises execution, analyzes outcomes.">
 </p>
 
 mentor — Mentor: multi-skill orchestration and self-improvement engine — decomposes goals, supervises execution, analyzes outcomes.
