@@ -30,14 +30,14 @@
 
 ### Email Triage
 
-#### owner's Account (google-workspace-user)
+#### <operator>'s Account (<user-google-email>)
 - 11 actionable, 3 high-priority
 - **Priority 80:** <contact> / <vendor> — <item> shipped via DHL today. Tracking tomorrow. → No action (positive resolution, informational)
 - **Priority 70:** <bank> — Credit card payment scheduled ($<amount>). → No action (informational)
 - **Priority 65:** <contact> / <expert-network> — Paid survey follow-up. → No action (low-priority market research)
 - **Priority 30:** Amazon shipment, <expert-network> acknowledgment, <vendor> compliance, <wallet> passkey, Kickstargogo promo. → All no action
 
-#### Indigo's Account (mx.indigo.karasu@gmail.com)
+#### the agent's Account (<third-party-or-user-email>)
 - 5 actionable, 2 high-priority
 - **Priority 70:** GitHub PR #12 (Nano-Collective/get-md) — **APPROVED** by @akramcodez ("LGTM @indigokarasu"). → No action
 - **Priority 70:** GitHub PR #13 (DOCX→Markdown) — Also approved. → No action

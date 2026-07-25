@@ -33,14 +33,14 @@
 - Eval file: 38,620 → 53,814 (+15,194 from backfill + mitigation + ingest)
 
 ### Email Triage
-- **owner (7 threads):** All no-action
+- **<operator> (7 threads):** All no-action
   - <contact>/<vendor>: Panel shipped DHL (supplier update, no action)
   - <bank>: Payment scheduled (transactional)
   - <expert-network> survey: Paid survey follow-up (no action)
   - <contact>/<vendor>: doc proof not received (informational)
   - Amazon: Eve Weather shipped (transactional)
   - <wallet>: Passkey created + wallet activated (transactional)
-- **Indigo (3 threads):** All no-action
+- **the agent (3 threads):** All no-action
   - GitHub PR #12/#13 reviews: other-profile's domain
   - Wikipedia: Login verification code (transactional)
 - State files updated for both accounts

@@ -2,7 +2,7 @@
 """
 Mentor Deep Heartbeat — Cron-Mode Script
 =========================================
-Run via: terminal(command="python3 <hermes-root>/skills/ocas-mentor/scripts/cron-heartbeat-deep.py")
+Run via: terminal(command="python3 ~/.hermes/skills/ocas-mentor/scripts/cron-heartbeat-deep.py")
 
 Handles three journal file formats:
   1. JSONL (.jsonl): one JSON dict per line
@@ -124,8 +124,8 @@ def load_journal_entries(filepath):
 
 
 # === PATHS ===
-JOURNALS_ROOT = "<hermes-root>/commons/journals/"
-MENTOR_DATA = "<hermes-root>/commons/data/mentor/"
+JOURNALS_ROOT = "~/.hermes/commons/journals/"
+MENTOR_DATA = "~/.hermes/commons/data/mentor/"
 INGESTION_LOG = os.path.join(MENTOR_DATA, "ingestion_log.jsonl")
 EVIDENCE_LOG = os.path.join(MENTOR_DATA, "evidence.jsonl")
 DECISIONS_LOG = os.path.join(MENTOR_DATA, "decisions.jsonl")

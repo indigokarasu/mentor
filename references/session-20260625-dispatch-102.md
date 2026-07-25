@@ -2,15 +2,15 @@
 
 ## Email Triage
 
-### owner's account (16 actionable, 4 high-priority → 0 escalations)
-- **<contact> (<vendor>)**: `action_required`, priority 80 — Panel testing completed, shipping DHL today. **No action** — supplier update confirming owner's question. Resolves 47-day follow-up.
+### <operator>'s account (16 actionable, 4 high-priority → 0 escalations)
+- **<contact> (<vendor>)**: `action_required`, priority 80 — Panel testing completed, shipping DHL today. **No action** — supplier update confirming <operator>'s question. Resolves 47-day follow-up.
 - **<bank> credit card payment**: `scheduling`, priority 70 — Transactional. No action.
 - **<contact> (<expert-network>)**: `response_needed`, priority 65 — Follow-up on sharing experience. No action.
 - **<contact> (<expert-network>)**: `response_needed`, priority 65 — Survey follow-up. No action.
 - **Morning Briefing, Dream**: `personal`, priority 55 — Self-sent. No action.
 - **Alpaca, Couchsurfing, <contact>, <exchange>**: `informational` — Marketing/transactional. No action.
 
-### Indigo's account (5 actionable, 2 high-priority → 0 escalations)
+### the agent's account (5 actionable, 2 high-priority → 0 escalations)
 - **GitHub PR #12, PR #13 reviews**: `pr_review`, priority 70 — other-profile's domain. No action.
 - **Newspapers.com, GitGuardian, Wikipedia**: `informational` — Marketing/transactional/security noise. No action.
 

@@ -24,8 +24,8 @@
 - Sync to commons: 12,579 lines (large — accumulated from prior syncs)
 
 ### Email Triage
-- **owner**: 0 actionable. All pending follow-ups have `from_me=True` (owner already responded). 77 messages scanned by triage script.
-- **Indigo**: 0 actionable. PR #12 approved (LGTM, merge-blocked by review policy). PR #13 fix for double HTML escaping already pushed (commit `8d874389`). Wikipedia code = security notification.
+- **<operator>**: 0 actionable. All pending follow-ups have `from_me=True` (<operator> already responded). 77 messages scanned by triage script.
+- **the agent**: 0 actionable. PR #12 approved (LGTM, merge-blocked by review policy). PR #13 fix for double HTML escaping already pushed (commit `8d874389`). Wikipedia code = security notification.
 
 ## Key Learnings
 
@@ -46,9 +46,9 @@ Attempted to reply to a PR #13 review comment via `gh api repos/.../pulls/commen
 
 ### Triage script auth issue
 
-`python3 scripts/triage.py --account mx.indigo.karasu@gmail.com` reported "Auth OK: google-workspace-user" — it used owner's auth even when targeting Indigo's account. The script likely has a hardcoded credential path or the `--account` flag only affects the search query, not authentication.
+`python3 scripts/triage.py --account <third-party-or-user-email>` reported "Auth OK: <user-google-email>" — it used <operator>'s auth even when targeting the agent's account. The script likely has a hardcoded credential path or the `--account` flag only affects the search query, not authentication.
 
-**Workaround:** For Indigo's account, check state files directly (`last_email_check_mx_indigo_karasu_gmail_com.json`) and use `gmail_scan.py` with explicit auth.
+**Workaround:** For the agent's account, check state files directly (`last_email_check_mx_indigo_karasu_gmail_com.json`) and use `gmail_scan.py` with explicit auth.
 
 ### Dispatcher `new_files` timestamp mismatch (recurring)
 
