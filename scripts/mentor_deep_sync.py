@@ -21,8 +21,8 @@ if set(sys.argv[1:]) & _HELP_ARGS:
     sys.exit(0)
 
 
-PROFILE = "$HERMES_HOME/commons/data/mentor"
-COMMONS = "~/.hermes/commons/data/mentor"
+PROFILE = os.path.expanduser("$HERMES_HOME/commons/data/mentor")
+COMMONS = os.path.expanduser("~/.hermes/commons/data/mentor")
 
 
 def sync(src, dst, label):

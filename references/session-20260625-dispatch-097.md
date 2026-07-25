@@ -37,7 +37,7 @@
   - <contact>/<vendor>: Panel shipped DHL (supplier update, no action)
   - <bank>: Payment scheduled (transactional)
   - <expert-network> survey: Paid survey follow-up (no action)
-  - <contact>/<vendor>: doc proof not received (informational)
+  - <contact>/<third-party-domain>: doc proof not received (informational)
   - Amazon: Eve Weather shipped (transactional)
   - <wallet>: Passkey created + wallet activated (transactional)
 - **the agent (3 threads):** All no-action

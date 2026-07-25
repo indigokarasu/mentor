@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 """
 Mentor Deep Heartbeat — Cron-Mode Script
 =========================================
@@ -124,8 +125,8 @@ def load_journal_entries(filepath):
 
 
 # === PATHS ===
-JOURNALS_ROOT = "~/.hermes/commons/journals/"
-MENTOR_DATA = "~/.hermes/commons/data/mentor/"
+JOURNALS_ROOT = os.path.expanduser("~/.hermes/commons/journals/")
+MENTOR_DATA = os.path.expanduser("~/.hermes/commons/data/mentor/")
 INGESTION_LOG = os.path.join(MENTOR_DATA, "ingestion_log.jsonl")
 EVIDENCE_LOG = os.path.join(MENTOR_DATA, "evidence.jsonl")
 DECISIONS_LOG = os.path.join(MENTOR_DATA, "decisions.jsonl")

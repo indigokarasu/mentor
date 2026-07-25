@@ -26,8 +26,8 @@ if set(sys.argv[1:]) & _HELP_ARGS:
     sys.exit(0)
 
 PATHS = [
-    ("profile", "$HERMES_HOME/commons/data/mentor/evidence.jsonl"),
-    ("commons", "~/.hermes/commons/data/mentor/evidence.jsonl"),
+    ("profile", os.path.expanduser("$HERMES_HOME/commons/data/mentor/evidence.jsonl")),
+    ("commons", os.path.expanduser("~/.hermes/commons/data/mentor/evidence.jsonl")),
 ]
 
 
