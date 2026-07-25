@@ -7,8 +7,8 @@
 - **Mentor:** 992 files scanned (3-day window), 2 ingested, 0 errors. `active_skills_30d` corrected 9→22 (confirmation #27). Evidence +2, ingestion +2, journal verified. Commons synced.
 - **Praxis:** 4 journals ingested via mtime-based discovery (captured TS: `2026-06-25T00:52:39.287841+00:00`). 0 events, 4 gap backfill. Third-wave mitigation applied (3 dispatch-output journals added to eval file). `last_ingest_run` advanced to `2026-06-25T00:59:17.414250+00:00`.
 - **Email:**
-  - owner: 1 thread — DoorDash order confirmation (Next Level VG, `no-reply@doordash.com`). Priority 80 but transactional. No action.
-  - Indigo: 7 threads — all informational (Twilio invite, NVIDIA NGC retirement, Taskrabbit review, ChatGPT feature, Wikipedia verification), self-sent (morning briefing), or already replied (Chris/Hermes thread). No action.
+  - <operator>: 1 thread — DoorDash order confirmation (Next Level VG, `no-reply@doordash.com`). Priority 80 but transactional. No action.
+  - the agent: 7 threads — all informational (Twilio invite, NVIDIA NGC retirement, Taskrabbit review, ChatGPT feature, Wikipedia verification), self-sent (morning briefing), or already replied (Chris/Hermes thread). No action.
 
 ## Key Observations
 - Mixed dispatch (journals + email) handled correctly: journals first (3-pipeline sequence), email triage last (independent, no journal output).

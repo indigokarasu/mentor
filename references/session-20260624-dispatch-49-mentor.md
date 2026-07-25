@@ -13,7 +13,7 @@
 - **Correction mandatory:** YES — script succeeded on all 3 writes but count was still wrong
 
 ## Path Discovery: correct_active_skills_30d.py
-The correction script path was initially tried as `<hermes-home>/skills/mentor/scripts/correct_active_skills_30d.py` — **WRONG** (doesn't exist). The correct path is `<hermes-home>/skills/ocas-mentor/scripts/correct_active_skills_30d.py`. The skill name is `ocas-mentor`, not `mentor`. This seems obvious but the skill directory naming convention (ocas- prefix) is easy to forget under pressure, especially when the data directory is `commons/data/mentor/` (no ocas- prefix).
+The correction script path was initially tried as `<hermes-home>/profiles/indigo/skills/mentor/scripts/correct_active_skills_30d.py` — **WRONG** (doesn't exist). The correct path is `<hermes-home>/profiles/indigo/skills/ocas-mentor/scripts/correct_active_skills_30d.py`. The skill name is `ocas-mentor`, not `mentor`. This seems obvious but the skill directory naming convention (ocas- prefix) is easy to forget under pressure, especially when the data directory is `commons/data/mentor/` (no ocas- prefix).
 
 **Fix:** Always use `skills/ocas-mentor/scripts/` path. The data directory (`commons/data/mentor/`) does NOT match the skill directory (`skills/ocas-mentor/`).
 
@@ -26,7 +26,7 @@ The Praxis ingest at 19:30:13Z processed 6 journals but did NOT automatically ad
 This is a recurring pattern — the Praxis ingest script does NOT always add all dispatch-output journals to the eval file. The third-wave mitigation is the caller's responsibility.
 
 ## Assessment
-Routine multi-skill dispatch. All 4 pipelines completed clean. Email: all action:none (owner hard rule enforced, Indigo self-sent filter confirmed). Forge: no-op. Mentor: correction 9→22 (mandatory). Praxis: 6 journals, 4 events (all no-signal). Third-wave mitigation applied.
+Routine multi-skill dispatch. All 4 pipelines completed clean. Email: all action:none (<operator> hard rule enforced, the agent self-sent filter confirmed). Forge: no-op. Mentor: correction 9→22 (mandatory). Praxis: 6 journals, 4 events (all no-signal). Third-wave mitigation applied.
 
 ## Key Metrics
 - `evaluation_coverage`: 0.1111 (1 skill with new / 9 script-counted)

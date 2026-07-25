@@ -45,8 +45,8 @@ Light heartbeat cron run. Script self-journaling **succeeded** on all 3 writes (
 
 ## Files Modified
 
-- `<hermes-home>/commons/data/mentor/evidence.jsonl` (+2 lines: script + backup)
-- `<hermes-home>/commons/data/mentor/ingestion_log.jsonl` (+6 lines)
-- `<hermes-home>/commons/journals/ocas-mentor/2026-06-15/mentor-light-20260615T231221Z.json` (new)
-- `<hermes-root>/commons/data/mentor/evidence.jsonl` (+2 lines synced)
-- `<hermes-root>/commons/data/mentor/ingestion_log.jsonl` (+6 lines synced)
+- `<hermes-home>/profiles/indigo/commons/data/mentor/evidence.jsonl` (+2 lines: script + backup)
+- `<hermes-home>/profiles/indigo/commons/data/mentor/ingestion_log.jsonl` (+6 lines)
+- `<hermes-home>/profiles/indigo/commons/journals/ocas-mentor/2026-06-15/mentor-light-20260615T231221Z.json` (new)
+- `<hermes-home>/commons/data/mentor/evidence.jsonl` (+2 lines synced)
+- `<hermes-home>/commons/data/mentor/ingestion_log.jsonl` (+6 lines synced)

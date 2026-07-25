@@ -26,21 +26,21 @@ Use **timestamp-based set-difference**, not line-count comparison:
 
 ```bash
 # Get the last timestamp in commons
-LAST_COMMONS=$(tail -1 <hermes-root>/commons/data/mentor/evidence.jsonl | python3 -c "import sys,json; print(json.loads(sys.stdin.read()).get('timestamp',''))")
+LAST_COMMONS=$(tail -1 <hermes-home>/commons/data/mentor/evidence.jsonl | python3 -c "import sys,json; print(json.loads(sys.stdin.read()).get('timestamp',''))")
 
 # Append only profile lines newer than commons' last timestamp
 python3 -c "
 import json
 last_commons = '$LAST_COMMONS'
 count = 0
-with open('<hermes-home>/commons/data/mentor/evidence.jsonl') as f:
+with open('<hermes-home>/profiles/indigo/commons/data/mentor/evidence.jsonl') as f:
     for line in f:
         line = line.strip()
         if not line: continue
         try:
             d = json.loads(line)
             if d.get('timestamp','') > last_commons:
-                with open('<hermes-root>/commons/data/mentor/evidence.jsonl', 'a') as out:
+                with open('<hermes-home>/commons/data/mentor/evidence.jsonl', 'a') as out:
                     out.write(line + '\n')
                 count += 1
         except: pass
@@ -54,7 +54,7 @@ This is idempotent and safe regardless of whether commons is behind, ahead, or e
 
 After sync, confirm the correction record made it:
 ```bash
-grep -a "14:55:5" <hermes-root>/commons/data/mentor/evidence.jsonl | grep "active_skills_30d_true" | head -1
+grep -a "14:55:5" <hermes-home>/commons/data/mentor/evidence.jsonl | grep "active_skills_30d_true" | head -1
 ```
 
 ## Outcome

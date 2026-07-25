@@ -10,7 +10,7 @@
 - **Praxis:** 5 journals evaluated via mtime (0 events, all no-signal). **15,238 gap backfill** — accumulated same-day concurrent heartbeat eval gaps, including 31 Praxis dispatch journals from today that were processed by concurrent heartbeats but never added to `journals_evaluated.jsonl`. Eval file: 38,612→53,851 entries.
 
 ### Email Triage
-**google-workspace-user** — 7 threads, 0 escalations:
+**<user-google-email>** — 7 threads, 0 escalations:
 - ARGGER (Emily Zhang): Panel shipped DHL — supplier update, no action
 - Chase: Payment scheduled — transactional, no action
 - Dialectica (Maria Kiseleva): Survey follow-up — `intent: response_needed` but correctly classified as **no_action** (market research, no prior commitment)
@@ -18,7 +18,7 @@
 - Amazon: Shipment delivered — no action
 - Paze ×2: Passkey + welcome — system notifications, no action
 
-**mx.indigo.karasu@gmail.com** — 3 threads, 0 escalations:
+**<third-party-or-user-email>** — 3 threads, 0 escalations:
 - GitHub ×2: PR #12 and PR #13 review notifications — Koda's domain, no action
 - Wikipedia: Login verification code — system notification, no action
 
@@ -28,7 +28,7 @@
 31 Praxis dispatch journals from today were missing from `journals_evaluated.jsonl`. These were written by concurrent Praxis heartbeats (different cron triggers) that didn't coordinate eval file writes. The gap backfill caught them all. This is a variant of the "accumulated backlog" pattern but specifically from same-day concurrent heartbeats.
 
 ### Survey Follow-up Classification
-Dialectica survey follow-up (`intent: response_needed`, no prior reply from owner) correctly classified as `no_action`. Market research surveys with `response_needed` intent do not require owner's personal input — they are low-priority solicitations, not genuine action items.
+Dialectica survey follow-up (`intent: response_needed`, no prior reply from <operator>) correctly classified as `no_action`. Market research surveys with `response_needed` intent do not require <operator>'s personal input — they are low-priority solicitations, not genuine action items.
 
 ## Verification
 - Forge: no-op journal written

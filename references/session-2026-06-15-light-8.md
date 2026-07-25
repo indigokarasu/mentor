@@ -49,9 +49,9 @@ All mandatory steps completed:
 
 ## Files Modified
 
-- `<hermes-home>/commons/data/mentor/evidence.jsonl` (+2 lines: script + corrected)
-- `<hermes-home>/commons/data/mentor/ingestion_log.jsonl` (+5 lines, all re-ingestions)
-- `<hermes-home>/commons/journals/ocas-mentor/2026-06-15/mentor-light-20260615T185159Z.json` (journal)
+- `<hermes-home>/profiles/indigo/commons/data/mentor/evidence.jsonl` (+2 lines: script + corrected)
+- `<hermes-home>/profiles/indigo/commons/data/mentor/ingestion_log.jsonl` (+5 lines, all re-ingestions)
+- `<hermes-home>/profiles/indigo/commons/journals/ocas-mentor/2026-06-15/mentor-light-20260615T185159Z.json` (journal)
 - Commons synced: ingestion +5 lines
 
 ## Notes

@@ -10,7 +10,7 @@ Two dispatch items processed:
 
 ## Email Triage
 
-- **475HOA fire alarm thread** (Starr Knight/latest): owner already replied "Thanks for the update Pedro!" — no action
+- **475HOA fire alarm thread** (Starr Knight/latest): <operator> already replied "Thanks for the update Pedro!" — no action
 - **NGC API paths retiring** (contact@example.com): intent=informational — no action (NVIDIA product notification)
 
 ## Journal Pipelines

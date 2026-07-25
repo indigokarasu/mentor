@@ -5,8 +5,8 @@
 ## What Happened
 
 ### Email Triage (ocas-dispatch skill)
-- **owner account:** 7 threads triaged. ARGGER shipment resolved (47-day follow-up). Bywater COC Shannon signed doc needs resend (escalated). All others action:none.
-- **Indigo account:** 3 threads. PR #12 approved. PR #13 blocker (double HTML escaping). Wikipedia login informational.
+- **<operator> account:** 7 threads triaged. ARGGER shipment resolved (47-day follow-up). Bywater COC Shannon signed doc needs resend (escalated). All others action:none.
+- **the agent account:** 3 threads. PR #12 approved. PR #13 blocker (double HTML escaping). Wikipedia login informational.
 
 ### Journal Pipeline
 
@@ -32,5 +32,5 @@ The mandatory `active_skills_30d` correction was NOT run in dispatch mode. The d
 
 ## Escalations
 
-1. **🔴 Bywater COC for Shannon** — owner needs to resend signed COC document. Medical procedures at UCSF at risk.
-2. **🟡 PR #13 double-escape fix** — Indigo's own codebase, can be fixed autonomously.
+1. **🔴 Bywater COC for Shannon** — <operator> needs to resend signed COC document. Medical procedures at UCSF at risk.
+2. **🟡 PR #13 double-escape fix** — the agent's own codebase, can be fixed autonomously.

@@ -15,11 +15,11 @@ def load_module():
 
 def test_extract_skill_from_profile_scoped_journal_path():
     module = load_module()
-    path = "<hermes-home>/commons/journals/ocas-mentor/2026-07-09/mentor-light-20260709T133823Z.json"
+    path = "~/.hermes/profiles/indigo/commons/journals/ocas-mentor/2026-07-09/mentor-light-20260709T133823Z.json"
     assert module.extract_skill_from_journal_path(path) == "ocas-mentor"
 
 
 def test_extract_skill_from_shared_commons_journal_path():
     module = load_module()
-    path = "<hermes-root>/commons/journals/ocas-praxis/2026-07-09/praxis-run.json"
+    path = "~/.hermes/commons/journals/ocas-praxis/2026-07-09/praxis-run.json"
     assert module.extract_skill_from_journal_path(path) == "ocas-praxis"

@@ -4,9 +4,9 @@
 
 | Purpose | Path |
 |---------|------|
-| Mentor data (evidence, ingestion, anomalies, OKR, decisions, proposals) | `<hermes-home>/commons/data/mentor/` |
-| Mentor journals | `<hermes-home>/commons/journals/ocas-mentor/` |
-| Skill directory | `<hermes-home>/skills/ocas-mentor/` |
+| Mentor data (evidence, ingestion, anomalies, OKR, decisions, proposals) | `<hermes-home>/profiles/indigo/commons/data/mentor/` |
+| Mentor journals | `<hermes-home>/profiles/indigo/commons/journals/ocas-mentor/` |
+| Skill directory | `<hermes-home>/profiles/indigo/skills/ocas-mentor/` |
 
 ## Journal Locations (DUAL — scan BOTH)
 
@@ -14,8 +14,8 @@ Skill journals are written to **two** different locations depending on the skill
 
 | Location | Path | Notes |
 |----------|------|-------|
-| Shared commons | `<hermes-root>/commons/journals/` | Most OCAS skills write here (custodian, elephas, spot, dispatch, bones, etc.) |
-| Profile-scoped commons | `<hermes-home>/commons/journals/` | Some skills write here (elephas cron runs, bones monitor, forge, mentor self, etc.) |
+| Shared commons | `<hermes-home>/commons/journals/` | Most OCAS skills write here (custodian, elephas, spot, dispatch, bones, etc.) |
+| Profile-scoped commons | `<hermes-home>/profiles/indigo/commons/journals/` | Some skills write here (elephas cron runs, bones monitor, forge, mentor self, etc.) |
 
 **Critical:** Scanning only one path will miss active skills and produce incorrect `active_skills_30d` counts. The `find` commands in heartbeat scripts must scan both paths and merge results (e.g., `cat list1 list2 | sort -u`).
 
@@ -35,8 +35,8 @@ be invisible to downstream processes that read from `mentor/`.
 
 After every heartbeat, sync key files from profile to commons:
 ```bash
-PROFILE_DATA="<hermes-home>/commons/data/mentor"
-COMMONS_DATA="<hermes-root>/commons/data/mentor"
+PROFILE_DATA="<hermes-home>/profiles/indigo/commons/data/mentor"
+COMMONS_DATA="<hermes-home>/commons/data/mentor"
 for f in evidence.jsonl ingestion_log.jsonl anomalies.jsonl okr_state.json decisions.jsonl; do
     cp "$PROFILE_DATA/$f" "$COMMONS_DATA/$f" 2>/dev/null
 done
@@ -47,10 +47,10 @@ done
 **Always use UTC for journal directory names.** The `run_id` is composed from UTC time (`datetime.now(timezone.utc)`), so the directory must match:
 ```bash
 # CORRECT — UTC date matches UTC run_id
-JOURNAL_DIR="<hermes-home>/commons/journals/ocas-mentor/$(date -u +%Y-%m-%d)"
+JOURNAL_DIR="<hermes-home>/profiles/indigo/commons/journals/ocas-mentor/$(date -u +%Y-%m-%d)"
 
 # WRONG — local date can be a day behind, putting journal in wrong directory
-JOURNAL_DIR="<hermes-home>/commons/journals/ocas-mentor/$(date +%Y-%m-%d)"
+JOURNAL_DIR="<hermes-home>/profiles/indigo/commons/journals/ocas-mentor/$(date +%Y-%m-%d)"
 ```
 If the server timezone is not UTC, using `date +%Y-%m-%d` puts the journal file in yesterday's directory while the filename contains today's UTC timestamp — creating a mismatch that confuses cross-reference and manual inspection.
 

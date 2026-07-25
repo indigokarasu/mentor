@@ -51,9 +51,9 @@ The mandatory verify-and-backup workflow (single `terminal()` call) executed com
 
 ## Files Modified
 
-- `<hermes-home>/commons/data/mentor/evidence.jsonl` (+2 lines: script + corrected)
-- `<hermes-home>/commons/data/mentor/ingestion_log.jsonl` (+8 lines)
-- `<hermes-home>/commons/journals/ocas-mentor/2026-06-15/mentor-light-20260615T132558Z.json` (script self-journal)
+- `<hermes-home>/profiles/indigo/commons/data/mentor/evidence.jsonl` (+2 lines: script + corrected)
+- `<hermes-home>/profiles/indigo/commons/data/mentor/ingestion_log.jsonl` (+8 lines)
+- `<hermes-home>/profiles/indigo/commons/journals/ocas-mentor/2026-06-15/mentor-light-20260615T132558Z.json` (script self-journal)
 - Commons synced: evidence +2, ingestion +8
 
 ## Notes

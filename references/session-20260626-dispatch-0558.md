@@ -23,9 +23,9 @@
 ### 2. Email triage: all second-wave re-detection
 
 All 3 email threads (2 owner, 1 indigo) had `is_new: false` and were already handled:
-- owner `<thread-id>`: Data Intelligence Study — already has `drafted_response` in state
-- owner `<thread-id>`: GLG — already marked `no_action` (informational/closed)
-- Indigo `<thread-id>`: Wikipedia AFC acceptance — already marked `no_action` (informational)
+- <operator> `<thread-id>`: Data Intelligence Study — already has `drafted_response` in state
+- <operator> `<thread-id>`: GLG — already marked `no_action` (informational/closed)
+- the agent `<thread-id>`: Wikipedia AFC acceptance — already marked `no_action` (informational)
 
 No escalations. State files updated to current timestamp.
 

@@ -14,7 +14,7 @@
 ```python
 python3 << 'PYEOF'
 import os
-journal_dir = f"<hermes-home>/commons/journals/ocas-mentor/2026-06-21"
+journal_dir = f"<hermes-home>/profiles/indigo/commons/journals/ocas-mentor/2026-06-21"
 os.makedirs(journal_dir, exist_ok=True)
 # ... use journal_dir, not $JOURNAL_DIR ...
 PYEOF

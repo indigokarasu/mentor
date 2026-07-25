@@ -46,7 +46,7 @@
 
 23. **Python `with open()` writes to evidence.jsonl and ingestion_log.jsonl are INTERMITTENT in cron mode — verify every run** — The `cron-heartbeat-light.py` script's Python `with open()` writes can silently fail (0 delta) regardless of which files succeeded. The three writes (evidence, ingestion, journal) are independent and can succeed/fail in any combination. **The verify-and-backup workflow remains mandatory regardless of streak length** — always `wc -l` all 3 files after the script exits and write backup if delta is 0. See `references/shell-write-pattern.md`.
 
-24. **Profile-scoped journal paths resolve to `..` skill name** — `cron-heartbeat-light.py` computes skill name via `os.path.relpath(fpath, JOURNALS_DIR)` where `JOURNALS_DIR = "<hermes-root>/commons/journals"`. Files under `<hermes-home>/commons/journals/` resolve to `..` as the skill name. Fix: extract skill name from path parts after `/journals/`: `parts = fpath.split('/'); skill = parts[parts.index('journals')+1] if 'journals' in parts else 'unknown'`.
+24. **Profile-scoped journal paths resolve to `..` skill name** — `cron-heartbeat-light.py` computes skill name via `os.path.relpath(fpath, JOURNALS_DIR)` where `JOURNALS_DIR = "<hermes-home>/commons/journals"`. Files under `<hermes-home>/profiles/indigo/commons/journals/` resolve to `..` as the skill name. Fix: extract skill name from path parts after `/journals/`: `parts = fpath.split('/'); skill = parts[parts.index('journals')+1] if 'journals' in parts else 'unknown'`.
 
 25. **Gap detection false negative chain** — When evidence writes silently fail across multiple consecutive heartbeats, the evidence log's last entry becomes stale. The script reports `gap_detected: false` because it only reads the evidence log. **Mitigation**: if gap >15 min when cron runs every 5 min, evidence writes are failing, not the system is quiet.
 
@@ -147,11 +147,11 @@
 40. **Evidence.jsonl corrupt-line repair during heartbeat** — When a heartbeat's own backup evidence write has produced a corrupt line (detected via `tail -1 | python3 -c "json.loads(...)"` failing), repair it within the same heartbeat before writing the new entry:
     ```bash
     # Check last line validity
-    if ! tail -1 <hermes-root>/commons/data/mentor/evidence.jsonl | python3 -c "import sys,json; json.loads(sys.stdin.read())" 2>/dev/null; then
+    if ! tail -1 <hermes-home>/commons/data/mentor/evidence.jsonl | python3 -c "import sys,json; json.loads(sys.stdin.read())" 2>/dev/null; then
         # Remove corrupt tail — scan for last valid JSONL line (may be multiple corrupt lines)
         VALID_LINES=$(python3 -c "
 import json
-lines = open('<hermes-root>/commons/data/mentor/evidence.jsonl').readlines()
+lines = open('<hermes-home>/commons/data/mentor/evidence.jsonl').readlines()
 for i in range(len(lines)-1, -1, -1):
     try:
         json.loads(lines[i].strip())
@@ -159,8 +159,8 @@ for i in range(len(lines)-1, -1, -1):
         break
     except: continue
 ")
-        head -n "$VALID_LINES" <hermes-root>/commons/data/mentor/evidence.jsonl > /tmp/evidence_repair.jsonl
-        cp /tmp/evidence_repair.jsonl <hermes-root>/commons/data/mentor/evidence.jsonl
+        head -n "$VALID_LINES" <hermes-home>/commons/data/mentor/evidence.jsonl > /tmp/evidence_repair.jsonl
+        cp /tmp/evidence_repair.jsonl <hermes-home>/commons/data/mentor/evidence.jsonl
         echo "Repaired evidence.jsonl: kept $VALID_LINES lines"
     fi
     ```
@@ -185,7 +185,7 @@ for i in range(len(lines)-1, -1, -1):
         'notes': 'Backup via shell.'
     }
     print(json.dumps(record))
-    ")" >> <hermes-root>/commons/data/mentor/evidence.jsonl
+    ")" >> <hermes-home>/commons/data/mentor/evidence.jsonl
 
     # ALSO SAFE: Write to /tmp/ with json.dumps (no indent), validate line count BEFORE appending
     python3 -c "
@@ -196,7 +196,7 @@ for i in range(len(lines)-1, -1, -1):
     "
     # Validate: file must be exactly 1 line
     if [ "$(wc -l < /tmp/evidence_backup.json)" -eq 1 ]; then
-        cat /tmp/evidence_backup.json >> <hermes-root>/commons/data/mentor/evidence.jsonl
+        cat /tmp/evidence_backup.json >> <hermes-home>/commons/data/mentor/evidence.jsonl
     else
         echo "ERROR: /tmp/evidence_backup.json has multiple lines — JSONL would be corrupted. Abort."
     fi
@@ -205,19 +205,19 @@ for i in range(len(lines)-1, -1, -1):
     Confirmed 2026-06-08: evidence.jsonl grew from 223 to 239 lines (+16) because a Python heredoc wrote multi-line JSON to `/tmp/` which was then `cat >>`'d into the JSONL. Required truncating 16 corrupt lines and rewriting the entry as single-line JSON.
     **Root cause:** The Python heredoc `python3 << 'PYEOF' > /tmp/evidence_backup.json` can produce multi-line output if the script uses `json.dump(record, indent=2)`, `print(json.dumps(record, indent=2))`, or multiple `print()` statements. Always validate with `wc -l` before appending to any JSONL file.
 
-42. **Ingestion log uses TWO path formats — naive `comm` shows false "new" files** — The ingestion log stores paths in two formats: (a) relative `ocas-xxx/YYYY-MM-DD/file.json` (from early heartbeats) and (b) absolute `<hermes-root>/commons/journals/ocas-xxx/...` (from later heartbeats). Profile-scoped paths use `<hermes-home>/commons/journals/ocas-xxx/...`. A naive `comm -23 <(sort find_output) <(sort ingestion_log)` will show 800+ "new" files when only ~6 are truly new, because the relative paths from the ingestion log don't match the absolute paths from `find`. **Fix:** Extract and normalize all paths to absolute before comparison:
+42. **Ingestion log uses TWO path formats — naive `comm` shows false "new" files** — The ingestion log stores paths in two formats: (a) relative `ocas-xxx/YYYY-MM-DD/file.json` (from early heartbeats) and (b) absolute `<hermes-home>/commons/journals/ocas-xxx/...` (from later heartbeats). Profile-scoped paths use `<hermes-home>/profiles/indigo/commons/journals/ocas-xxx/...`. A naive `comm -23 <(sort find_output) <(sort ingestion_log)` will show 800+ "new" files when only ~6 are truly new, because the relative paths from the ingestion log don't match the absolute paths from `find`. **Fix:** Extract and normalize all paths to absolute before comparison:
     ```bash
     python3 -c "
     import json
     paths = set()
-    with open('<hermes-root>/commons/data/mentor/ingestion_log.jsonl') as f:
+    with open('<hermes-home>/commons/data/mentor/ingestion_log.jsonl') as f:
         for line in f:
             try:
                 d = json.loads(line)
                 src = d.get('source') or d.get('file', '')
                 if src:
                     if not src.startswith('/'):
-                        src = '<hermes-root>/commons/journals/' + src
+                        src = '<hermes-home>/commons/journals/' + src
                     paths.add(src)
             except: pass
     for p in sorted(paths):
@@ -234,7 +234,7 @@ for i in range(len(lines)-1, -1, -1):
     import json
     seen = {}
     lines = []
-    with open('<hermes-root>/commons/data/mentor/ingestion_log.jsonl') as f:
+    with open('<hermes-home>/commons/data/mentor/ingestion_log.jsonl') as f:
         for line in f:
             line = line.strip()
             if not line: continue
@@ -243,7 +243,7 @@ for i in range(len(lines)-1, -1, -1):
                 fp = d.get('file', '')
                 if fp: seen[fp] = line
             except: pass
-    with open('<hermes-root>/commons/data/mentor/ingestion_log.jsonl', 'w') as f:
+    with open('<hermes-home>/commons/data/mentor/ingestion_log.jsonl', 'w') as f:
         for v in seen.values():
             f.write(v + '\n')
     print(f'Deduped: {len(seen)} unique entries')
@@ -255,11 +255,11 @@ for i in range(len(lines)-1, -1, -1):
 
 44. **`active_skills_30d` from dual-path `find` counts ALL skill dirs, not just OCAS** — The dual-path 30-day `find` returns 289 unique directories, but many are non-OCAS skills (api-integration, csv-parsing, database-operations, etc.). The true OCAS skill count is ~25-30. The inflated number makes `evaluation_coverage` misleading (6/289 ≈ 0.02 instead of 6/30 ≈ 0.20). **Fix:** Filter to ocas-* prefixes when computing the denominator:
     ```bash
-    ACTIVE_OCAS_30D=$(find <hermes-root>/commons/journals/ <hermes-home>/commons/journals/ -name "*.json" -mtime -30 2>/dev/null | grep -oP 'ocas-[a-z]+' | sort -u | wc -l)
+    ACTIVE_OCAS_30D=$(find <hermes-home>/commons/journals/ <hermes-home>/profiles/indigo/commons/journals/ -name "*.json" -mtime -30 2>/dev/null | grep -oP 'ocas-[a-z]+' | sort -u | wc -l)
     ```
     This gives the true OCAS active skill count for evaluation_coverage denominator.
 
-44a. **`awk -F/` on absolute paths produces `//` double-slash prefixes — use `grep -oP` instead** — When counting unique skill directories from absolute paths using `awk -F/`, the leading `/` creates an empty first field, producing paths like `/<hermes-root>/...` instead of `<hermes-root>/...`. This causes downstream path comparisons to fail because `~/...` ≠ `~/...`. Additionally, the awk approach requires complex logic to strip date subdirectories and deduplicate. **Confirmed reliable alternative:** Use `grep -oP` to extract the skill name directly from the path:
+44a. **`awk -F/` on absolute paths produces `//` double-slash prefixes — use `grep -oP` instead** — When counting unique skill directories from absolute paths using `awk -F/`, the leading `/` creates an empty first field, producing paths like `/<hermes-home>/...` instead of `<hermes-home>/...`. This causes downstream path comparisons to fail because `~/...` ≠ `~/...`. Additionally, the awk approach requires complex logic to strip date subdirectories and deduplicate. **Confirmed reliable alternative:** Use `grep -oP` to extract the skill name directly from the path:
     ```bash
     # Extract unique OCAS skill names (confirmed reliable)
     cat /tmp/mentor_files_30d.txt | grep -oP 'ocas-[a-z]+' | sort -u | wc -l
@@ -283,7 +283,7 @@ for i in range(len(lines)-1, -1, -1):
 
 50a. **Light heartbeat evidence entries use `outcome_counts` (dict), NOT `outcome` (string)** — When validating evidence entries, checking for `outcome` field presence will falsely flag ~95% of light heartbeat entries as corrupt. Light heartbeat entries have `outcome_counts: {"success": N}` (a dict), while deep heartbeat entries may have `outcome: "success"` (a string). Both are valid. Do NOT use `if 'outcome' in d` as a validity check — use `if 'outcome' in d or 'outcome_counts' in d` instead. Confirmed 2026-06-14: 789/822 entries flagged as "missing outcome" were actually valid light heartbeat entries with `outcome_counts`.
 
-53. **Shell `${VAR}` inside heredocs can produce stray braces in paths** — When constructing file paths in heredocs using `${VAR}` syntax, a stray `}` can appear (e.g., `${DATA_DIR}}` producing `/path/to/file.jsonl}`). This silently breaks file operations. **Use `$VAR` without braces for path interpolation in heredocs**, or better yet, use Python heredocs (`python3 << 'PYEOF'`) with hardcoded paths for all backup writes. Never mix shell variable expansion with `>>` redirection to paths constructed from variables. Confirmed 2026-06-14: three separate terminal() calls failed with "No such file or directory" because `${DATA_DIR}}` expanded to `<hermes-root>/commons/data/mentor/}`.
+53. **Shell `${VAR}` inside heredocs can produce stray braces in paths** — When constructing file paths in heredocs using `${VAR}` syntax, a stray `}` can appear (e.g., `${DATA_DIR}}` producing `/path/to/file.jsonl}`). This silently breaks file operations. **Use `$VAR` without braces for path interpolation in heredocs**, or better yet, use Python heredocs (`python3 << 'PYEOF'`) with hardcoded paths for all backup writes. Never mix shell variable expansion with `>>` redirection to paths constructed from variables. Confirmed 2026-06-14: three separate terminal() calls failed with "No such file or directory" because `${DATA_DIR}}` expanded to `<hermes-home>/commons/data/mentor/}`.
 
 54. **`os.environ.get()` in single-quoted Python heredocs returns 0/empty for unexported shell vars** — When the backup workflow writes evidence via `python3 << 'PYEOF'` and uses `os.environ.get("TOTAL_3D", 0)`, the value will be 0 if `TOTAL_3D` was set as a shell variable (not exported) in the same `terminal()` block. Single-quoted heredocs (`'PYEOF'`) prevent shell expansion AND the subprocess doesn't inherit non-exported shell vars. This produces evidence records with all-zero metrics (total_files_3d=0, new_files_ingested=0, active_skills_30d=0) that silently pass validation but are wrong. **Fix:** Either (a) `export` vars before the heredoc (but `export` in a compound `terminal()` block may not propagate to subshells either), or (b) compute values directly inside the Python heredoc using subprocess calls (e.g., `TOTAL_3D = int(subprocess.check_output(["wc", "-l", "/tmp/mentor_files_3d.txt"]).split()[0])`), or (c) write a standalone `/tmp/write_evidence.py` script file and invoke it — file-based scripts don't have the heredoc env var isolation problem. Confirmed 2026-06-14: evidence written with 0 values despite correct shell vars visible via `echo` in the same block. Fixed post-hoc by re-writing the evidence record.
 
@@ -301,11 +301,11 @@ for i in range(len(lines)-1, -1, -1):
 
 ## Commons-Drift Reversal
 
-66. **Commons evidence.jsonl can grow AHEAD of profile evidence.jsonl from prior direct-write patterns** — Gotcha #59 describes the expected pattern (profile leads commons). The reverse can also occur: commons evidence grows ahead of profile when prior sessions or tools write directly to `<hermes-root>/commons/data/mentor/evidence.jsonl` without going through the profile path. Confirmed 2026-06-17: commons evidence was 2,586 lines while profile evidence was 2,562 lines — commons ahead by 24 lines. This is NOT an error — the line-level set-difference sync handles this correctly by only appending profile-lines-not-in-commons, so extra commons lines are preserved (not overwritten). The sync is one-directional: profile → commons append-only, never truncating commons. Do NOT attempt to "fix" this by copying commons back to profile or by truncating commons. The two files are allowed to diverge; commons is a superset that absorbs profile lines over time.
+66. **Commons evidence.jsonl can grow AHEAD of profile evidence.jsonl from prior direct-write patterns** — Gotcha #59 describes the expected pattern (profile leads commons). The reverse can also occur: commons evidence grows ahead of profile when prior sessions or tools write directly to `<hermes-home>/commons/data/mentor/evidence.jsonl` without going through the profile path. Confirmed 2026-06-17: commons evidence was 2,586 lines while profile evidence was 2,562 lines — commons ahead by 24 lines. This is NOT an error — the line-level set-difference sync handles this correctly by only appending profile-lines-not-in-commons, so extra commons lines are preserved (not overwritten). The sync is one-directional: profile → commons append-only, never truncating commons. Do NOT attempt to "fix" this by copying commons back to profile or by truncating commons. The two files are allowed to diverge; commons is a superset that absorbs profile lines over time.
 
 67. **Commons ingestion_log.jsonl accumulates massive historical bloat — 2-4x+ profile line count is normal** — The commons ingestion log receives writes from multiple sources: the heartbeat script (when it targets commons directly), caller backups (when incorrectly written to commons per gotcha #62), and the line-level sync from profile. Over time, commons ingestion_log grows to 2-4x the profile count. Confirmed 2026-06-18: commons ingestion was 28,393 lines vs profile 11,692 lines (2.4x). Confirmed 2026-06-19: commons ingestion was 41,409 lines vs profile 12,278 lines (3.4x) — the ratio continues to grow over time as commons accumulates historical entries from pre-profile-era direct writes. This is a known cosmetic issue — the profile ingestion_log is the authoritative source and is the one read by the heartbeat's cross-reference dedup. The commons copy is a lagging superset. Do NOT attempt to deduplicate or truncate commons ingestion_log — it has no operational impact (the heartbeat reads from profile). The gap will continue to grow slowly over time and may exceed 4x over months.
 
-62. **Caller backup writes MUST target profile path, NOT commons — writing to commons creates duplicate/offset evidence lines** — When the caller writes backup evidence or ingestion records, the target MUST be the profile-scoped path (`<hermes-home>/commons/data/mentor/`), NOT `<hermes-root>/commons/data/mentor/`. The profile is the authoritative source; commons receives data only via the line-level set-difference sync run after each heartbeat. If the caller writes directly to commons: (a) the sync copies the script's version from profile (with wrong `active_skills_30d`) to commons, (b) the caller's corrected version is also in commons, (c) two evidence lines exist for the same run — one wrong, one correct. This confuses gap detection and metrics. **The rule: write once, to profile. Let sync handle commons.** Confirmed 2026-06-16: backup evidence written to commons path created duplicate lines; required re-writing to profile + re-sync.
+62. **Caller backup writes MUST target profile path, NOT commons — writing to commons creates duplicate/offset evidence lines** — When the caller writes backup evidence or ingestion records, the target MUST be the profile-scoped path (`<hermes-home>/profiles/indigo/commons/data/mentor/`), NOT `<hermes-home>/commons/data/mentor/`. The profile is the authoritative source; commons receives data only via the line-level set-difference sync run after each heartbeat. If the caller writes directly to commons: (a) the sync copies the script's version from profile (with wrong `active_skills_30d`) to commons, (b) the caller's corrected version is also in commons, (c) two evidence lines exist for the same run — one wrong, one correct. This confuses gap detection and metrics. **The rule: write once, to profile. Let sync handle commons.** Confirmed 2026-06-16: backup evidence written to commons path created duplicate lines; required re-writing to profile + re-sync.
 
 69. **Line-level set-difference sync can re-append the script's own record to profile** — After the heartbeat script writes to profile evidence.jsonl, and the caller writes a corrected record, the commons sync (profile → commons append-only) uses `set(commons_lines)` to find new lines. If the commons evidence file already contains the script's record (from a prior sync or direct write), but with a slightly different timestamp or formatting, the `set()` comparison treats it as a new line and appends it to profile. This creates a duplicate: the script's original record (skills_30d=14) appears in profile twice — once from the script's own write, once from the sync pulling it back from commons. **This is harmless** (the corrected record at the tail is the authoritative one) but inflates the profile line count by ~1 per heartbeat. The sync is working as designed (append-only, no deletes). Do NOT attempt to deduplicate profile evidence after sync — the duplicates are cosmetic and self-healing (the corrected record is always the last line). Confirmed 2026-06-21: sync appended 6 lines to commons, and the reverse check showed the script's original record was re-appended to profile.
 

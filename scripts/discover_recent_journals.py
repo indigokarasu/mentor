@@ -14,7 +14,7 @@ redirect, never a pipe) into cron-heartbeat-light.py.
 
 Usage (cron-safe -- stdin redirect, NEVER pipe to python; see SKILL.md
 tirith:pipe_to_interpreter block):
-    find <hermes-root>/commons/journals/ <hermes-home>/commons/journals/ \
+    find ~/.hermes/commons/journals/ ~/.hermes/profiles/indigo/commons/journals/ \
         -name "*.json" -mmin -450 -not -path "*/.archive/*" -not -path "*/.quarantine/*" \
         > /tmp/candidates.txt
     python3 scripts/discover_recent_journals.py --window-minutes 5 < /tmp/candidates.txt \

@@ -8,10 +8,10 @@ if set(sys.argv[1:]) & _HELP_ARGS:
     print((__doc__ or "").strip() or "Usage: python3 mentor_sync_commons.py")
     sys.exit(0)
 
-PROFILE_EVIDENCE = "<hermes-home>/commons/data/mentor/evidence.jsonl"
-COMMONS_EVIDENCE = "<hermes-root>/commons/data/mentor/evidence.jsonl"
-PROFILE_INGESTION = "<hermes-home>/commons/data/mentor/ingestion_log.jsonl"
-COMMONS_INGESTION = "<hermes-root>/commons/data/mentor/ingestion_log.jsonl"
+PROFILE_EVIDENCE = "~/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl"
+COMMONS_EVIDENCE = "~/.hermes/commons/data/mentor/evidence.jsonl"
+PROFILE_INGESTION = "~/.hermes/profiles/indigo/commons/data/mentor/ingestion_log.jsonl"
+COMMONS_INGESTION = "~/.hermes/commons/data/mentor/ingestion_log.jsonl"
 
 # --- Evidence sync (field: timestamp) ---
 last_commons_ts = ""

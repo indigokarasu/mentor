@@ -16,7 +16,7 @@ After running the dispatch ingest template, the Praxis dispatch journal (`praxis
 
 **Mandatory step:** After writing the Praxis dispatch journal, manually add it to `journals_evaluated.jsonl`:
 ```bash
-echo '{"journal_id":"ocas-praxis/2026-06-25/praxis-dispatch-20260625T044806Z.json","evaluated_at":"ISO_NOW","action_taken":"dispatch_output_skip"}' >> <hermes-home>/commons/data/ocas-praxis/journals_evaluated.jsonl
+echo '{"journal_id":"ocas-praxis/2026-06-25/praxis-dispatch-20260625T044806Z.json","evaluated_at":"ISO_NOW","action_taken":"dispatch_output_skip"}' >> <hermes-home>/profiles/indigo/commons/data/ocas-praxis/journals_evaluated.jsonl
 ```
 
 This is distinct from third-wave mitigation for Mentor/Forge journals — those are handled by the ingest script's mtime discovery. The Praxis journal is written AFTER the ingest completes and is never caught by its own mtime scan.

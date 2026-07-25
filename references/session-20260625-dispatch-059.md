@@ -11,7 +11,7 @@
 | Mentor | ✅ Success | 1005 files, 5 ingested, correction 9→22 |
 | Praxis | ✅ Success | 4 journals evaluated (all no-ops), third-wave mitigation |
 | Taste | ✅ Success | 2 signals created (Next Level VG $76.66, Lavash $64.60), both DoorDash |
-| Email | ✅ No action | Indigo 1 thread: outgoing reply ("Re: Saw you're working with Hermes Agent") — already handled |
+| Email | ✅ No action | the agent 1 thread: outgoing reply ("Re: Saw you're working with Hermes Agent") — already handled |
 
 ## New Pattern: `taste_new_data` as Separate Dispatch Type
 

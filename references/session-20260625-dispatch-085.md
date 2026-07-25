@@ -22,11 +22,11 @@
 - Third-wave mitigation for current run's mentor-light journal (100756Z) and forge-scan
 
 ### Email Triage
-- google-workspace-user: 5 actionable, 0 requiring response
+- <user-google-email>: 5 actionable, 0 requiring response
   - ARGGER (Emily Zhang): Panel shipped via DHL today, tracking tomorrow. Informational.
   - Chase: Payment scheduled ($409.58). Informational.
   - Amazon, Paze, Wikipedia: All informational.
-- mx.indigo.karasu@gmail.com: 3 actionable, 0 requiring response
+- <third-party-or-user-email>: 3 actionable, 0 requiring response
   - GitHub PR #12 (Nano-Collective/get-md): Approved (LGTM). No action needed.
   - GitHub PR #13: Review pending blocker. Existing state.
   - Wikipedia verification code. Informational.
@@ -34,4 +34,4 @@
 ### Outcome
 - No escalations, no personal input required
 - System steady-state confirmed across all pipelines
-- Key signal: ARGGER shipment resolves owner's longest-running supplier follow-up (47 days from initial order to shipment)
+- Key signal: ARGGER shipment resolves <operator>'s longest-running supplier follow-up (47 days from initial order to shipment)

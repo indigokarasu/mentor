@@ -22,19 +22,19 @@ if set(sys.argv[1:]) & _HELP_ARGS:
     print((__doc__ or "").strip() or "Usage: python3 correct_active_skills_30d.py")
     sys.exit(0)
 
-AGENT_ROOT = "<hermes-home>"
+AGENT_ROOT = "~/.hermes/profiles/indigo"
 MENTOR_DATA = os.path.join(AGENT_ROOT, "commons", "data", "mentor")
 EVIDENCE_LOG = os.path.join(MENTOR_DATA, "evidence.jsonl")
 JOURNALS_DIRS = [
-    "<hermes-root>/commons/journals",
-    "<hermes-home>/commons/journals",
+    "~/.hermes/commons/journals",
+    "~/.hermes/profiles/indigo/commons/journals",
 ]
 
 
 def count_active_skills_30d():
     """Count unique skill names across both journal paths, 30-day window."""
     cmd = (
-        "find <hermes-root>/commons/journals/ <hermes-home>/commons/journals/ "
+        "find ~/.hermes/commons/journals/ ~/.hermes/profiles/indigo/commons/journals/ "
         "-name '*.json' -mtime -30 2>/dev/null "
         "| grep -oP 'commons/journals/([a-z][a-z0-9_-]+)' "
         "| sed 's|commons/journals/||' "
@@ -47,7 +47,7 @@ def count_active_skills_30d():
 def count_active_skills_30d_ocas():
     """Count OCAS-only skills across both journal paths, 30-day window."""
     cmd = (
-        "find <hermes-root>/commons/journals/ <hermes-home>/commons/journals/ "
+        "find ~/.hermes/commons/journals/ ~/.hermes/profiles/indigo/commons/journals/ "
         "-name '*.json' -mtime -30 2>/dev/null "
         "| grep -oP 'ocas-[a-z]+' "
         "| sort -u | wc -l"

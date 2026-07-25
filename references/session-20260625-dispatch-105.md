@@ -2,13 +2,13 @@
 
 ## Email Triage
 
-### owner's account (16 actionable, 4 high-priority → 0 escalations)
+### <operator>'s account (16 actionable, 4 high-priority → 0 escalations)
 - All threads `is_new: false` — second-wave re-detection (prior check at 14:33, 17 min earlier)
 - **Emily Zhang (ARGGER)**: `action_required`, priority 80 — Panel shipped via DHL. Already noted as resolved in prior check.
 - **Chase, Subhash Movva, Maria Kiseleva, self-sent, informational**: All confirmed no-action from 14:33 check.
 - **Result**: no_action, state timestamp updated, no re-escalation.
 
-### Indigo's account (5 actionable, 2 high-priority → 0 escalations)
+### the agent's account (5 actionable, 2 high-priority → 0 escalations)
 - All threads `is_new: false` — second-wave re-detection.
 - GitHub PR reviews, newspapers.com, GitGuardian, Wikipedia: All informational. No action.
 

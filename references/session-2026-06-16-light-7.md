@@ -22,7 +22,7 @@ Routine light heartbeat. Script ingested 8 new files (4 self-referential ocas-me
 
 ## Path Confusion Incident
 
-Backup evidence was written directly to commons path (`<hermes-root>/commons/data/mentor/`) instead of profile path (`<hermes-home>/commons/data/mentor/`). Commons sync then also copied script's wrong version (active_skills_30d=14). Two evidence lines for same run in commons — one wrong, one correct.
+Backup evidence was written directly to commons path (`<hermes-home>/commons/data/mentor/`) instead of profile path (`<hermes-home>/profiles/indigo/commons/data/mentor/`). Commons sync then also copied script's wrong version (active_skills_30d=14). Two evidence lines for same run in commons — one wrong, one correct.
 
 **Fix:** ALL caller writes MUST target profile path first. Commons receives data only via line-level set-difference sync. The profile path is the authoritative source.
 

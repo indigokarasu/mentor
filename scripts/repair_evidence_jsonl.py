@@ -26,8 +26,8 @@ if set(sys.argv[1:]) & _HELP_ARGS:
     sys.exit(0)
 
 PATHS = [
-    ("profile", "<hermes-home>/commons/data/mentor/evidence.jsonl"),
-    ("commons", "<hermes-root>/commons/data/mentor/evidence.jsonl"),
+    ("profile", "~/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl"),
+    ("commons", "~/.hermes/commons/data/mentor/evidence.jsonl"),
 ]
 
 

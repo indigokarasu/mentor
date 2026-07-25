@@ -83,7 +83,7 @@ Mentor does not emit entity signals directly. Journal outputs are ingested by Ch
 
 Proper error handling in cron mode requires special attention because shell variables don't persist across `terminal()` calls and Python `with open()` writes can silently fail. The following constraints are confirmed through operational experience.
 
-**Commons sync "already in sync" pattern (confirmed 2026-06-25):** After running the evidence/ingestion sync, `wc -l` may show 0 delta on both files. This happens when a concurrent heartbeat already synced the new lines between the script's write and the dispatch's sync call. This is EXPECTED in steady-state with multiple concurrent cron triggers. Do NOT treat as a sync failure. Verify with `grep <new_run_id> <hermes-root>/commons/data/mentor/evidence.jsonl` to confirm the line exists in commons. If present, sync is already done — proceed to next step.
+**Commons sync "already in sync" pattern (confirmed 2026-06-25):** After running the evidence/ingestion sync, `wc -l` may show 0 delta on both files. This happens when a concurrent heartbeat already synced the new lines between the script's write and the dispatch's sync call. This is EXPECTED in steady-state with multiple concurrent cron triggers. Do NOT treat as a sync failure. Verify with `grep <new_run_id> <hermes-home>/commons/data/mentor/evidence.jsonl` to confirm the line exists in commons. If present, sync is already done — proceed to next step.
 
 **`execute_code` is blocked in cron-triggered jobs.** All heartbeat, update, and plan runs triggered by cron must use `terminal()` with inline `python3 /path/to/scripts.py` for multi-stage logic. **CRITICAL: Do NOT use `<<` heredoc syntax in `terminal()`** — the `<<` delimiter triggers the terminal's foreground-background detection, causing exit_code=-1. Write scripts to `/tmp/` via `write_file` first, then invoke with `python3 /tmp/script.py`. See gotcha #70.
 
@@ -91,12 +91,12 @@ Proper error handling in cron mode requires special attention because shell vari
 
 **`execute_code` blocking applies to ALL cron-triggered jobs** (confirmed 2026-06-25 dispatch #99). This includes not just heartbeat scripts but also state file writes, JSON manipulation, and any multi-step Python logic. When the dispatch caller (triggered by cron) needs to write JSON state files or perform set-difference syncs, it MUST use `terminal()` with `cat > file << 'EOF'` for JSON files or `echo >> file` for JSONL appends — never `execute_code`. Attempting `execute_code` in cron produces: `BLOCKED: execute_code runs arbitrary local Python`. This is a hard runtime constraint, not a suggestion.
 
-**Python runtime resolution (confirmed 2026-06-24):** The skill docs historically reference `<hermes-install>/.venv/bin/python3.13` but this path does NOT exist. The venv symlinks all resolve to `/usr/bin/python3` (3.14). To run mentor/taste scripts that need `googleapiclient`:
+**Python runtime resolution (confirmed 2026-06-24):** The skill docs historically reference `<hermes-venv>/bin/python3.13` but this path does NOT exist. The venv symlinks all resolve to `/usr/bin/python3` (3.14). To run mentor/taste scripts that need `googleapiclient`:
 1. Install deps: `pip3 install --break-system-packages google-api-python-client google-auth google-auth-oauthlib`
 2. Use `/usr/bin/python3` (system Python 3.14, has googleapiclient after install)
 3. Do NOT use `~/.local/share/uv/python/cpython-3.13.13-linux-x86_64-gnu/bin/python3.13` — it's externally-managed and cannot install packages
-4. Do NOT use `<hermes-home>/commons/data/ocas-taste/venv/bin/python3` — symlinks to system 3.14 but googleapiclient is not installed there
-**Script path: skill name vs data directory mismatch (confirmed 2026-06-24 dispatch #49, #55, #63):** The skill name is `ocas-mentor` so scripts live at `<hermes-home>/skills/ocas-mentor/scripts/`. The data directory is `<hermes-home>/commons/data/mentor/` (no `ocas-` prefix). Do NOT derive the script path from the data directory name — always use `skills/ocas-mentor/scripts/<script>.py`. The correction script specifically is at `skills/ocas-mentor/scripts/correct_active_skills_30d.py` (NOT `skills/mentor/scripts/`). **Hard rule:** Before invoking ANY Mentor script, verify the path starts with `skills/ocas-mentor/scripts/`. A quick `ls skills/ocas-mentor/scripts/<script>.py` confirms. The agent has fallen into this trap 3+ times despite knowing the rule — the instinct to derive the path from the data directory name (`commons/data/mentor/`) is strong and must be actively countered.
+4. Do NOT use `<hermes-home>/profiles/indigo/commons/data/ocas-taste/venv/bin/python3` — symlinks to system 3.14 but googleapiclient is not installed there
+**Script path: skill name vs data directory mismatch (confirmed 2026-06-24 dispatch #49, #55, #63):** The skill name is `ocas-mentor` so scripts live at `<hermes-home>/profiles/indigo/skills/ocas-mentor/scripts/`. The data directory is `<hermes-home>/profiles/indigo/commons/data/mentor/` (no `ocas-` prefix). Do NOT derive the script path from the data directory name — always use `skills/ocas-mentor/scripts/<script>.py`. The correction script specifically is at `skills/ocas-mentor/scripts/correct_active_skills_30d.py` (NOT `skills/mentor/scripts/`). **Hard rule:** Before invoking ANY Mentor script, verify the path starts with `skills/ocas-mentor/scripts/`. A quick `ls skills/ocas-mentor/scripts/<script>.py` confirms. The agent has fallen into this trap 3+ times despite knowing the rule — the instinct to derive the path from the data directory name (`commons/data/mentor/`) is strong and must be actively countered.
 
 **Inline Python variable scoping in `terminal()`** — When composing multi-step Python logic inline in `terminal()` (either as heredoc or `python3 -c`), variables defined inside a function are NOT available in the outer scope. This manifests as `NameError: name 'X' is not defined` at a line that logically follows the definition. **Fix:** Structure inline scripts so all logic is in a single flat scope (no nested functions), or write the script to `/tmp/` via `write_file` where you can verify scoping independently. Confirmed 2026-06-24 dispatch: `skill = jid.split("/")[0]` inside `extract_signals()` was invisible to the caller's loop.
 
@@ -205,14 +205,14 @@ echo "Forge: $(ls .../ocas-forge/2026-06-25/ | tail -2)" && echo "Mentor: eviden
 
 **Praxis "already evaluated" second-wave detection (confirmed 2026-06-24 dispatch #40):** After a multi-skill dispatch, the dispatcher may re-detect the mentor-light journal from the same dispatch as "new." Before running Praxis mtime-based discovery, always grep `journals_evaluated.jsonl` for the journal filename. If found (regardless of `action_taken`), Praxis has already evaluated it — skip silently. This is the correct no-op (not a failure, not a stale state). Example pattern:
 ```bash
-grep -q "mentor-light-20260624T044239Z" <hermes-home>/commons/data/ocas-praxis/journals_evaluated.jsonl
+grep -q "mentor-light-20260624T044239Z" <hermes-home>/profiles/indigo/commons/data/ocas-praxis/journals_evaluated.jsonl
 # If exit code 0: already evaluated, skip Praxis silently
 ```
 This prevents duplicate re-ingestion and unnecessary gap backfill on second-wave dispatches.
 
 **Dispatch-mode caller workflow (confirmed 2026-06-22):** When triggered by `dispatcher.py` (not a standalone cron), the dispatch caller must:
-1. Build dual-path 3-day file list: `find <hermes-root>/commons/journals/ <hermes-home>/commons/journals/ -name "*.json" -mtime -3 | sort -u > /tmp/mentor_files_3d.txt`
-2. Record pre-run evidence count: `wc -l < <hermes-home>/commons/data/mentor/evidence.jsonl`
+1. Build dual-path 3-day file list: `find <hermes-home>/commons/journals/ <hermes-home>/profiles/indigo/commons/journals/ -name "*.json" -mtime -3 | sort -u > /tmp/mentor_files_3d.txt`
+2. Record pre-run evidence count: `wc -l < <hermes-home>/profiles/indigo/commons/data/mentor/evidence.jsonl`
 3. Run: `python3 {skill_dir}/scripts/cron-heartbeat-light.py < /tmp/mentor_files_3d.txt`
 4. Verify evidence grew (delta should be ≥1). If delta=0, write backup evidence via `terminal()` Python one-liner.
 5. **Always** run `python3 {skill_dir}/scripts/correct_active_skills_30d.py` to compute true dual-path 30-day count and write corrected evidence record to profile path. **NEVER write ad-hoc correction scripts** — use the existing script (see gotcha #74).
@@ -228,8 +228,8 @@ This prevents duplicate re-ingestion and unnecessary gap backfill on second-wave
 Steps 5–7 are mandatory regardless of script success. The script's evidence record (step 3) is always wrong on `active_skills_30d`. Do not skip the correction because the script reported "success." Confirmed 42+ times (2026-06-19 through 2026-06-25).
 
 **Dispatch-mode caller workflow (confirmed 2026-06-22):** When triggered by `dispatcher.py` (not a standalone cron), the dispatch caller must:
-1. Build dual-path 3-day file list: `find <hermes-root>/commons/journals/ <hermes-home>/commons/journals/ -name "*.json" -mtime -3 | sort -u > /tmp/mentor_files_3d.txt`
-2. Record pre-run evidence count: `wc -l < <hermes-home>/commons/data/mentor/evidence.jsonl`
+1. Build dual-path 3-day file list: `find <hermes-home>/commons/journals/ <hermes-home>/profiles/indigo/commons/journals/ -name "*.json" -mtime -3 | sort -u > /tmp/mentor_files_3d.txt`
+2. Record pre-run evidence count: `wc -l < <hermes-home>/profiles/indigo/commons/data/mentor/evidence.jsonl`
 3. Run: `python3 {skill_dir}/scripts/cron-heartbeat-light.py < /tmp/mentor_files_3d.txt`
 4. Verify evidence grew (delta should be ≥1). If delta=0, write backup evidence via `terminal()` Python one-liner.
 5. **Always** run `python3 {skill_dir}/scripts/correct_active_skills_30d.py` to compute true dual-path 30-day count and write corrected evidence record to profile path. **NEVER write ad-hoc correction scripts** — use the existing script (see gotcha #74).
@@ -269,7 +269,7 @@ Check both sources before running Praxis ingest. If found, mark as `already_inge
 
 **CRITICAL: Mentor heartbeat updates Praxis ingest state** — The `cron-heartbeat-light.py` script updates `ingest_state.json:last_ingest_run` when it writes evidence. If Praxis dispatch runs immediately after in the same multi-skill dispatch, its mtime-based journal discovery may find 0 new journals because the state timestamp moved forward. The dispatcher must capture `last_ingest_run` BEFORE running Mentor and pass it to Praxis. See Praxis SKILL.md § Dispatch / Cron Integration step 3.
 
-**Caveat — heartbeat does NOT reliably advance Praxis ingest state (verified 2026-07-11):** In a multi-skill dispatch, after running `cron-heartbeat-light.py` via `python3 script.py < filelist` (returncode 0, heartbeat journal written to disk), `ingest_state.json:last_ingest_run` at `<hermes-home>/commons/data/ocas-praxis/` was UNCHANGED — it still held the prior-wave value. The dispatch caller MUST explicitly advance `last_ingest_run` itself after the heartbeat (and sync `journals_evaluated_count` / `last_eval_file_line` to the actual eval-file `wc -l`). Do NOT assume the script moved the state forward. A stale `last_ingest_run` is usually harmless (grep-based per-file classification wins over mtime discovery), but it means the state no longer reflects this wave's work and any later step that trusts it will read the prior-wave timestamp.
+**Caveat — heartbeat does NOT reliably advance Praxis ingest state (verified 2026-07-11):** In a multi-skill dispatch, after running `cron-heartbeat-light.py` via `python3 script.py < filelist` (returncode 0, heartbeat journal written to disk), `ingest_state.json:last_ingest_run` at `<hermes-home>/profiles/indigo/commons/data/ocas-praxis/` was UNCHANGED — it still held the prior-wave value. The dispatch caller MUST explicitly advance `last_ingest_run` itself after the heartbeat (and sync `journals_evaluated_count` / `last_eval_file_line` to the actual eval-file `wc -l`). Do NOT assume the script moved the state forward. A stale `last_ingest_run` is usually harmless (grep-based per-file classification wins over mtime discovery), but it means the state no longer reflects this wave's work and any later step that trusts it will read the prior-wave timestamp.
 
 The script's `active_skills_30d` is the stdin-based count (3-day window, single path) — NOT the true 30-day active skill count. The correction is MANDATORY every time, not just when the script's write fails.
 

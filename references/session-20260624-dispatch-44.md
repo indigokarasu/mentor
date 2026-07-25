@@ -33,6 +33,6 @@ The dispatcher listed `mentor-light-20260624T115206Z.json` but the actual file w
 14,446 gap journals backfilled because `last_ingest_run` was not advanced for multiple dispatch cycles. All were dispatch-output journals from prior waves today (forge-scan and mentor-light files written before the state timestamp moved forward). This is recovery behavior, not an error.
 
 ### Email triage
-- **owner:** 4 threads — 1 CoC follow-up (404/deleted), 2 business opportunities (Dialectica survey, GLG consulting), 1 spam
-- **Indigo:** 2 threads — GitGuardian security alert (3 secret incidents, escalated to owner), Wikipedia verification code
-- **Hard rule followed:** owner's inbox was NOT modified (no archive, label, or trash operations)
+- **<operator>:** 4 threads — 1 CoC follow-up (404/deleted), 2 business opportunities (Dialectica survey, GLG consulting), 1 spam
+- **the agent:** 2 threads — GitGuardian security alert (3 secret incidents, escalated to <operator>), Wikipedia verification code
+- **Hard rule followed:** <operator>'s inbox was NOT modified (no archive, label, or trash operations)

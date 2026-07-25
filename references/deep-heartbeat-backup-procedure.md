@@ -16,13 +16,13 @@ Python `with open()` in cron `terminal()` is unreliable. The deep heartbeat is N
 
 ### Step 1: Ensure proposals directory exists
 ```bash
-mkdir -p <hermes-home>/commons/data/mentor/proposals
+mkdir -p <hermes-home>/profiles/indigo/commons/data/mentor/proposals
 ```
 
 ### Step 2: Build the full dual-path file list (if not already built)
 ```bash
-find <hermes-root>/commons/journals/ -name "*.json" -not -path "*/.archive/*" -not -path "*/.quarantine/*" > /tmp/mentor_deep_shared.txt
-find <hermes-home>/commons/journals/ -name "*.json" -not -path "*/.archive/*" -not -path "*/.quarantine/*" >> /tmp/mentor_deep_shared.txt
+find <hermes-home>/commons/journals/ -name "*.json" -not -path "*/.archive/*" -not -path "*/.quarantine/*" > /tmp/mentor_deep_shared.txt
+find <hermes-home>/profiles/indigo/commons/journals/ -name "*.json" -not -path "*/.archive/*" -not -path "*/.quarantine/*" >> /tmp/mentor_deep_shared.txt
 sort -u /tmp/mentor_deep_shared.txt > /tmp/mentor_deep_files.txt
 ```
 
@@ -32,7 +32,7 @@ sort -u /tmp/mentor_deep_shared.txt > /tmp/mentor_deep_files.txt
 import json, os
 from datetime import datetime, timezone
 
-DATA_DIR = "<hermes-home>/commons/data/mentor"
+DATA_DIR = "<hermes-home>/profiles/indigo/commons/data/mentor"
 INGESTION_LOG = os.path.join(DATA_DIR, "ingestion_log.jsonl")
 
 already_ingested = set()
@@ -72,7 +72,7 @@ print(f"Ingestion backup: {written} records written")
 
 ### Step 4: Verify
 ```bash
-echo "Ingestion (profile): $(wc -l < <hermes-home>/commons/data/mentor/ingestion_log.jsonl)"
+echo "Ingestion (profile): $(wc -l < <hermes-home>/profiles/indigo/commons/data/mentor/ingestion_log.jsonl)"
 ```
 
 ## Key Differences from Light Heartbeat Backup

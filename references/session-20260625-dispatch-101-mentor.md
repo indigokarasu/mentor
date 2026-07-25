@@ -2,10 +2,10 @@
 
 ## Email Triage
 
-### owner's account (15 actionable, 4 high-priority → 0 escalations)
+### <operator>'s account (15 actionable, 4 high-priority → 0 escalations)
 All no-action. ARGGER panel shipped DHL (47-day follow-up resolved). Chase, Office Hours, survey, Couchsurfing, Preslav Rachev, Bybit, Kickstargogo — all informational/transactional.
 
-### Indigo's account (5 actionable, 2 high-priority → 0 escalations)
+### the agent's account (5 actionable, 2 high-priority → 0 escalations)
 All no-action. GitHub PR reviews (Koda's domain), Newspapers.com, GitGuardian test JWTs, Wikipedia login.
 
 ## Journal Pipelines

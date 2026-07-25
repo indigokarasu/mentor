@@ -3,14 +3,14 @@
 **Trigger:** Multi-skill dispatch (email + journals + taste), all pipelines needed Python with googleapiclient
 
 ## Problem
-Both `ocas-mentor` and `ocas-taste` skills reference `<hermes-install>/.venv/bin/python3.13` which does NOT exist.
+Both `ocas-mentor` and `ocas-taste` skills reference `<hermes-venv>/bin/python3.13` which does NOT exist.
 The venv symlinks all resolve to `/usr/bin/python3` (Python 3.14.4).
 
 ## Diagnosis
 ```
-ls -la <hermes-root>-agent/.venv/bin/python* → symlinks → /usr/bin/python3 (3.14)
+ls -la <hermes-home>-agent/.venv/bin/python* → symlinks → /usr/bin/python3 (3.14)
 ~/.local/share/uv/python/cpython-3.13.13-linux-x86_64-gnu/bin/python3.13 → exists but externally-managed (can't pip install)
-<hermes-home>/commons/data/ocas-taste/venv/bin/python3 → symlinks to /usr/bin/python3 but googleapiclient missing
+<hermes-home>/profiles/indigo/commons/data/ocas-taste/venv/bin/python3 → symlinks to /usr/bin/python3 but googleapiclient missing
 ```
 
 ## Resolution

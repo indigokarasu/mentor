@@ -60,7 +60,7 @@ Single JSON object split across multiple lines due to `json.dump(record, f, inde
 ```python
 import json
 
-path = "<hermes-home>/commons/data/mentor/evidence.jsonl"
+path = "<hermes-home>/profiles/indigo/commons/data/mentor/evidence.jsonl"
 
 with open(path) as f:
     lines = [l.rstrip('\n') for l in f]

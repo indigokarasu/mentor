@@ -33,14 +33,14 @@
 - Eval file: 38,620 → 53,814 (+15,194 from backfill + mitigation + ingest)
 
 ### Email Triage
-- **owner (7 threads):** All no-action
+- **<operator> (7 threads):** All no-action
   - Emily Zhang/ARGGER: Panel shipped DHL (supplier update, no action)
   - Chase: Payment scheduled (transactional)
   - Dialectica survey: Paid survey follow-up (no action)
   - Ravon Logan/ChooseByWater: COC proof not received (informational)
   - Amazon: Eve Weather shipped (transactional)
   - Paze: Passkey created + wallet activated (transactional)
-- **Indigo (3 threads):** All no-action
+- **the agent (3 threads):** All no-action
   - GitHub PR #12/#13 reviews: Koda's domain
   - Wikipedia: Login verification code (transactional)
 - State files updated for both accounts

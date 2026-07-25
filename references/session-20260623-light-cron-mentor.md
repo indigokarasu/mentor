@@ -33,7 +33,7 @@
 
 **What happened:** Agent attempted to cross-reference ingestion counts by computing `files_3d - ingested_paths` in Python. Result: 4,232 of 4,232 3-day files appeared "un-ingested."
 
-**Root cause:** `files_3d` contained absolute paths (`<hermes-home>/commons/journals/ocas-mentor/...`) while the ingestion log stored mixed formats (relative `ocas-mentor/file.json` + absolute paths). Path format mismatch = complete set divergence.
+**Root cause:** `files_3d` contained absolute paths (`<hermes-home>/profiles/indigo/commons/journals/ocas-mentor/...`) while the ingestion log stored mixed formats (relative `ocas-mentor/file.json` + absolute paths). Path format mismatch = complete set divergence.
 
 **Lesson:** The "obvious" cross-reference algorithm (Python set difference on raw paths) produces meaningless output when path formats don't match. Normalize both sets (basename or trailing-N-components) before comparing. Better: trust `new_files_ingested` from the script unless `wc -l` shows 0 delta on evidence.
 

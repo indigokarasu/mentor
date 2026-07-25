@@ -22,8 +22,8 @@ if set(sys.argv[1:]) & _HELP_ARGS:
     print((__doc__ or "").strip() or "Usage: python3 sync_profile_to_commons.py")
     sys.exit(0)
 
-PROFILE_DIR = '<hermes-home>/commons/data/mentor'
-COMMONS_DIR = '<hermes-root>/commons/data/mentor'
+PROFILE_DIR = '~/.hermes/profiles/indigo/commons/data/mentor'
+COMMONS_DIR = '~/.hermes/commons/data/mentor'
 
 JSONL_FILES = ['evidence.jsonl', 'ingestion_log.jsonl']
 STATE_FILES = ['okr_state.json', 'anomalies.jsonl', 'decisions.jsonl']

@@ -3,10 +3,10 @@
 **Trigger:** Email dispatch (12 actionable threads across 2 accounts) + Journal dispatch (4 new files: 2 forge-scan, 2 mentor-light)
 
 ## Phase 1: Email Triage (ocas-dispatch)
-- **owner high-priority:** CoC proof follow-up (<thread-id>, priority 65) — **already drafted in prior run** (`dispatch-check-20260624T1432Z`). Evidence log confirmed 2 prior `no_op` entries. Correctly skipped — no duplicate draft.
-- **owner informational (11 threads):** Alpaca markets, Guilds invite, Cathay statement, Uber receipt, Capital One offer, Kickstargogo spam, etc. All `action:none`.
-- **Indigo (4 threads):** Twilio dev notification, morning brief, ChatGPT tip, Wikipedia verification code. All routine.
-- **Hard rule followed:** owner's inbox NOT modified.
+- **<operator> high-priority:** CoC proof follow-up (<thread-id>, priority 65) — **already drafted in prior run** (`dispatch-check-20260624T1432Z`). Evidence log confirmed 2 prior `no_op` entries. Correctly skipped — no duplicate draft.
+- **<operator> informational (11 threads):** Alpaca markets, Guilds invite, Cathay statement, Uber receipt, Capital One offer, Kickstargogo spam, etc. All `action:none`.
+- **the agent (4 threads):** Twilio dev notification, morning brief, ChatGPT tip, Wikipedia verification code. All routine.
+- **Hard rule followed:** <operator>'s inbox NOT modified.
 
 ## Phase 2: Forge
 - **Result:** No-op. Data root empty (all 10 proposals in `intake/processed/`).

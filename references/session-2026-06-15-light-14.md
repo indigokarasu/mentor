@@ -46,10 +46,10 @@ Light heartbeat cron run. Script self-journaling **succeeded** on evidence (+1) 
 
 ## Files Modified
 
-- `<hermes-root>/commons/data/mentor/evidence.jsonl` (+2 lines: script + caller backup)
-- `<hermes-root>/commons/data/mentor/ingestion_log.jsonl` (+6 lines)
-- `<hermes-home>/commons/journals/ocas-mentor/2026-06-15/mentor-light-20260615T215416Z-caller.json` (caller journal)
-- `<hermes-root>/commons/journals/ocas-mentor/2026-06-15/mentor-light-20260615T215416Z-caller.json` (synced to commons)
+- `<hermes-home>/commons/data/mentor/evidence.jsonl` (+2 lines: script + caller backup)
+- `<hermes-home>/commons/data/mentor/ingestion_log.jsonl` (+6 lines)
+- `<hermes-home>/profiles/indigo/commons/journals/ocas-mentor/2026-06-15/mentor-light-20260615T215416Z-caller.json` (caller journal)
+- `<hermes-home>/commons/journals/ocas-mentor/2026-06-15/mentor-light-20260615T215416Z-caller.json` (synced to commons)
 
 ## Notes
 

@@ -3,8 +3,8 @@
 ## Problem
 
 Skill journals are split across two locations:
-- `<hermes-root>/commons/journals/` (shared commons)
-- `<hermes-home>/commons/journals/` (profile-scoped commons)
+- `<hermes-home>/commons/journals/` (shared commons)
+- `<hermes-home>/profiles/indigo/commons/journals/` (profile-scoped commons)
 
 Scanning only one path produces incorrect active-skill counts (e.g., 14 instead of 35).
 
@@ -12,12 +12,12 @@ Scanning only one path produces incorrect active-skill counts (e.g., 14 instead 
 
 ```bash
 # Step 1: Discover files in both locations
-find <hermes-root>/commons/journals/ \
+find <hermes-home>/commons/journals/ \
     -name "*.json" -mtime -3 \
     -not -path "*/.archive/*" -not -path "*/.quarantine/*" \
   > /tmp/mentor_files_shared.txt
 
-find <hermes-home>/commons/journals/ \
+find <hermes-home>/profiles/indigo/commons/journals/ \
     -name "*.json" -mtime -3 \
     -not -path "*/.archive/*" -not -path "*/.quarantine/*" \
   > /tmp/mentor_files_profile.txt
@@ -30,12 +30,12 @@ cat /tmp/mentor_files_shared.txt /tmp/mentor_files_profile.txt | sort -u \
 ## For Active-Skill Counting (30-day window)
 
 ```bash
-find <hermes-root>/commons/journals/ \
+find <hermes-home>/commons/journals/ \
     -name "*.json" -mtime -30 \
     -not -path "*/.archive/*" -not -path "*/.quarantine/*" \
   > /tmp/active_shared.txt
 
-find <hermes-home>/commons/journals/ \
+find <hermes-home>/profiles/indigo/commons/journals/ \
     -name "*.json" -mtime -30 \
     -not -path "*/.archive/*" -not -path "*/.quarantine/*" \
   > /tmp/active_profile.txt
@@ -63,4 +63,4 @@ In cron-triggered `terminal()` heredocs, Python's `os.walk()` and `subprocess.ru
 
 ## Ingestion Dedup
 
-The ingestion log stores absolute paths via `os.path.abspath()`. Since both `find` commands output absolute paths under different roots, the dedup check works correctly across both locations — a file at `<hermes-root>/commons/journals/ocas-elephas/run.json` and one at `<hermes-home>/commons/journals/ocas-elephas/run.json` are treated as distinct entries (which is correct since they are different files).
+The ingestion log stores absolute paths via `os.path.abspath()`. Since both `find` commands output absolute paths under different roots, the dedup check works correctly across both locations — a file at `<hermes-home>/commons/journals/ocas-elephas/run.json` and one at `<hermes-home>/profiles/indigo/commons/journals/ocas-elephas/run.json` are treated as distinct entries (which is correct since they are different files).

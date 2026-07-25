@@ -4,13 +4,13 @@
 
 1. **Build dual-path 3-day list:**
    ```bash
-   find <hermes-root>/commons/journals/ <hermes-home>/commons/journals/ \
+   find <hermes-home>/commons/journals/ <hermes-home>/profiles/indigo/commons/journals/ \
      -name "*.json" -mtime -3 | sort -u > /tmp/mentor_files_3d.txt
    ```
 
 2. **Record pre-run counts (PROFILE path):**
    ```bash
-   EVIDENCE_BEFORE=$(wc -l < <hermes-home>/commons/data/mentor/evidence.jsonl)
+   EVIDENCE_BEFORE=$(wc -l < <hermes-home>/profiles/indigo/commons/data/mentor/evidence.jsonl)
    ```
 
 3. **Run script:**

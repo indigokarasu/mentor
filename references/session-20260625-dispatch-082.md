@@ -7,7 +7,7 @@
 - **Forge:** Clean — 0 unprocessed proposals. No-op journal written (`forge-scan-20260625T093133Z.json`).
 - **Mentor:** 1,165 files scanned (dual-path), 4 ingested. Correction 9→22 (confirmation #35+). All 3 writes verified (evidence +1→+2 with correction, ingestion +4). Synced to commons (4 evidence +5 ingestion lines).
 - **Praxis:** 2 journals found via mtime (mentor-light + praxis-cron). Script found 1 (praxis-cron, in ocas-praxis/ dir). Mentor-light was already in eval file from concurrent heartbeat. Manual bridge: praxis-dispatch journal added to eval file. 3 third-wave mitigation entries. 0 events. 0 gap backfill (eval file 38,557).
-- **Email:** owner 5 threads (all transactional: ARGGER shipping, Chase payment, Amazon delivery, Paze wallet ×2). Indigo 4 threads (2 GitHub PR reviews, Wikipedia 2FA, GitGuardian internal scan). 0 escalations. State updated.
+- **Email:** <operator> 5 threads (all transactional: ARGGER shipping, Chase payment, Amazon delivery, Paze wallet ×2). the agent 4 threads (2 GitHub PR reviews, Wikipedia 2FA, GitGuardian internal scan). 0 escalations. State updated.
 
 ## Key Observations
 

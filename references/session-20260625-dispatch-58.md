@@ -10,14 +10,14 @@
 | Forge | ✅ Clean | No unprocessed proposals. No-op journal. |
 | Mentor | ✅ Success | 998 files, 2 ingested, correction 9→22 |
 | Praxis | ✅ Success | 6 journals evaluated, 1 gap backfill, 0 events |
-| Email (owner) | ✅ All handled | 4 threads: all no-action (incl. already-replied 475HOA) |
-| Email (Indigo) | ✅ All handled | 7 threads: all informational/self-sent |
+| Email (<operator>) | ✅ All handled | 4 threads: all no-action (incl. already-replied 475HOA) |
+| Email (the agent) | ✅ All handled | 7 threads: all informational/self-sent |
 
 ## Key Learning: "Personal" email already replied
 
-The dispatch flagged the 475HOA fire alarm thread as `intent: personal, priority: 55`. Reading the full thread revealed owner had already replied "Thanks for the update Pedro!" 30 minutes before the original email. The thread was complete — no escalation needed.
+The dispatch flagged the 475HOA fire alarm thread as `intent: personal, priority: 55`. Reading the full thread revealed <operator> had already replied "Thanks for the update Pedro!" 30 minutes before the original email. The thread was complete — no escalation needed.
 
-**Pattern:** Before escalating or acting on `intent: personal` emails, always read the thread content to check for existing replies from owner. The dispatch's thread snippet only shows the incoming message, not owner's response.
+**Pattern:** Before escalating or acting on `intent: personal` emails, always read the thread content to check for existing replies from <operator>. The dispatch's thread snippet only shows the incoming message, not <operator>'s response.
 
 ## Third-Wave Mitigation
 

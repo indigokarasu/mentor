@@ -3,8 +3,8 @@
 **Trigger:** Email dispatch (12 actionable) + Journal dispatch (1 new file: `mentor-light-20260624T152255Z.json`)
 
 ## Phase 1: Email Triage (ocas-dispatch)
-- **owner:** 12 threads — 1 already followed up (CoC proof), 1 self-sent dream, 10 informational
-- **Indigo:** 5 threads — all informational (Twilio, self-sent briefing, Chris Monk, ChatGPT, Wikipedia)
+- **<operator>:** 12 threads — 1 already followed up (CoC proof), 1 self-sent dream, 10 informational
+- **the agent:** 5 threads — all informational (Twilio, self-sent briefing, Chris Monk, ChatGPT, Wikipedia)
 - **Outcome:** All `action:none`. No drafts, no inbox modifications (hard rule enforced).
 
 ## Phase 2: Forge

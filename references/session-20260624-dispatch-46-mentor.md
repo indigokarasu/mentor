@@ -3,8 +3,8 @@
 **Trigger:** Email dispatch (16 threads across 2 accounts) + Journal dispatch (1 new file)
 
 ## Phase 1: Email Triage (ocas-dispatch)
-- **owner:** 12 threads — all already evaluated by prior runs within 10 minutes. CoC follow-up has pending draft. Self-sent dream excluded.
-- **Indigo:** 4 threads — Twilio dev notification (informational), morning briefing (self-sent), ChatGPT tip, Wikipedia verification codes.
+- **<operator>:** 12 threads — all already evaluated by prior runs within 10 minutes. CoC follow-up has pending draft. Self-sent dream excluded.
+- **the agent:** 4 threads — Twilio dev notification (informational), morning briefing (self-sent), ChatGPT tip, Wikipedia verification codes.
 - **Outcome:** All `action:none`. No new drafts. No inbox modifications.
 
 ## Phase 2: Forge
