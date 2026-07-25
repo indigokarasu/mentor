@@ -16,8 +16,13 @@ A 779-minute gap was observed in the evidence log:
 
 **Diagnostic steps:**
 1. Check gateway uptime: `terminal(command="ps aux | grep hermes")`
+<<<<<<< Updated upstream
 2. Check if mentor:light job ran: `terminal(command="cat <hermes-home>/cron/jobs.json | python3 -c \"import json,sys; d=json.load(sys.stdin); jobs=d.get('jobs',d.get('tasks',[])); [print(j.get('name'), j.get('last_status'), j.get('last_run_at')) for j in jobs if 'mentor' in j.get('name','')]\"")`
 3. Check cron_jobs.log for the gap window: `terminal(command="grep mentor <hermes-home>/logs/cron_jobs.log | tail -20")`
+=======
+2. Check if mentor:light job ran: `terminal(command="cat ~/.hermes/cron/jobs.json | python3 -c \"import json,sys; d=json.load(sys.stdin); jobs=d.get('jobs',d.get('tasks',[])); [print(j.get('name'), j.get('last_status'), j.get('last_run_at')) for j in jobs if 'mentor' in j.get('name','')]\"")`
+3. Check cron_jobs.log for the gap window: `terminal(command="grep mentor ~/.hermes/logs/cron_jobs.log | tail -20")`
+>>>>>>> Stashed changes
 4. If gateway was down, no remedial action needed — heartbeats resume automatically on restart
 5. If gateway was up but heartbeat didn't fire, check for `cron: skipping disabled job` or errors in gateway log
 

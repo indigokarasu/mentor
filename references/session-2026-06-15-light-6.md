@@ -47,9 +47,15 @@ All mandatory steps completed in single `terminal()` calls:
 
 ## Files Modified
 
+<<<<<<< Updated upstream
 - `<hermes-home>/profiles/<profile>/commons/data/mentor/evidence.jsonl` (+2 lines: script + corrected)
 - `<hermes-home>/profiles/<profile>/commons/data/mentor/ingestion_log.jsonl` (+6 lines)
 - `<hermes-home>/profiles/<profile>/commons/journals/ocas-mentor/2026-06-15/mentor-light-20260615T181900Z.json` (caller-written journal)
+=======
+- `$HERMES_HOME/commons/data/mentor/evidence.jsonl` (+2 lines: script + corrected)
+- `$HERMES_HOME/commons/data/mentor/ingestion_log.jsonl` (+6 lines)
+- `$HERMES_HOME/commons/journals/ocas-mentor/2026-06-15/mentor-light-20260615T181900Z.json` (caller-written journal)
+>>>>>>> Stashed changes
 - Commons synced: evidence +2, ingestion +6
 
 ## Notes

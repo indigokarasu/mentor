@@ -14,7 +14,11 @@
 ```python
 python3 << 'PYEOF'
 import os
+<<<<<<< Updated upstream
 journal_dir = f"<hermes-home>/profiles/<profile>/commons/journals/ocas-mentor/2026-06-21"
+=======
+journal_dir = f"$HERMES_HOME/commons/journals/ocas-mentor/2026-06-21"
+>>>>>>> Stashed changes
 os.makedirs(journal_dir, exist_ok=True)
 # ... use journal_dir, not $JOURNAL_DIR ...
 PYEOF
