@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 """Timestamp-based set-difference sync: profile -> commons for evidence and ingestion."""
 import json
 import sys
@@ -8,10 +9,10 @@ if set(sys.argv[1:]) & _HELP_ARGS:
     print((__doc__ or "").strip() or "Usage: python3 mentor_sync_commons.py")
     sys.exit(0)
 
-PROFILE_EVIDENCE = "~/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl"
-COMMONS_EVIDENCE = "~/.hermes/commons/data/mentor/evidence.jsonl"
-PROFILE_INGESTION = "~/.hermes/profiles/indigo/commons/data/mentor/ingestion_log.jsonl"
-COMMONS_INGESTION = "~/.hermes/commons/data/mentor/ingestion_log.jsonl"
+PROFILE_EVIDENCE = os.path.expanduser("~/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl")
+COMMONS_EVIDENCE = os.path.expanduser("~/.hermes/commons/data/mentor/evidence.jsonl")
+PROFILE_INGESTION = os.path.expanduser("~/.hermes/profiles/indigo/commons/data/mentor/ingestion_log.jsonl")
+COMMONS_INGESTION = os.path.expanduser("~/.hermes/commons/data/mentor/ingestion_log.jsonl")
 
 # --- Evidence sync (field: timestamp) ---
 last_commons_ts = ""

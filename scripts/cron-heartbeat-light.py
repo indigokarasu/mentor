@@ -17,8 +17,8 @@ if set(sys.argv[1:]) & _HELP_ARGS:
     print((__doc__ or "").strip() or "Usage: python3 cron-heartbeat-light.py")
     sys.exit(0)
 
-AGENT_ROOT = "~/.hermes/profiles/indigo"
-JOURNALS_DIR = "~/.hermes/commons/journals"
+AGENT_ROOT = os.path.expanduser("~/.hermes/profiles/indigo")
+JOURNALS_DIR = os.path.expanduser("~/.hermes/commons/journals")
 # Canonical Mentor data lives under commons/data/mentor/ (not ocas-mentor/).
 # The ocas-mentor/ directory is a legacy alias; all heartbeats must write
 # evidence, ingestion_log, anomalies, and okr_state to the canonical path.
@@ -131,7 +131,7 @@ def main():
                     if fp.startswith("/"):
                         canonical = fp
                     elif fp.startswith("commons/"):
-                        canonical = os.path.join("~/.hermes/profiles/indigo", fp)
+                        canonical = os.path.join(os.path.expanduser("~/.hermes/profiles/indigo"), fp)
                     else:
                         canonical = os.path.abspath(fp) if fp else fp
                     ingested_files.add(canonical)

@@ -1,3 +1,4 @@
+import os
 import importlib.util
 from pathlib import Path
 
@@ -15,11 +16,11 @@ def load_module():
 
 def test_extract_skill_from_profile_scoped_journal_path():
     module = load_module()
-    path = "~/.hermes/profiles/indigo/commons/journals/ocas-mentor/2026-07-09/mentor-light-20260709T133823Z.json"
+    path = os.path.expanduser("~/.hermes/profiles/indigo/commons/journals/ocas-mentor/2026-07-09/mentor-light-20260709T133823Z.json")
     assert module.extract_skill_from_journal_path(path) == "ocas-mentor"
 
 
 def test_extract_skill_from_shared_commons_journal_path():
     module = load_module()
-    path = "~/.hermes/commons/journals/ocas-praxis/2026-07-09/praxis-run.json"
+    path = os.path.expanduser("~/.hermes/commons/journals/ocas-praxis/2026-07-09/praxis-run.json")
     assert module.extract_skill_from_journal_path(path) == "ocas-praxis"

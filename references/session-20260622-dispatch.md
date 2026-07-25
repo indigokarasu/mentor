@@ -26,7 +26,7 @@ All three pipelines ran independently in one session. No cross-pipeline blocking
 ## Email triage outcome
 
 - Thread <thread-id> (PR #41756 +1 from Pedro): archived, no reply needed
-- Thread <thread-id> (CI failure owner.com): already handled (labels empty)
+- Thread <thread-id> (CI failure <external-domain>): already handled (labels empty)
 - 1 unread message processed, 0 drafts created
 
 ## Pipelines

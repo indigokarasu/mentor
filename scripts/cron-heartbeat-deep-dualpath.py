@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 """Mentor Deep Heartbeat — Dual-Path Wrapper. Fixes gotcha #32."""
 import json, os, hashlib, sys
 from datetime import datetime, timezone, timedelta
@@ -65,9 +66,9 @@ def load_journal_entries(filepath):
     except json.JSONDecodeError: pass
     return []
 
-JOURNALS_PATHS = ["~/.hermes/commons/journals/", "~/.hermes/profiles/indigo/commons/journals/"]
-MENTOR_DATA = "~/.hermes/commons/data/mentor/"
-PROFILE_MENTOR_DATA = "~/.hermes/profiles/indigo/commons/data/mentor/"
+JOURNALS_PATHS = [os.path.expanduser("~/.hermes/commons/journals/"), os.path.expanduser("~/.hermes/profiles/indigo/commons/journals/")]
+MENTOR_DATA = os.path.expanduser("~/.hermes/commons/data/mentor/")
+PROFILE_MENTOR_DATA = os.path.expanduser("~/.hermes/profiles/indigo/commons/data/mentor/")
 
 def resolve_skill_name(filepath):
     for base in JOURNALS_PATHS:
@@ -263,7 +264,7 @@ def main():
     profile_okr = os.path.join(PROFILE_MENTOR_DATA, "okr_state.json")
     with open(profile_okr, "w") as f: json.dump(okr_save, f, indent=2)
 
-    jdir = os.path.join("~/.hermes/profiles/indigo/commons/journals/ocas-mentor", today_str)
+    jdir = os.path.join(os.path.expanduser("~/.hermes/profiles/indigo/commons/journals/ocas-mentor"), today_str)
     os.makedirs(jdir, exist_ok=True)
     jfile = os.path.join(jdir, f"mentor-deep-{run_id}.json")
     jrecord = {"timestamp": now.isoformat(), "run_id": run_id, "command": "mentor.heartbeat.deep", "outcome": "success", "metrics": evidence_record, "okr_scores": okr_scores, "proposals": [{"id": p["proposal_id"], "skill": p["target_skill"], "priority": p["priority"]} for p in proposals], "anomalies_new": [a["key"] for a in new_anomalies], "skill_health": sorted(skill_health, key=lambda x: x["success_rate"]), "gap_detected": gap_detected, "gap_minutes": gap_minutes}

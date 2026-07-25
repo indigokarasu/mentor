@@ -36,7 +36,7 @@ import sys
 import os
 from datetime import datetime, timezone
 
-BASE = "~/.hermes/profiles/indigo"
+BASE = os.path.expanduser("~/.hermes/profiles/indigo")
 DISP = os.path.join(BASE, "commons/data/ocas-dispatch/journals_evaluated.jsonl")
 PRAX = os.path.join(BASE, "commons/data/ocas-praxis/journals_evaluated.jsonl")
 

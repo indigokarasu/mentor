@@ -22,12 +22,12 @@ if set(sys.argv[1:]) & _HELP_ARGS:
     print((__doc__ or "").strip() or "Usage: python3 correct_active_skills_30d.py")
     sys.exit(0)
 
-AGENT_ROOT = "~/.hermes/profiles/indigo"
+AGENT_ROOT = os.path.expanduser("~/.hermes/profiles/indigo")
 MENTOR_DATA = os.path.join(AGENT_ROOT, "commons", "data", "mentor")
 EVIDENCE_LOG = os.path.join(MENTOR_DATA, "evidence.jsonl")
 JOURNALS_DIRS = [
-    "~/.hermes/commons/journals",
-    "~/.hermes/profiles/indigo/commons/journals",
+    os.path.expanduser("~/.hermes/commons/journals"),
+    os.path.expanduser("~/.hermes/profiles/indigo/commons/journals"),
 ]
 
 

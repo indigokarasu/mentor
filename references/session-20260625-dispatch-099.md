@@ -35,7 +35,7 @@
 - **Priority 80:** Emily Zhang / ARGGER — Water Ripple Sheet panel shipped via DHL today. Tracking tomorrow. → No action (positive resolution, informational)
 - **Priority 70:** Chase — Credit card payment scheduled ($409.58). → No action (informational)
 - **Priority 65:** Maria Kiseleva / Dialectica — Paid survey follow-up. → No action (low-priority market research)
-- **Priority 30:** Amazon shipment, GLG acknowledgment, ChooseByWater compliance, Paze passkey, Kickstargogo promo. → All no action
+- **Priority 30:** Amazon shipment, GLG acknowledgment, <third-party-domain> compliance, Paze passkey, Kickstargogo promo. → All no action
 
 #### the agent's Account (<third-party-or-user-email>)
 - 5 actionable, 2 high-priority

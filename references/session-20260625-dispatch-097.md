@@ -37,7 +37,7 @@
   - Emily Zhang/ARGGER: Panel shipped DHL (supplier update, no action)
   - Chase: Payment scheduled (transactional)
   - Dialectica survey: Paid survey follow-up (no action)
-  - Ravon Logan/ChooseByWater: COC proof not received (informational)
+  - Ravon Logan/<third-party-domain>: COC proof not received (informational)
   - Amazon: Eve Weather shipped (transactional)
   - Paze: Passkey created + wallet activated (transactional)
 - **the agent (3 threads):** All no-action

@@ -30,8 +30,8 @@ WIN_START = NOW.timestamp() - WINDOW * 60
 MTIME_CUTOFF = NOW.timestamp() - MTIME_COVER * 60
 
 ROOTS = [
-    "~/.hermes/commons/journals",
-    "~/.hermes/profiles/indigo/commons/journals",
+    os.path.expanduser("~/.hermes/commons/journals"),
+    os.path.expanduser("~/.hermes/profiles/indigo/commons/journals"),
 ]
 
 
