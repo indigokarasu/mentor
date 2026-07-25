@@ -9,4 +9,3 @@
    cp -R "$TMPDIR/extracted/"* ./
    rm -rf "$TMPDIR"
    ```
-

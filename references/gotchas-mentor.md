@@ -259,7 +259,7 @@ for i in range(len(lines)-1, -1, -1):
     ```
     This gives the true OCAS active skill count for evaluation_coverage denominator.
 
-44a. **`awk -F/` on absolute paths produces `//` double-slash prefixes — use `grep -oP` instead** — When counting unique skill directories from absolute paths using `awk -F/`, the leading `/` creates an empty first field, producing paths like `/<hermes-home>/...` instead of `<hermes-home>/...`. This causes downstream path comparisons to fail because `~/...` ≠ `~/...`. Additionally, the awk approach requires complex logic to strip date subdirectories and deduplicate. **Confirmed reliable alternative:** Use `grep -oP` to extract the skill name directly from the path:
+44a. **`awk -F/` on absolute paths produces `//` double-slash prefixes — use `grep -oP` instead** — When counting unique skill directories from absolute paths using `awk -F/`, the leading `/` creates an empty first field, producing paths like `/<hermes-home>/...` instead of `<hermes-home>/...`. This causes downstream path comparisons to fail because `/<fs-root>/...` ≠ `<fs-root>/...`. Additionally, the awk approach requires complex logic to strip date subdirectories and deduplicate. **Confirmed reliable alternative:** Use `grep -oP` to extract the skill name directly from the path:
     ```bash
     # Extract unique OCAS skill names (confirmed reliable)
     cat /tmp/mentor_files_30d.txt | grep -oP 'ocas-[a-z]+' | sort -u | wc -l
