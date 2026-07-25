@@ -18,7 +18,11 @@ The ingestion log uses **two different path fields** depending on entry type:
 
 | Field | Type | Description | Example |
 |-------|------|-------------|---------|
+<<<<<<< Updated upstream
 | `file` | string | Absolute path to journal (most entries) | `<hermes-home>/profiles/indigo/commons/journals/ocas-mentor/2026-06-22/mentor-light-20260622T144335Z.json` |
+=======
+| `file` | string | Absolute path to journal (most entries) | `~/.hermes/profiles/indigo/commons/journals/ocas-mentor/2026-06-22/mentor-light-20260622T144335Z.json` |
+>>>>>>> Stashed changes
 | `source` | string | Relative path (some older entries) | `ocas-lucid/2026-05-15/dream-20260515T104600.json` |
 | `paths` | list | **DOES NOT EXIST** — common misconception | N/A |
 
@@ -26,7 +30,11 @@ The ingestion log uses **two different path fields** depending on entry type:
 
 ```python
 ingested = set()
+<<<<<<< Updated upstream
 with open('<hermes-home>/profiles/indigo/commons/data/mentor/ingestion_log.jsonl') as f:
+=======
+with open('~/.hermes/profiles/indigo/commons/data/mentor/ingestion_log.jsonl') as f:
+>>>>>>> Stashed changes
     for line in f:
         try:
             rec = json.loads(line.strip())
@@ -51,7 +59,11 @@ with open('/tmp/mentor_files_3d_sorted.txt') as f:
 
 # Load ingested paths (using file + source fields)
 ingested = set()
+<<<<<<< Updated upstream
 with open('<hermes-home>/profiles/indigo/commons/data/mentor/ingestion_log.jsonl') as f:
+=======
+with open('~/.hermes/profiles/indigo/commons/data/mentor/ingestion_log.jsonl') as f:
+>>>>>>> Stashed changes
     for line in f:
         try:
             rec = json.loads(line.strip())
@@ -80,7 +92,11 @@ To verify the script didn't re-ingest already-known files, check if the last N i
 ```python
 import json
 
+<<<<<<< Updated upstream
 with open('<hermes-home>/profiles/indigo/commons/data/mentor/ingestion_log.jsonl') as f:
+=======
+with open('~/.hermes/profiles/indigo/commons/data/mentor/ingestion_log.jsonl') as f:
+>>>>>>> Stashed changes
     lines = f.readlines()
 
 n_new = 4  # script's reported count

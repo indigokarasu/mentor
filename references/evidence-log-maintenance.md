@@ -60,7 +60,11 @@ Single JSON object split across multiple lines due to `json.dump(record, f, inde
 ```python
 import json
 
+<<<<<<< Updated upstream
 path = "<hermes-home>/profiles/indigo/commons/data/mentor/evidence.jsonl"
+=======
+path = "~/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl"
+>>>>>>> Stashed changes
 
 with open(path) as f:
     lines = [l.rstrip('\n') for l in f]

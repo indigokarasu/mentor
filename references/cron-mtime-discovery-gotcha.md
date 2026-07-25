@@ -60,7 +60,11 @@ over a tight window, you need a filtered file list to feed
 `cron-heartbeat-light.py` via stdin redirect. Use `scripts/discover_recent_journals.py`:
 
     # 1. Wide find (counter the 7h12m mtime lag) -> candidates file
+<<<<<<< Updated upstream
     find <hermes-home>/commons/journals/ <hermes-home>/profiles/indigo/commons/journals/ \
+=======
+    find ~/.hermes/commons/journals/ ~/.hermes/profiles/indigo/commons/journals/ \
+>>>>>>> Stashed changes
         -name "*.json" -mmin -450 -not -path "*/.archive/*" -not -path "*/.quarantine/*" \
         > /tmp/candidates.txt
     # 2. Content-timestamp filter -> heartbeat input (stdin redirect, NOT pipe)

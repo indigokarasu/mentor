@@ -30,23 +30,31 @@
 
 ### Email Triage
 
+<<<<<<< Updated upstream
 #### <operator>'s Account (<user-google-email>)
+=======
+#### <operator>'s Account (<user-google-email>)
+>>>>>>> Stashed changes
 - 11 actionable, 3 high-priority
 - **Priority 80:** Emily Zhang / ARGGER — Water Ripple Sheet panel shipped via DHL today. Tracking tomorrow. → No action (positive resolution, informational)
 - **Priority 70:** Chase — Credit card payment scheduled ($409.58). → No action (informational)
 - **Priority 65:** Maria Kiseleva / Dialectica — Paid survey follow-up. → No action (low-priority market research)
 - **Priority 30:** Amazon shipment, GLG acknowledgment, <third-party-domain> compliance, Paze passkey, Kickstargogo promo. → All no action
 
+<<<<<<< Updated upstream
 #### the agent's Account (<third-party-or-user-email>)
+=======
+#### the agent's Account (<agent-email>)
+>>>>>>> Stashed changes
 - 5 actionable, 2 high-priority
-- **Priority 70:** GitHub PR #12 (Nano-Collective/get-md) — **APPROVED** by @akramcodez ("LGTM @indigokarasu"). → No action
+- **Priority 70:** GitHub PR #12 (Nano-Collective/get-md) — **APPROVED** by @akramcodez ("LGTM @<agent-handle>"). → No action
 - **Priority 70:** GitHub PR #13 (DOCX→Markdown) — Also approved. → No action
-- **Priority 30:** GitGuardian — 3 internal secret incidents on indigokarasu/indigo (JWT + high entropy). → No action (test credentials, not active production secrets)
+- **Priority 30:** GitGuardian — 3 internal secret incidents on <agent-handle>/indigo (JWT + high entropy). → No action (test credentials, not active production secrets)
 - **Priority 30:** Newspapers.com, Wikipedia login code. → No action
 
 ## Key Learnings
 
-1. **GitGuardian internal alerts pattern:** GitGuardian detects secrets in internal repos (indigokarasu/indigo). These are test credentials or config values, not active production secrets. Classify as `security_alert` intent → no action unless active production keys are confirmed. Recurring alerts on same commit = noise.
+1. **GitGuardian internal alerts pattern:** GitGuardian detects secrets in internal repos (<agent-handle>/indigo). These are test credentials or config values, not active production secrets. Classify as `security_alert` intent → no action unless active production keys are confirmed. Recurring alerts on same commit = noise.
 
 2. **Commons sync "already in sync":** The sync script returned 0 delta on both evidence and ingestion. Concurrent heartbeats had already synced the new lines. Verified by checking the new run_id exists in commons. This is expected steady-state behavior — do NOT treat as sync failure.
 

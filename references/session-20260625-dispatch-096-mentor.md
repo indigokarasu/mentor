@@ -18,7 +18,11 @@
 - Amazon: Shipment delivered — no action
 - Paze ×2: Passkey + welcome — system notifications, no action
 
+<<<<<<< Updated upstream
 **<third-party-or-user-email>** — 3 threads, 0 escalations:
+=======
+**<agent-email>** — 3 threads, 0 escalations:
+>>>>>>> Stashed changes
 - GitHub ×2: PR #12 and PR #13 review notifications — Koda's domain, no action
 - Wikipedia: Login verification code — system notification, no action
 

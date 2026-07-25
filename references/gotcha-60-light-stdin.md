@@ -15,7 +15,11 @@ The script's `main()` reads from `sys.stdin` — it has no CLI argument parsing.
 ## Correct Pattern
 
     # Step 1: Write file list to /tmp
+<<<<<<< Updated upstream
     find <hermes-home>/commons/journals/ <hermes-home>/profiles/indigo/commons/journals/ \
+=======
+    find ~/.hermes/commons/journals/ ~/.hermes/profiles/indigo/commons/journals/ \
+>>>>>>> Stashed changes
       -name "*.json" -mtime -3 2>/dev/null | sort -u > /tmp/mentor_files_3d.txt
 
     # Step 2: Pipe into script

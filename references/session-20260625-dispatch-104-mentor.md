@@ -17,7 +17,7 @@
 ## Email Triage Notes
 - **PR reviews on the agent's account**: GitHub PR #12/#13 review notifications correctly classified as `no_action` — code review tasks are Koda's domain, not dispatch communications.
 - **ARGGER supplier thread**: Panel shipped via DHL after 47-day production timeline (May 18 → Jun 25). No action — informational update confirming resolution.
-- **GitGuardian internal alerts**: Test JWTs on `indigokarasu/indigo` repo. No action — test credentials, not active production secrets.
+- **GitGuardian internal alerts**: Test JWTs on `<agent-handle>/indigo` repo. No action — test credentials, not active production secrets.
 
 ## Pipeline Metrics
 | Metric | Value |

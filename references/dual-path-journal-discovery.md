@@ -3,8 +3,13 @@
 ## Problem
 
 Skill journals are split across two locations:
+<<<<<<< Updated upstream
 - `<hermes-home>/commons/journals/` (shared commons)
 - `<hermes-home>/profiles/indigo/commons/journals/` (profile-scoped commons)
+=======
+- `~/.hermes/commons/journals/` (shared commons)
+- `~/.hermes/profiles/indigo/commons/journals/` (profile-scoped commons)
+>>>>>>> Stashed changes
 
 Scanning only one path produces incorrect active-skill counts (e.g., 14 instead of 35).
 
@@ -12,12 +17,20 @@ Scanning only one path produces incorrect active-skill counts (e.g., 14 instead 
 
 ```bash
 # Step 1: Discover files in both locations
+<<<<<<< Updated upstream
 find <hermes-home>/commons/journals/ \
+=======
+find ~/.hermes/commons/journals/ \
+>>>>>>> Stashed changes
     -name "*.json" -mtime -3 \
     -not -path "*/.archive/*" -not -path "*/.quarantine/*" \
   > /tmp/mentor_files_shared.txt
 
+<<<<<<< Updated upstream
 find <hermes-home>/profiles/indigo/commons/journals/ \
+=======
+find ~/.hermes/profiles/indigo/commons/journals/ \
+>>>>>>> Stashed changes
     -name "*.json" -mtime -3 \
     -not -path "*/.archive/*" -not -path "*/.quarantine/*" \
   > /tmp/mentor_files_profile.txt
@@ -30,12 +43,20 @@ cat /tmp/mentor_files_shared.txt /tmp/mentor_files_profile.txt | sort -u \
 ## For Active-Skill Counting (30-day window)
 
 ```bash
+<<<<<<< Updated upstream
 find <hermes-home>/commons/journals/ \
+=======
+find ~/.hermes/commons/journals/ \
+>>>>>>> Stashed changes
     -name "*.json" -mtime -30 \
     -not -path "*/.archive/*" -not -path "*/.quarantine/*" \
   > /tmp/active_shared.txt
 
+<<<<<<< Updated upstream
 find <hermes-home>/profiles/indigo/commons/journals/ \
+=======
+find ~/.hermes/profiles/indigo/commons/journals/ \
+>>>>>>> Stashed changes
     -name "*.json" -mtime -30 \
     -not -path "*/.archive/*" -not -path "*/.quarantine/*" \
   > /tmp/active_profile.txt
@@ -63,4 +84,8 @@ In cron-triggered `terminal()` heredocs, Python's `os.walk()` and `subprocess.ru
 
 ## Ingestion Dedup
 
+<<<<<<< Updated upstream
 The ingestion log stores absolute paths via `os.path.abspath()`. Since both `find` commands output absolute paths under different roots, the dedup check works correctly across both locations — a file at `<hermes-home>/commons/journals/ocas-elephas/run.json` and one at `<hermes-home>/profiles/indigo/commons/journals/ocas-elephas/run.json` are treated as distinct entries (which is correct since they are different files).
+=======
+The ingestion log stores absolute paths via `os.path.abspath()`. Since both `find` commands output absolute paths under different roots, the dedup check works correctly across both locations — a file at `~/.hermes/commons/journals/ocas-elephas/run.json` and one at `~/.hermes/profiles/indigo/commons/journals/ocas-elephas/run.json` are treated as distinct entries (which is correct since they are different files).
+>>>>>>> Stashed changes

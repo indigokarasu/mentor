@@ -20,7 +20,7 @@
 
 ### Email triage: GitGuardian internal alerts = no action
 
-GitGuardian detected 3 "internal secret incidents" in `indigokarasu/indigo` (commit f33783f: JWT + high-entropy secret). These are test/example JWTs in CI/config files, not production credentials. Classified as informational, no escalation. Pattern: internal repo secret scanning notifications are operational noise unless they contain production credentials.
+GitGuardian detected 3 "internal secret incidents" in `<agent-handle>/indigo` (commit f33783f: JWT + high-entropy secret). These are test/example JWTs in CI/config files, not production credentials. Classified as informational, no escalation. Pattern: internal repo secret scanning notifications are operational noise unless they contain production credentials.
 
 ### Pipeline health
 

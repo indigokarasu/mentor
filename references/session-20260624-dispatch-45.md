@@ -3,9 +3,15 @@
 **Trigger:** Email dispatch (7 threads across 2 accounts) + Journal dispatch (2 new files)
 
 ## Phase 1: Email Triage (ocas-dispatch)
+<<<<<<< Updated upstream
 - **<operator>:** 5 threads — CoC follow-up (ball in court, no action), Capital One promo, Kickstargogo spam, Dialectica survey, GLG consulting invite
 - **the agent:** 2 threads — GitGuardian security alert (3 secret incidents on indigokarasu/indigo repo, **escalated to <operator>**), Wikipedia verification codes (16 messages, own login attempts)
 - **Hard rule followed:** <operator>'s inbox was NOT modified
+=======
+- **<operator>:** 5 threads — CoC follow-up (ball in court, no action), Capital One promo, Kickstargogo spam, Dialectica survey, GLG consulting invite
+- **the agent:** 2 threads — GitGuardian security alert (3 secret incidents on <agent-handle>/indigo repo, **escalated to <operator>**), Wikipedia verification codes (16 messages, own login attempts)
+- **Hard rule followed:** <operator>'s inbox was NOT modified
+>>>>>>> Stashed changes
 - **Outcome:** All `action:none` except GitGuardian → `escalate:owner`
 
 ## Phase 2: Forge
@@ -35,4 +41,8 @@ Both journals from the dispatcher's `new_files` list were already evaluated by p
 The mentor-light journal written by this dispatch's heartbeat was NOT in `journals_evaluated.jsonl`. Added it manually and advanced `ingest_state.json:last_ingest_run` to prevent re-detection in wave N+1.
 
 ### Security alert escalation
+<<<<<<< Updated upstream
 GitGuardian detected 3 internal secret incidents on `indigokarasu/indigo` (commit d6b3a45): 1 JWT, 2 high-entropy secrets. Per dispatch hard rules, escalated to <operator> — never fix secrets/code autonomously.
+=======
+GitGuardian detected 3 internal secret incidents on `<agent-handle>/indigo` (commit d6b3a45): 1 JWT, 2 high-entropy secrets. Per dispatch hard rules, escalated to <operator> — never fix secrets/code autonomously.
+>>>>>>> Stashed changes

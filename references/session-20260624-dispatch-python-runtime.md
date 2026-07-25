@@ -8,9 +8,15 @@ The venv symlinks all resolve to `/usr/bin/python3` (Python 3.14.4).
 
 ## Diagnosis
 ```
+<<<<<<< Updated upstream
 ls -la <hermes-home>-agent/.venv/bin/python* → symlinks → /usr/bin/python3 (3.14)
 <fs-root>/.local/share/uv/python/cpython-3.13.13-linux-x86_64-gnu/bin/python3.13 → exists but externally-managed (can't pip install)
 <hermes-home>/profiles/indigo/commons/data/ocas-taste/venv/bin/python3 → symlinks to /usr/bin/python3 but googleapiclient missing
+=======
+ls -la ~/.hermes-agent/.venv/bin/python* → symlinks → /usr/bin/python3 (3.14)
+<fs-root>/.local/share/uv/python/cpython-3.13.13-linux-x86_64-gnu/bin/python3.13 → exists but externally-managed (can't pip install)
+~/.hermes/profiles/indigo/commons/data/ocas-taste/venv/bin/python3 → symlinks to /usr/bin/python3 but googleapiclient missing
+>>>>>>> Stashed changes
 ```
 
 ## Resolution

@@ -4,13 +4,21 @@
 
 1. **Build dual-path 3-day list:**
    ```bash
+<<<<<<< Updated upstream
    find <hermes-home>/commons/journals/ <hermes-home>/profiles/indigo/commons/journals/ \
+=======
+   find ~/.hermes/commons/journals/ ~/.hermes/profiles/indigo/commons/journals/ \
+>>>>>>> Stashed changes
      -name "*.json" -mtime -3 | sort -u > /tmp/mentor_files_3d.txt
    ```
 
 2. **Record pre-run counts (PROFILE path):**
    ```bash
+<<<<<<< Updated upstream
    EVIDENCE_BEFORE=$(wc -l < <hermes-home>/profiles/indigo/commons/data/mentor/evidence.jsonl)
+=======
+   EVIDENCE_BEFORE=$(wc -l < ~/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl)
+>>>>>>> Stashed changes
    ```
 
 3. **Run script:**
