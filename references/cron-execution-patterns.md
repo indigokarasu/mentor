@@ -19,11 +19,7 @@ The pipe pattern `cat file | python3 script` triggers the `tirith:pipe_to_interp
 
 Prepare the input file list using shell redirection (not pipes to python):
 ```bash
-<<<<<<< Updated upstream
 find <hermes-home>/commons/journals/ <hermes-home>/profiles/indigo/commons/journals/ -name "*.json" -mtime -3 | sort -u > /tmp/mentor_files_3d.txt
-=======
-find ~/.hermes/commons/journals/ ~/.hermes/profiles/indigo/commons/journals/ -name "*.json" -mtime -3 | sort -u > /tmp/mentor_files_3d.txt
->>>>>>> Stashed changes
 ```
 
 ## Verification Workflow (Single terminal() call)
@@ -31,7 +27,6 @@ find ~/.hermes/commons/journals/ ~/.hermes/profiles/indigo/commons/journals/ -na
 All verification steps MUST be in the same terminal() call to avoid race conditions:
 ```bash
 # 1. Record pre-run counts
-<<<<<<< Updated upstream
 EVIDENCE_BEFORE=$(wc -l < <hermes-home>/profiles/indigo/commons/data/mentor/evidence.jsonl)
 INGESTION_BEFORE=$(wc -l < <hermes-home>/profiles/indigo/commons/data/mentor/ingestion_log.jsonl)
 
@@ -42,18 +37,6 @@ python3 <hermes-home>/profiles/indigo/skills/ocas-mentor/scripts/cron-heartbeat-
 EVIDENCE_AFTER=$(wc -l < <hermes-home>/profiles/indigo/commons/data/mentor/evidence.jsonl)
 INGESTION_AFTER=$(wc -l < <hermes-home>/profiles/indigo/commons/data/mentor/ingestion_log.jsonl)
 RECENT_JOURNAL=$(find "<hermes-home>/profiles/indigo/commons/journals/ocas-mentor/$(date -u +%Y-%m-%d)" -name "mentor-light-*.json" -mmin -5 2>/dev/null | head -1)
-=======
-EVIDENCE_BEFORE=$(wc -l < ~/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl)
-INGESTION_BEFORE=$(wc -l < ~/.hermes/profiles/indigo/commons/data/mentor/ingestion_log.jsonl)
-
-# 2. Run the script
-python3 ~/.hermes/profiles/indigo/skills/ocas-mentor/scripts/cron-heartbeat-light.py < /tmp/mentor_files_3d.txt
-
-# 3. Verify and backup if needed (all in same terminal() call)
-EVIDENCE_AFTER=$(wc -l < ~/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl)
-INGESTION_AFTER=$(wc -l < ~/.hermes/profiles/indigo/commons/data/mentor/ingestion_log.jsonl)
-RECENT_JOURNAL=$(find "~/.hermes/profiles/indigo/commons/journals/ocas-mentor/$(date -u +%Y-%m-%d)" -name "mentor-light-*.json" -mmin -5 2>/dev/null | head -1)
->>>>>>> Stashed changes
 
 # 4. Backup evidence if needed
 if [ "$EVIDENCE_AFTER" -eq "$EVIDENCE_BEFORE" ]; then
@@ -71,19 +54,11 @@ if [ -z "$RECENT_JOURNAL" ]; then
 fi
 
 # 7. Run mandatory active_skills_30d correction
-<<<<<<< Updated upstream
 python3 <hermes-home>/profiles/indigo/skills/ocas-mentor/scripts/correct_active_skills_30d.py
 
 # 8. VERIFY the correction by comparing against filesystem count
 OCAS_CHECK=$(find <hermes-home>/commons/journals/ <hermes-home>/profiles/indigo/commons/journals/ -name "*.json" -mtime -30 2>/dev/null | grep -oP 'ocas-[a-z]+' | sort -u | wc -l)
 ALL_CHECK=$(find <hermes-home>/commons/journals/ <hermes-home>/profiles/indigo/commons/journals/ -name "*.json" -mtime -30 2>/dev/null | grep -oP 'commons/journals/([a-z][a-z0-9_-]+)' | sed 's|commons/journals/||' | sort -u | wc -l)
-=======
-python3 ~/.hermes/profiles/indigo/skills/ocas-mentor/scripts/correct_active_skills_30d.py
-
-# 8. VERIFY the correction by comparing against filesystem count
-OCAS_CHECK=$(find ~/.hermes/commons/journals/ ~/.hermes/profiles/indigo/commons/journals/ -name "*.json" -mtime -30 2>/dev/null | grep -oP 'ocas-[a-z]+' | sort -u | wc -l)
-ALL_CHECK=$(find ~/.hermes/commons/journals/ ~/.hermes/profiles/indigo/commons/journals/ -name "*.json" -mtime -30 2>/dev/null | grep -oP 'commons/journals/([a-z][a-z0-9_-]+)' | sed 's|commons/journals/||' | sort -u | wc -l)
->>>>>>> Stashed changes
 echo "Filesystem verification - OCAS: $OCAS_CHECK, ALL: $ALL_CHECK"
 
 # 9. Verify timestamp field names before commons sync

@@ -41,17 +41,10 @@ The script's `load_ingested_paths()` checks for a `file_path` key in ingestion l
 
 ## Files Modified
 
-<<<<<<< Updated upstream
 - `<hermes-home>/commons/data/mentor/evidence.jsonl` (+1 line: caller backup)
 - `<hermes-home>/commons/data/mentor/ingestion_log.jsonl` (+10 lines: caller backup)
 - `<hermes-home>/profiles/indigo/commons/journals/ocas-mentor/2026-06-15/mentor-light-20260615T201552Z.json` (script journal)
 - `<hermes-home>/profiles/indigo/commons/journals/ocas-mentor/2026-06-15/mentor-light-caller-20260615T202035Z.json` (caller journal, synced to commons)
-=======
-- `~/.hermes/commons/data/mentor/evidence.jsonl` (+1 line: caller backup)
-- `~/.hermes/commons/data/mentor/ingestion_log.jsonl` (+10 lines: caller backup)
-- `~/.hermes/profiles/indigo/commons/journals/ocas-mentor/2026-06-15/mentor-light-20260615T201552Z.json` (script journal)
-- `~/.hermes/profiles/indigo/commons/journals/ocas-mentor/2026-06-15/mentor-light-caller-20260615T202035Z.json` (caller journal, synced to commons)
->>>>>>> Stashed changes
 
 ## Notes
 

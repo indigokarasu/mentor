@@ -15,11 +15,7 @@
 Both token files hit Mode 1 simultaneously:
 ```
 <user-google-email>: '2026-06-24T19:25:55+00:00' → stripped → '2026-06-24T19:25:55'
-<<<<<<< Updated upstream
-<third-party-or-user-email>: '2026-06-24T19:20:55+00:00' → stripped → '2026-06-24T19:20:55'
-=======
 <agent-email>: '2026-06-24T19:20:55+00:00' → stripped → '2026-06-24T19:20:55'
->>>>>>> Stashed changes
 ```
 
 Ran the combined repair script from `references/token-repair.md` before the scan.

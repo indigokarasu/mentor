@@ -8,11 +8,7 @@
 
 ```bash
 # ALWAYS run this after the heartbeat script, even if script reports "success"
-<<<<<<< Updated upstream
 /usr/bin/python3 <hermes-home>/profiles/indigo/skills/ocas-mentor/scripts/correct_active_skills_30d.py
-=======
-/usr/bin/python3 ~/.hermes/profiles/indigo/skills/ocas-mentor/scripts/correct_active_skills_30d.py
->>>>>>> Stashed changes
 ```
 
 **Output:** `active_skills_30d correction: script=9 → true=22 (OCAS: 18)`
@@ -30,11 +26,7 @@
 # Check the last evidence record has the corrected value
 python3 -c "
 import json
-<<<<<<< Updated upstream
 with open('<hermes-home>/profiles/indigo/commons/data/mentor/evidence.jsonl') as f:
-=======
-with open('~/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl') as f:
->>>>>>> Stashed changes
     lines = [json.loads(l) for l in f if l.strip()]
 last = lines[-1]
 print(f'active_skills_30d_true: {last.get(\"active_skills_30d_true\", \"MISSING\")}')

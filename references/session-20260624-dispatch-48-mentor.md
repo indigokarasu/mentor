@@ -4,11 +4,7 @@
 
 ## What Happened
 
-<<<<<<< Updated upstream
 - Dual-path scan: 1,199 files (both `<hermes-home>/commons/journals/` and `<hermes-home>/profiles/indigo/commons/journals/`)
-=======
-- Dual-path scan: 1,199 files (both `~/.hermes/commons/journals/` and `~/.hermes/profiles/indigo/commons/journals/`)
->>>>>>> Stashed changes
 - 1 new file ingested: `mentor-light-20260624T164227Z.json`
 - `active_skills_30d` corrected: 10 → 22 (OCAS: 18)
 - All 3 writes verified (evidence delta +1, ingestion delta +1, journal written)

@@ -8,11 +8,7 @@ Success. Light heartbeat completed with mandatory correction.
 ## Execution
 
 ### Pre-Run Setup
-<<<<<<< Updated upstream
 - Built dual-path 3-day file list: 1,033 files from `<hermes-home>/commons/journals/` + `<hermes-home>/profiles/indigo/commons/journals/`
-=======
-- Built dual-path 3-day file list: 1,033 files from `~/.hermes/commons/journals/` + `~/.hermes/profiles/indigo/commons/journals/`
->>>>>>> Stashed changes
 - Pre-run evidence count: 4,764
 - Pre-run ingestion count: 28,635
 

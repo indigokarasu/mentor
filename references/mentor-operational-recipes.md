@@ -39,36 +39,21 @@ Two failure modes (BOTH observed in production):
 # The profile path is authoritative; commons is a lagging copy.
 
 # 1. Record pre-run counts (PROFILE path, not commons)
-<<<<<<< Updated upstream
 EVIDENCE_BEFORE=$(wc -l < <hermes-home>/profiles/indigo/commons/data/mentor/evidence.jsonl)
 INGESTION_BEFORE=$(wc -l < <hermes-home>/profiles/indigo/commons/data/mentor/ingestion_log.jsonl)
 JOURNAL_DIR="<hermes-home>/profiles/indigo/commons/journals/ocas-mentor/$(date -u +%Y-%m-%d)"
-=======
-EVIDENCE_BEFORE=$(wc -l < ~/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl)
-INGESTION_BEFORE=$(wc -l < ~/.hermes/profiles/indigo/commons/data/mentor/ingestion_log.jsonl)
-JOURNAL_DIR="~/.hermes/profiles/indigo/commons/journals/ocas-mentor/$(date -u +%Y-%m-%d)"
->>>>>>> Stashed changes
 
 # 2. Run the script
 python3 scripts/cron-heartbeat-light.py < /tmp/mentor_files_3d.txt
 
 # 3. Verify ALL THREE files independently (partial success is possible)
-<<<<<<< Updated upstream
 EVIDENCE_AFTER=$(wc -l < <hermes-home>/profiles/indigo/commons/data/mentor/evidence.jsonl)
 INGESTION_AFTER=$(wc -l < <hermes-home>/profiles/indigo/commons/data/mentor/ingestion_log.jsonl)
-=======
-EVIDENCE_AFTER=$(wc -l < ~/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl)
-INGESTION_AFTER=$(wc -l < ~/.hermes/profiles/indigo/commons/data/mentor/ingestion_log.jsonl)
->>>>>>> Stashed changes
 RECENT_JOURNAL=$(find "$JOURNAL_DIR" -name "mentor-light-*.json" -mmin -5 2>/dev/null | head -1)
 
 # 4. If evidence didn't grow, write backup via shell to PROFILE path
 if [ "$EVIDENCE_AFTER" -eq "$EVIDENCE_BEFORE" ]; then
-<<<<<<< Updated upstream
     printf '%s\\n' '{...evidence json...}' >> <hermes-home>/profiles/indigo/commons/data/mentor/evidence.jsonl
-=======
-    printf '%s\\n' '{...evidence json...}' >> ~/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl
->>>>>>> Stashed changes
 fi
 
 # 5. If ingestion didn't grow, write backup ingestion records via shell to PROFILE path
@@ -83,11 +68,7 @@ if [ -z "$RECENT_JOURNAL" ]; then
     # Write backup journal via shell (see references/shell-write-pattern.md)
 fi
 
-<<<<<<< Updated upstream
 # IMPORTANT: $JOURNAL_DIR must use UTC date: JOURNAL_DIR="<hermes-home>/profiles/indigo/commons/journals/ocas-mentor/$(date -u +%Y-%m-%d)"
-=======
-# IMPORTANT: $JOURNAL_DIR must use UTC date: JOURNAL_DIR="~/.hermes/profiles/indigo/commons/journals/ocas-mentor/$(date -u +%Y-%m-%d)"
->>>>>>> Stashed changes
 # Using local date puts the journal in the wrong directory when server TZ != UTC.
 # DO NOT write a separate caller journal — the script's journal is canonical (gotcha #73).
 #
@@ -108,11 +89,7 @@ fi
 
 **Correction script field naming (confirmed 2026-06-23):** `correct_active_skills_30d.py` writes the corrected evidence with fields `active_skills_30d_true` and `active_skills_30d_true_ocas` (NOT `active_skills_30d`). When verifying the correction was applied, check for these field names — searching for `active_skills_30d` in the last evidence record will return the script's undercount (wrong) value, not the corrected one. The correction record also includes `active_skills_30d_script` showing the script's original (wrong) count.
 
-<<<<<<< Updated upstream
 **CRITICAL: Caller backup writes MUST target the profile path, NOT commons** — All caller-written evidence and ingestion records MUST be written to the profile-scoped data directory (`<hermes-home>/profiles/indigo/commons/data/mentor/`), NOT directly to `<hermes-home>/commons/data/mentor/`. The profile path is the authoritative source; commons is a lagging copy that receives data only via the line-level set-difference sync. Writing directly to commons creates duplicate or offset evidence lines — the script's version (with wrong `active_skills_30d`) gets synced from profile, then the caller's corrected version gets written directly to commons, producing two lines for the same run. See `references/session-2026-06-16-light-7.md` and gotcha #62.
-=======
-**CRITICAL: Caller backup writes MUST target the profile path, NOT commons** — All caller-written evidence and ingestion records MUST be written to the profile-scoped data directory (`~/.hermes/profiles/indigo/commons/data/mentor/`), NOT directly to `~/.hermes/commons/data/mentor/`. The profile path is the authoritative source; commons is a lagging copy that receives data only via the line-level set-difference sync. Writing directly to commons creates duplicate or offset evidence lines — the script's version (with wrong `active_skills_30d`) gets synced from profile, then the caller's corrected version gets written directly to commons, producing two lines for the same run. See `references/session-2026-06-16-light-7.md` and gotcha #62.
->>>>>>> Stashed changes
 
 **Commons sync must use timestamp-based set-difference, NOT line-count comparison (confirmed 2026-06-28):** When multiple concurrent heartbeats fire, commons can be AHEAD of profile (commons accumulated writes from sibling runs). A naive `if [ profile_lines -gt commons_lines ]` check falsely concludes "up to date" and skips sync. Use timestamp-based set-difference instead.
 
@@ -124,17 +101,10 @@ Write the sync script via `write_file`:
 """Timestamp-based set-difference sync: profile -> commons for evidence and ingestion."""
 import json
 
-<<<<<<< Updated upstream
 PROFILE_EVIDENCE = "<hermes-home>/profiles/indigo/commons/data/mentor/evidence.jsonl"
 COMMONS_EVIDENCE = "<hermes-home>/commons/data/mentor/evidence.jsonl"
 PROFILE_INGESTION = "<hermes-home>/profiles/indigo/commons/data/mentor/ingestion_log.jsonl"
 COMMONS_INGESTION = "<hermes-home>/commons/data/mentor/ingestion_log.jsonl"
-=======
-PROFILE_EVIDENCE = "~/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl"
-COMMONS_EVIDENCE = "~/.hermes/commons/data/mentor/evidence.jsonl"
-PROFILE_INGESTION = "~/.hermes/profiles/indigo/commons/data/mentor/ingestion_log.jsonl"
-COMMONS_INGESTION = "~/.hermes/commons/data/mentor/ingestion_log.jsonl"
->>>>>>> Stashed changes
 
 # --- Evidence sync (field: timestamp) ---
 last_commons_ts = ""
@@ -200,37 +170,22 @@ This is idempotent regardless of whether commons is behind, ahead, or equal. **I
 
 **Commons ingestion_log structural bloat (confirmed 2026-06-28):** The commons `ingestion_log.jsonl` is typically 2x the profile count (e.g. 37,734 commons vs 19,454 profile) due to: (1) historical records from other agent profiles (corvus, lucid, elephas) that live in commons but were never synced to indigo's profile, (2) ~18,000 legacy records with empty `file` field from schema variants across profiles, (3) duplicate ingestion records from pre-timestamp-sync era. This is expected structural accumulation — commons is a superset accumulator for all profiles. Do NOT investigate or attempt dedup. The profile-scoped file is the authoritative source for indigo's own ingestion state. This run's sync adds only the correct new lines via timestamp-based set-difference.
 
-<<<<<<< Updated upstream
 **`cron-heartbeat-light.py` `JOURNALS_DIR` constant is legacy/unused for output (confirmed 2026-07-13):** The script hardcodes `JOURNALS_DIR = "<hermes-home>/commons/journals"` at module top (line 9), which looks like it would make the heartbeat read/write against the legacy root. It does NOT. The script reads its journal file list from **stdin** (the `find ... > /tmp/mentor_files_3d.txt && python3 cron-heartbeat-light.py < /tmp/mentor_files_3d.txt` pattern) and writes its own journal to `JOURNAL_DIR = os.path.join(AGENT_ROOT, "commons", "journals", "ocas-mentor")` where `AGENT_ROOT = "<hermes-home>/profiles/indigo"` — i.e. the **profile-scoped** tree. The legacy `<hermes-home>/commons/journals/ocas-mentor/` holds only 1 stale file (2026-07-12); the 138 active `mentor-light-*` journals all live under the profile path. Do NOT conclude the script leaks stray journals into the legacy tree, and do NOT "fix" the script by changing `JOURNALS_DIR` (it is only referenced in the docstring/usage example, not in execution). The dual-path `find` (both commons + profile) is what feeds stdin — see `references/dual-path-journal-discovery.md`.
-=======
-**`cron-heartbeat-light.py` `JOURNALS_DIR` constant is legacy/unused for output (confirmed 2026-07-13):** The script hardcodes `JOURNALS_DIR = "~/.hermes/commons/journals"` at module top (line 9), which looks like it would make the heartbeat read/write against the legacy root. It does NOT. The script reads its journal file list from **stdin** (the `find ... > /tmp/mentor_files_3d.txt && python3 cron-heartbeat-light.py < /tmp/mentor_files_3d.txt` pattern) and writes its own journal to `JOURNAL_DIR = os.path.join(AGENT_ROOT, "commons", "journals", "ocas-mentor")` where `AGENT_ROOT = "~/.hermes/profiles/indigo"` — i.e. the **profile-scoped** tree. The legacy `~/.hermes/commons/journals/ocas-mentor/` holds only 1 stale file (2026-07-12); the 138 active `mentor-light-*` journals all live under the profile path. Do NOT conclude the script leaks stray journals into the legacy tree, and do NOT "fix" the script by changing `JOURNALS_DIR` (it is only referenced in the docstring/usage example, not in execution). The dual-path `find` (both commons + profile) is what feeds stdin — see `references/dual-path-journal-discovery.md`.
->>>>>>> Stashed changes
 
 **Recommended skill counting technique (confirmed 2026-06-14):** Use `grep -oP` to extract unique skill names from journal file paths — avoids all edge cases of `awk -F/` on absolute paths (see gotcha #44a):
 ```bash
 # OCAS-only count (fastest, most reliable)
-<<<<<<< Updated upstream
 ACTIVE_OCAS_30D=$(find <hermes-home>/commons/journals/ <hermes-home>/profiles/indigo/commons/journals/ -name "*.json" -mtime -30 2>/dev/null | grep -oP 'ocas-[a-z]+' | sort -u | wc -l)
 
 # All skills count (OCAS + non-OCAS)
 ACTIVE_ALL_30D=$(find <hermes-home>/commons/journals/ <hermes-home>/profiles/indigo/commons/journals/ -name "*.json" -mtime -30 2>/dev/null | grep -oP 'commons/journals/([a-z][a-z0-9_-]+)' | sed 's|commons/journals/||' | sort -u | wc -l)
-=======
-ACTIVE_OCAS_30D=$(find ~/.hermes/commons/journals/ ~/.hermes/profiles/indigo/commons/journals/ -name "*.json" -mtime -30 2>/dev/null | grep -oP 'ocas-[a-z]+' | sort -u | wc -l)
-
-# All skills count (OCAS + non-OCAS)
-ACTIVE_ALL_30D=$(find ~/.hermes/commons/journals/ ~/.hermes/profiles/indigo/commons/journals/ -name "*.json" -mtime -30 2>/dev/null | grep -oP 'commons/journals/([a-z][a-z0-9_-]+)' | sed 's|commons/journals/||' | sort -u | wc -l)
->>>>>>> Stashed changes
 ```
 
 **`active_anomalies` counting fixed in v2.8.10** — The light heartbeat script now uses `a.get("timestamp") or a.get("detected_at")` to correctly read anomalies regardless of which date field they use. Prior to v2.8.10, `active_anomalies` always reported 0 due to the field mismatch (gotcha #36).
 
 **Light heartbeat caller MUST cross-reference ingestion counts** — The script's `new_files_ingested` is an upper bound. Pipe truncation (gotcha #26) and path normalization mismatches (gotcha #24) mean the script can report N while the true new-file count differs. After every heartbeat, cross-reference: `find ... -mtime -3 | sort -u` minus paths in `ingestion_log.jsonl`. If counts differ, note the discrepancy in the evidence record. Re-ingestions are harmless (idempotent).
 
-<<<<<<< Updated upstream
 **`cron-heartbeat-light.py` does NOT accept CLI arguments for file list — stdin redirect is the ONLY input method** — Invoking the script with `--files-from file.txt` or any other CLI argument silently produces 0 files scanned. Write file list to `/tmp/mentor_files_3d.txt` first, then use stdin redirect: `find ... | sort -u > /tmp/mentor_files_3d.txt && python3 <hermes-home>/profiles/indigo/skills/ocas-mentor/scripts/cron-heartbeat-light.py < /tmp/mentor_files_3d.txt`. Do NOT use `cat file | python3 script.py` — the pipe is blocked by `tirith:pipe_to_interpreter` in cron mode (confirmed 2026-07-01). Always use stdin redirect inside cron. See `references/gotcha-60-light-stdin.md`.
-=======
-**`cron-heartbeat-light.py` does NOT accept CLI arguments for file list — stdin redirect is the ONLY input method** — Invoking the script with `--files-from file.txt` or any other CLI argument silently produces 0 files scanned. Write file list to `/tmp/mentor_files_3d.txt` first, then use stdin redirect: `find ... | sort -u > /tmp/mentor_files_3d.txt && python3 ~/.hermes/profiles/indigo/skills/ocas-mentor/scripts/cron-heartbeat-light.py < /tmp/mentor_files_3d.txt`. Do NOT use `cat file | python3 script.py` — the pipe is blocked by `tirith:pipe_to_interpreter` in cron mode (confirmed 2026-07-01). Always use stdin redirect inside cron. See `references/gotcha-60-light-stdin.md`.
->>>>>>> Stashed changes
 
 **Script stdout filename ≠ actual file on disk** — The `cron-heartbeat-light.py` script calls `datetime.now()`/`strftime()` twice internally: once for the `run_id` field inside the JSON content, and once for the filename. If the clock rolls over between these two calls (e.g. second boundary crossing), the `run_id` and filename timestamps will differ by up to 60 seconds (confirmed: 100-second difference on dispatch #104). Script stdout prints the `run_id`-based filename, but the file on disk has the filename-timestamp. **Fix:** After completing the heartbeat, `ls` the actual journal directory to get the real filenames, then `grep` those real filenames against `journals_evaluated.jsonl` — never trust the script's stdout filename claim. If you already added the wrong filename via third-wave mitigation, the subsequent gap backfill will add the correct filename automatically. Do NOT attempt to remove the wrong-filename phantom entry — it is inert and harmless. Confirmed 2026-06-25 dispatch #104: stdout said `T145011Z`, actual file was `T145111Z`, gap backfill auto-corrected.
 
@@ -255,7 +210,6 @@ ACTIVE_ALL_30D=$(find ~/.hermes/commons/journals/ ~/.hermes/profiles/indigo/comm
 # ALL steps in ONE terminal() call — shell variables don't persist across calls.
 
 # 1. Ensure proposals directory exists
-<<<<<<< Updated upstream
 mkdir -p <hermes-home>/profiles/indigo/commons/data/mentor/proposals
 
 # 2. Record pre-run counts (PROFILE path)
@@ -276,28 +230,6 @@ python3 <hermes-home>/profiles/indigo/skills/ocas-mentor/scripts/cron-heartbeat-
 EVIDENCE_AFTER=$(wc -l < <hermes-home>/profiles/indigo/commons/data/mentor/evidence.jsonl)
 INGESTION_AFTER=$(wc -l < <hermes-home>/profiles/indigo/commons/data/mentor/ingestion_log.jsonl)
 DECISIONS_AFTER=$(wc -l < <hermes-home>/profiles/indigo/commons/data/mentor/decisions.jsonl)
-=======
-mkdir -p ~/.hermes/profiles/indigo/commons/data/mentor/proposals
-
-# 2. Record pre-run counts (PROFILE path)
-EVIDENCE_BEFORE=$(wc -l < ~/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl)
-INGESTION_BEFORE=$(wc -l < ~/.hermes/profiles/indigo/commons/data/mentor/ingestion_log.jsonl)
-DECISIONS_BEFORE=$(wc -l < ~/.hermes/profiles/indigo/commons/data/mentor/decisions.jsonl)
-JOURNAL_DIR="~/.hermes/profiles/indigo/commons/journals/ocas-mentor/$(date -u +%Y-%m-%d)"
-
-# 3. Build dual-path file list (all journals, not just 3-day)
-find ~/.hermes/commons/journals/ -name "*.json" -not -path "*/.archive/*" -not -path "*/.quarantine/*" > /tmp/mentor_deep_shared.txt
-find ~/.hermes/profiles/indigo/commons/journals/ -name "*.json" -not -path "*/.archive/*" -not -path "*/.quarantine/*" >> /tmp/mentor_deep_shared.txt
-sort -u /tmp/mentor_deep_shared.txt > /tmp/mentor_deep_files.txt
-
-# 4. Run the script (stdin redirect, NOT pipe)
-python3 ~/.hermes/profiles/indigo/skills/ocas-mentor/scripts/cron-heartbeat-deep-dualpath.py < /tmp/mentor_deep_files.txt
-
-# 5. Verify ALL write targets independently
-EVIDENCE_AFTER=$(wc -l < ~/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl)
-INGESTION_AFTER=$(wc -l < ~/.hermes/profiles/indigo/commons/data/mentor/ingestion_log.jsonl)
-DECISIONS_AFTER=$(wc -l < ~/.hermes/profiles/indigo/commons/data/mentor/decisions.jsonl)
->>>>>>> Stashed changes
 RECENT_JOURNAL=$(find "$JOURNAL_DIR" -name "mentor-deep-*.json" -mmin -5 2>/dev/null | head -1)
 echo "Evidence delta: $((EVIDENCE_AFTER - EVIDENCE_BEFORE))"
 echo "Ingestion delta: $((INGESTION_AFTER - INGESTION_BEFORE))"
@@ -336,11 +268,7 @@ record = {
     'partial_success_evidence_write_failed': True,
     'note': 'Backup evidence — script evidence write failed silently in cron.'
 }
-<<<<<<< Updated upstream
 with open('<hermes-home>/profiles/indigo/commons/data/mentor/evidence.jsonl', 'a') as f:
-=======
-with open('~/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl', 'a') as f:
->>>>>>> Stashed changes
     f.write(json.dumps(record) + '\n')
 "
 fi
@@ -353,11 +281,7 @@ if [ -z "$RECENT_JOURNAL" ]; then
 fi
 
 # 9. Run active_skills_30d correction (mandatory)
-<<<<<<< Updated upstream
 /usr/bin/python3 <hermes-home>/profiles/indigo/skills/ocas-mentor/scripts/correct_active_skills_30d.py
-=======
-/usr/bin/python3 ~/.hermes/profiles/indigo/skills/ocas-mentor/scripts/correct_active_skills_30d.py
->>>>>>> Stashed changes
 
 # 10. Sync to commons (timestamp-based set-difference)
 # See commons sync pattern in main Cron-Mode Constraints section
@@ -374,11 +298,7 @@ fi
 import json, os
 from datetime import datetime, timezone
 
-<<<<<<< Updated upstream
 DATA_DIR = "<hermes-home>/profiles/indigo/commons/data/mentor"
-=======
-DATA_DIR = "~/.hermes/profiles/indigo/commons/data/mentor"
->>>>>>> Stashed changes
 INGESTION_LOG = os.path.join(DATA_DIR, "ingestion_log.jsonl")
 
 already_ingested = set()

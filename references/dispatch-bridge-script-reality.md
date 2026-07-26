@@ -38,11 +38,7 @@ Use `scripts/bridge_eval_inline.py` instead of the documented (absent)
 helpers:
 
 ```
-<<<<<<< Updated upstream
 python3 <hermes-home>/profiles/indigo/skills/ocas-mentor/scripts/bridge_eval_inline.py \
-=======
-python3 ~/.hermes/profiles/indigo/skills/ocas-mentor/scripts/bridge_eval_inline.py \
->>>>>>> Stashed changes
   ocas-mentor/2026-07-14/mentor-light-20260714T065047Z.json \
   ocas-mentor/2026-07-14/mentor-light-20260714T065523Z.json
 ```
@@ -70,11 +66,7 @@ In-process (no shell pipe) mini-check, run as `python3 /tmp/check.py`:
 
 ```python
 import os, json
-<<<<<<< Updated upstream
 BASE="<hermes-home>/profiles/indigo"
-=======
-BASE="~/.hermes/profiles/indigo"
->>>>>>> Stashed changes
 JD=os.path.join(BASE,"commons/journals"); date="2026-07-14"
 disp=set()
 for line in open(os.path.join(BASE,"commons/data/ocas-dispatch/journals_evaluated.jsonl")):

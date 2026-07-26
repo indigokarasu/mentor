@@ -4,11 +4,7 @@ Extracted from `SKILL.md` ## Cron-Mode Constraints / ## Dispatch / Cron Integrat
 
 ## Cron-Mode Constraints — operational gotchas (full bodies)
 
-<<<<<<< Updated upstream
 - **Commons sync "already in sync" pattern (2026-06-25):** After evidence/ingestion sync, `wc -l` may show 0 delta on both — a concurrent heartbeat already synced between script write and dispatch sync call. EXPECTED in steady-state with multiple concurrent cron triggers. Verify with `grep <new_run_id> <hermes-home>/commons/data/mentor/evidence.jsonl`; if present, sync is done — proceed.
-=======
-- **Commons sync "already in sync" pattern (2026-06-25):** After evidence/ingestion sync, `wc -l` may show 0 delta on both — a concurrent heartbeat already synced between script write and dispatch sync call. EXPECTED in steady-state with multiple concurrent cron triggers. Verify with `grep <new_run_id> ~/.hermes/commons/data/mentor/evidence.jsonl`; if present, sync is done — proceed.
->>>>>>> Stashed changes
 - **`execute_code` blocked in cron-triggered jobs:** all heartbeat/update/plan runs must use `terminal()` with `python3 /path/to/scripts.py`. Do NOT use `<<` heredoc (triggers foreground-background detection, exit_code=-1). Write scripts to `/tmp/` via `write_file` first, then `python3 /tmp/script.py`. See gotcha #70.
 - **Pipe-to-python bash quoting pitfall (2026-06-29):** `VAR=$(tail -1 "$file" | python3 -c "...")` fails (syntax error). Fix: single quotes inside Python, or write `/tmp/script.py` and pipe into it.
 - **`execute_code` blocking applies to ALL cron jobs (2026-06-25 #99):** state writes, JSON manipulation, multi-step Python — all must use `terminal()` with `cat > file << 'EOF'` (JSON) or `echo >>` (JSONL). Hard runtime constraint.
@@ -32,20 +28,12 @@ Extracted from `SKILL.md` ## Cron-Mode Constraints / ## Dispatch / Cron Integrat
 - **`correct_active_skills_30d.py` writes BOTH evidence record AND its own journal** (separate run_id) — expected (audit trail), NOT a duplicate. Two journals per heartbeat (main + correction) expected from v2.8.23+.
 - **Caller MUST correct active_skills_30d AND write complete evidence record EVERY TIME** regardless of script success. Script receives only `-mtime -3` files via stdin → its count (12-13) NEVER true 30d count (18-21). Compute true count via dual-path 30-day `find` (`references/dual-path-journal-discovery.md`), write corrected evidence. Script's evidence always undercounts. Correction evidence is PRIMARY, not backup. Confirmed 42+ times.
 - **Correction field naming (2026-06-23):** `correct_active_skills_30d.py` writes `active_skills_30d_true` / `active_skills_30d_true_ocas` (NOT `active_skills_30d`). Verify against those field names.
-<<<<<<< Updated upstream
 - **Caller backup writes MUST target profile path, NOT commons:** profile `<hermes-home>/profiles/indigo/commons/data/mentor/` is authoritative; commons is lagging copy. Writing directly to commons creates duplicate/offset lines.
-=======
-- **Caller backup writes MUST target profile path, NOT commons:** profile `~/.hermes/profiles/indigo/commons/data/mentor/` is authoritative; commons is lagging copy. Writing directly to commons creates duplicate/offset lines.
->>>>>>> Stashed changes
 - **Commons sync must use timestamp-based set-difference, NOT line-count:** concurrent heartbeats can make commons AHEAD of profile; naive `profile_lines > commons_lines` falsely concludes "up to date". Use timestamp set-difference.
 - **No inline pipe-to-python for commons sync (2026-07-01):** `tail -1 | python3 -c` blocked by tirith. Write sync script to `/tmp/` via `write_file`, execute.
 - **Ingestion sync field-name trap (2026-06-28):** `ingestion_log.jsonl` uses `ingested_at`, NOT `timestamp`. Using wrong field duplicates entire file. Verify field with `head -1 <file> | python3 -c "import sys,json; print(list(json.loads(sys.stdin.read()).keys()))"`.
 - **Commons ingestion_log structural bloat (2026-06-28):** commons `ingestion_log.jsonl` ~2x profile (37,734 vs 19,454) — historical records from other profiles (corvus/lucid/elephas), ~18k legacy empty-`file` records, pre-timestamp-sync duplicates. Expected accumulation; do NOT dedup. Profile-scoped file is authoritative.
-<<<<<<< Updated upstream
 - **`cron-heartbeat-light.py` JOURNALS_DIR constant legacy/unused (2026-07-13):** hardcodes `<hermes-home>/commons/journals` (module top) but reads file list from STDIN and writes to profile-scoped `AGENT_ROOT/commons/journals/ocas-mentor/`. Legacy tree holds 1 stale file; 138 active journals under profile path. Do NOT "fix" the constant — it's only in docstring/usage.
-=======
-- **`cron-heartbeat-light.py` JOURNALS_DIR constant legacy/unused (2026-07-13):** hardcodes `~/.hermes/commons/journals` (module top) but reads file list from STDIN and writes to profile-scoped `AGENT_ROOT/commons/journals/ocas-mentor/`. Legacy tree holds 1 stale file; 138 active journals under profile path. Do NOT "fix" the constant — it's only in docstring/usage.
->>>>>>> Stashed changes
 - **Recommended skill counting (2026-06-14):** `grep -oP` for unique skill names — `ACTIVE_OCAS_30D=$(find ... -name "*.json" -mtime -30 | grep -oP 'ocas-[a-z]+' | sort -u | wc -l)`; all skills `grep -oP 'commons/journals/([a-z][a-z0-9_-]+)'`.
 - **`active_anomalies` fixed v2.8.10:** uses `a.get("timestamp") or a.get("detected_at")`. Prior always 0.
 - **Light heartbeat caller MUST cross-reference ingestion counts:** script's `new_files_ingested` is upper bound (pipe truncation, path normalization). Cross-ref `find -mtime -3 | sort -u` minus `ingestion_log.jsonl`.
@@ -65,7 +53,6 @@ Extracted from `SKILL.md` ## Cron-Mode Constraints / ## Dispatch / Cron Integrat
 
 ```bash
 # 1. Record pre-run counts (PROFILE path)
-<<<<<<< Updated upstream
 EVIDENCE_BEFORE=$(wc -l < <hermes-home>/profiles/indigo/commons/data/mentor/evidence.jsonl)
 INGESTION_BEFORE=$(wc -l < <hermes-home>/profiles/indigo/commons/data/mentor/ingestion_log.jsonl)
 JOURNAL_DIR="<hermes-home>/profiles/indigo/commons/journals/ocas-mentor/$(date -u +%Y-%m-%d)"
@@ -74,16 +61,6 @@ python3 scripts/cron-heartbeat-light.py < /tmp/mentor_files_3d.txt
 # 3. Verify ALL THREE files independently
 EVIDENCE_AFTER=$(wc -l < <hermes-home>/profiles/indigo/commons/data/mentor/evidence.jsonl)
 INGESTION_AFTER=$(wc -l < <hermes-home>/profiles/indigo/commons/data/mentor/ingestion_log.jsonl)
-=======
-EVIDENCE_BEFORE=$(wc -l < ~/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl)
-INGESTION_BEFORE=$(wc -l < ~/.hermes/profiles/indigo/commons/data/mentor/ingestion_log.jsonl)
-JOURNAL_DIR="~/.hermes/profiles/indigo/commons/journals/ocas-mentor/$(date -u +%Y-%m-%d)"
-# 2. Run the script
-python3 scripts/cron-heartbeat-light.py < /tmp/mentor_files_3d.txt
-# 3. Verify ALL THREE files independently
-EVIDENCE_AFTER=$(wc -l < ~/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl)
-INGESTION_AFTER=$(wc -l < ~/.hermes/profiles/indigo/commons/data/mentor/ingestion_log.jsonl)
->>>>>>> Stashed changes
 RECENT_JOURNAL=$(find "$JOURNAL_DIR" -name "mentor-light-*.json" -mmin -5 2>/dev/null | head -1)
 # 4-6. Backup evidence/ingestion/journal via shell if delta=0 / missing (see references/shell-write-pattern.md)
 ```
@@ -93,7 +70,6 @@ Then: run `correct_active_skills_30d.py`, sync commons (timestamp set-difference
 ## Deep heartbeat caller verify-and-backup workflow (SINGLE terminal() call)
 
 ```bash
-<<<<<<< Updated upstream
 mkdir -p <hermes-home>/profiles/indigo/commons/data/mentor/proposals
 EVIDENCE_BEFORE=$(wc -l < <hermes-home>/profiles/indigo/commons/data/mentor/evidence.jsonl)
 INGESTION_BEFORE=$(wc -l < <hermes-home>/profiles/indigo/commons/data/mentor/ingestion_log.jsonl)
@@ -105,19 +81,6 @@ sort -u /tmp/mentor_deep_shared.txt > /tmp/mentor_deep_files.txt
 python3 <hermes-home>/profiles/indigo/skills/ocas-mentor/scripts/cron-heartbeat-deep-dualpath.py < /tmp/mentor_deep_files.txt
 # Verify ALL write targets; backup via /tmp/mentor_deep_backup.py if ingestion delta=0
 /usr/bin/python3 <hermes-home>/profiles/indigo/skills/ocas-mentor/scripts/correct_active_skills_30d.py
-=======
-mkdir -p ~/.hermes/profiles/indigo/commons/data/mentor/proposals
-EVIDENCE_BEFORE=$(wc -l < ~/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl)
-INGESTION_BEFORE=$(wc -l < ~/.hermes/profiles/indigo/commons/data/mentor/ingestion_log.jsonl)
-DECISIONS_BEFORE=$(wc -l < ~/.hermes/profiles/indigo/commons/data/mentor/decisions.jsonl)
-JOURNAL_DIR="~/.hermes/profiles/indigo/commons/journals/ocas-mentor/$(date -u +%Y-%m-%d)"
-find ~/.hermes/commons/journals/ -name "*.json" -not -path "*/.archive/*" -not -path "*/.quarantine/*" > /tmp/mentor_deep_shared.txt
-find ~/.hermes/profiles/indigo/commons/journals/ -name "*.json" -not -path "*/.archive/*" -not -path "*/.quarantine/*" >> /tmp/mentor_deep_shared.txt
-sort -u /tmp/mentor_deep_shared.txt > /tmp/mentor_deep_files.txt
-python3 ~/.hermes/profiles/indigo/skills/ocas-mentor/scripts/cron-heartbeat-deep-dualpath.py < /tmp/mentor_deep_files.txt
-# Verify ALL write targets; backup via /tmp/mentor_deep_backup.py if ingestion delta=0
-/usr/bin/python3 ~/.hermes/profiles/indigo/skills/ocas-mentor/scripts/correct_active_skills_30d.py
->>>>>>> Stashed changes
 # Sync to commons (timestamp-based set-difference)
 ```
 

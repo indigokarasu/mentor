@@ -40,7 +40,6 @@ The dispatcher (`dispatcher.py`) outputs JSON with `"has_work": true` and a `dis
 **IMPORTANT:** `taste_new_data` is a **separate dispatch item** with its own `type`, `skill`, and pipeline. It runs independently of the journal pipeline sequence (Forge→Mentor→Praxis). When both `new_journals` and `taste_new_data` appear in the same dispatch, journal pipelines run first, then Taste runs. Taste produces its own journal in `ocas-taste/YYYY-MM-DD/`.
 
 **Canonical data paths (confirmed 2026-06-29):**
-<<<<<<< Updated upstream
 - Praxis data: `<hermes-home>/profiles/indigo/commons/data/ocas-praxis/` (NOT `oras-praxis` — single-char typo causes silent "No such file or directory")
 - Mentor data: `<hermes-home>/profiles/indigo/commons/data/mentor/`
 - Forge data: `<hermes-home>/profiles/indigo/commons/data/ocas-forge/`
@@ -49,32 +48,15 @@ The dispatcher (`dispatcher.py`) outputs JSON with `"has_work": true` and a `dis
 **CRITICAL: Path typo `oras-praxis` vs `ocas-praxis` (confirmed 2026-06-29):** When constructing the Praxis data directory path, a single-character typo (`oras-praxis` instead of `ocas-praxis`) causes `cp` and `python3` to fail with "No such file or directory". **Fix:** The canonical path is `<hermes-home>/profiles/indigo/commons/data/ocas-praxis/` — always verify with `ls -d <hermes-home>/profiles/indigo/commons/data/oca*` before constructing script paths. The skill name is `ocas-` (with `s`), not `ora-`.
 
 **Critical path note:** Dispatcher `new_files` paths look like `ocas-mentor/2026-06-23/file.json` but actual files live at `<hermes-home>/profiles/indigo/commons/journals/<path>`. Always check both locations.
-=======
-- Praxis data: `~/.hermes/profiles/indigo/commons/data/ocas-praxis/` (NOT `oras-praxis` — single-char typo causes silent "No such file or directory")
-- Mentor data: `~/.hermes/profiles/indigo/commons/data/mentor/`
-- Forge data: `~/.hermes/profiles/indigo/commons/data/ocas-forge/`
-- Journals: `~/.hermes/profiles/indigo/commons/journals/`
-
-**CRITICAL: Path typo `oras-praxis` vs `ocas-praxis` (confirmed 2026-06-29):** When constructing the Praxis data directory path, a single-character typo (`oras-praxis` instead of `ocas-praxis`) causes `cp` and `python3` to fail with "No such file or directory". **Fix:** The canonical path is `~/.hermes/profiles/indigo/commons/data/ocas-praxis/` — always verify with `ls -d ~/.hermes/profiles/indigo/commons/data/oca*` before constructing script paths. The skill name is `ocas-` (with `s`), not `ora-`.
-
-**Critical path note:** Dispatcher `new_files` paths look like `ocas-mentor/2026-06-23/file.json` but actual files live at `~/.hermes/profiles/indigo/commons/journals/<path>`. Always check both locations.
->>>>>>> Stashed changes
 
 ## Pipeline Sequence
 
 ### Phase 1 — Forge (Journal Scan)
 
-<<<<<<< Updated upstream
 1. Check `<hermes-home>/profiles/indigo/commons/data/ocas-forge/` for unprocessed `vp_*.json` (VariantProposal) or `vd_*.json` (VariantDecision) files
 2. Cross-reference against `intake/processed/` and `processed/` directories
 3. If nothing unprocessed: write no-op journal and exit
 4. Write journal to `<hermes-home>/profiles/indigo/commons/journals/ocas-forge/YYYY-MM-DD/forge-scan-YYYYMMDDTHHMMSSZ.json`
-=======
-1. Check `~/.hermes/profiles/indigo/commons/data/ocas-forge/` for unprocessed `vp_*.json` (VariantProposal) or `vd_*.json` (VariantDecision) files
-2. Cross-reference against `intake/processed/` and `processed/` directories
-3. If nothing unprocessed: write no-op journal and exit
-4. Write journal to `~/.hermes/profiles/indigo/commons/journals/ocas-forge/YYYY-MM-DD/forge-scan-YYYYMMDDTHHMMSSZ.json`
->>>>>>> Stashed changes
 
 **Forge journal schema:**
 ```json
@@ -90,15 +72,7 @@ The dispatcher (`dispatcher.py`) outputs JSON with `"has_work": true` and a `dis
 
 1. **Build dual-path file list (content-timestamp, NOT raw mtime):**
    ```bash
-<<<<<<< Updated upstream
    find <hermes-home>/commons/journals/ <hermes-home>/profiles/indigo/commons/journals/ -name "*.json" -mtime -3 | sort -u > /tmp/mentor_files_3d.txt
-=======
-   # Candidate discovery via mtime (3-day window safely covers today despite the ~7h12m mtime lag)
-   find ~/.hermes/commons/journals/ ~/.hermes/profiles/indigo/commons/journals/ -name "*.json" -mtime -3 2>/dev/null | sort -u > /tmp/candidates_all.txt
-   # Content-timestamp filter via discover_recent_journals.py — MUST pass --window-minutes >= 1440.
-   # The script DEFAULTS to 5 min and silently returns 0 for a dispatch wave whose target journals are hours old.
-   python3 {skill_dir}/scripts/discover_recent_journals.py --window-minutes 1440 < /tmp/candidates_all.txt > /tmp/mentor_files_3d.txt
->>>>>>> Stashed changes
    ```
    ⚠️ **`discover_recent_journals.py` default window traps dispatch waves (confirmed live 2026-07-22):** the script's default `--window-minutes 5` produces 0 candidates because the dispatcher's target journals are hours old and the mtime-lag makes raw `find` windows unreliable for tight windows. Always pass `--window-minutes 1440`. **Also:** the script matches journals by content timestamp fields (`timestamp`/`generated_at`/`run_id` regex); a journal whose timestamp fields are all `null` (e.g. an `ocas-rally/run_preopen-*.json` with no timestamp key) will NOT be auto-matched. After building the list, `grep` for each dispatcher `new_file` basename; if missing, append its absolute path explicitly so the heartbeat still ingests it:
    ```bash
@@ -108,13 +82,8 @@ The dispatcher (`dispatcher.py`) outputs JSON with `"has_work": true` and a `dis
 
 2. **Record pre-run counts:**
    ```bash
-<<<<<<< Updated upstream
    EVIDENCE_BEFORE=$(wc -l < <hermes-home>/profiles/indigo/commons/data/mentor/evidence.jsonl)
    INGESTION_BEFORE=$(wc -l < <hermes-home>/profiles/indigo/commons/data/mentor/ingestion_log.jsonl)
-=======
-   EVIDENCE_BEFORE=$(wc -l < ~/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl)
-   INGESTION_BEFORE=$(wc -l < ~/.hermes/profiles/indigo/commons/data/mentor/ingestion_log.jsonl)
->>>>>>> Stashed changes
    ```
 
 3. **Run script (stdin redirect — NOT pipe):**
@@ -160,20 +129,12 @@ When the dispatcher includes a `"type": "taste_new_data"` dispatch alongside jou
 
 2. **Run incremental scan:**
    ```bash
-<<<<<<< Updated upstream
    cd <hermes-home>/profiles/indigo/commons/data/ocas-taste && /usr/bin/python3 <hermes-home>/profiles/indigo/skills/ocas-taste/scripts/taste_scan.py scan-incremental 24
-=======
-   cd ~/.hermes/profiles/indigo/commons/data/ocas-taste && /usr/bin/python3 ~/.hermes/profiles/indigo/skills/ocas-taste/scripts/taste_scan.py scan-incremental 24
->>>>>>> Stashed changes
    ```
 
 3. **Parse output** — Extract `signals_created`, `cancellations`, `extractions` from JSON output.
 
-<<<<<<< Updated upstream
 4. **Write Taste journal** to `<hermes-home>/profiles/indigo/commons/journals/ocas-taste/YYYY-MM-DD/taste-scan-YYYYMMDDTHHMMSSZ.json`:
-=======
-4. **Write Taste journal** to `~/.hermes/profiles/indigo/commons/journals/ocas-taste/YYYY-MM-DD/taste-scan-YYYYMMDDTHHMMSSZ.json`:
->>>>>>> Stashed changes
    ```json
    {
      "timestamp": "ISO UTC",
@@ -199,11 +160,7 @@ When the dispatcher includes a `"type": "taste_new_data"` dispatch alongside jou
 1. **Determine mtime floor** — Read `ingest_state.json:last_ingest_run`. If it is PAST the dispatcher's `latest_ts` (common when Mentor ran first), use the state timestamp. Do NOT use `CAPTURED_TS` to move the window backward.
    ```python
    # Use Python, NOT find -newermt (which interprets timestamps as local time)
-<<<<<<< Updated upstream
    state_path = '<hermes-home>/profiles/indigo/commons/data/ocas-praxis/ingest_state.json'
-=======
-   state_path = '~/.hermes/profiles/indigo/commons/data/ocas-praxis/ingest_state.json'
->>>>>>> Stashed changes
    with open(state_path) as f:
        state = json.load(f)
    last_ingest = state.get('last_ingest_run', '2020-01-01T00:00:00+00:00')
@@ -244,13 +201,8 @@ When the dispatcher includes a `"type": "taste_new_data"` dispatch alongside jou
      the next wave:
      ```bash
      # Check what's in profile but not in commons
-<<<<<<< Updated upstream
      commons_eval="<hermes-home>/commons/data/ocas-praxis/journals_evaluated.jsonl"
      profile_eval="<hermes-home>/profiles/indigo/commons/data/ocas-praxis/journals_evaluated.jsonl"
-=======
-     commons_eval="~/.hermes/commons/data/ocas-praxis/journals_evaluated.jsonl"
-     profile_eval="~/.hermes/profiles/indigo/commons/data/ocas-praxis/journals_evaluated.jsonl"
->>>>>>> Stashed changes
      # Extract journal_id fields from both, find missing in commons, append
      ```
      Failure to sync causes re-detection on subsequent waves — the dispatcher may read the commons path.
@@ -293,11 +245,7 @@ After a multi-skill dispatch completes, the dispatcher may re-scan and detect jo
 
 ```bash
 # Check if a dispatcher new_file is already evaluated
-<<<<<<< Updated upstream
 grep -q "mentor-light-20260624T064417Z" <hermes-home>/profiles/indigo/commons/data/ocas-praxis/journals_evaluated.jsonl
-=======
-grep -q "mentor-light-20260624T064417Z" ~/.hermes/profiles/indigo/commons/data/ocas-praxis/journals_evaluated.jsonl
->>>>>>> Stashed changes
 # Exit code 0: already evaluated, skip silently (correct no-op)
 # Exit code 1: not yet evaluated, proceed with ingest
 ```
@@ -364,11 +312,7 @@ Confirmed 2026-06-24 dispatch #31: dispatcher listed `forge-scan-20260624T000942
 | **Dispatcher `new_files` incomplete** | Dispatcher lists N journals but mtime scan finds N+1 (or vice versa) | Dispatcher captures files at detection time; concurrent heartbeats can write journals before/after the scan. Always use mtime-based discovery as ground truth. Confirmed 2026-06-25 dispatch #59: dispatcher listed 4, mtime found 5. |
 | **Dispatcher `new_files` timestamp mismatch** | Dispatcher says `mentor-light-20260625T020800Z.json` but actual file is `mentor-light-20260625T020902Z.json`. `grep <dispatcher_filename>` against eval file returns NOT_FOUND even though the journal IS evaluated under the actual filename. | ALWAYS use mtime-based discovery as ground truth for Praxis ingest. After finding unevaluated journals via mtime, `grep <actual_filename>` to confirm status — never grep the dispatcher's stated filename directly. The dispatcher's `new_files` is a filename hint, not a journal_id authority. Confirmed 2026-06-25 dispatch #60: dispatcher listed `praxis-dispatch-20260625T015715Z.json` as NOT_EVALUATED by naive grep, but it was at line 37990 with `action_taken: self_referential_skip`. The `new_files` timestamp was correct for that file, but 4 other journals had timestamp discrepancies that would have caused false re-ingestion without mtime-based discovery. |
 | **Multiple phantom files for same skill** | Dispatcher lists 2+ files from same skill (e.g., `mentor-light-T042401Z` + `mentor-light-T043516Z`) but only one exists on disk | The dispatcher's scan interval captures the file list at T0, but a concurrent heartbeat writes a new journal and the dispatcher's next scan sees both the old and new. The "phantom" file was never actually written with that exact timestamp — it was a mid-write race. Check ALL listed files with `os.path.exists()`. If only one exists from a multi-file list for the same skill, it's the phantom pattern — evaluate the one that exists and skip the rest silently. Confirmed 2026-06-25 dispatch #69. |
-<<<<<<< Updated upstream
 | **Commons sync returns 0 delta** | `wc -l` on commons evidence/ingestion shows no growth after dispatch sync | Concurrent heartbeats may have already synced the new lines before the dispatch runs. This is EXPECTED in steady-state with multiple concurrent cron triggers. Do NOT treat as sync failure — verify with `grep <new_run_id> <hermes-home>/commons/data/mentor/evidence.jsonl` to confirm the new line exists in commons. If present, sync is already done. Confirmed 2026-06-25 dispatch #99. |
-=======
-| **Commons sync returns 0 delta** | `wc -l` on commons evidence/ingestion shows no growth after dispatch sync | Concurrent heartbeats may have already synced the new lines before the dispatch runs. This is EXPECTED in steady-state with multiple concurrent cron triggers. Do NOT treat as sync failure — verify with `grep <new_run_id> ~/.hermes/commons/data/mentor/evidence.jsonl` to confirm the new line exists in commons. If present, sync is already done. Confirmed 2026-06-25 dispatch #99. |
->>>>>>> Stashed changes
 | **Praxis dispatch journal NOT auto-evaluated** | After the dispatch ingest completes, the Praxis dispatch journal (`praxis-dispatch-TS.json`) is NOT in `journals_evaluated.jsonl`. The ingest script only evaluates source journals and never adds its own output. The next dispatcher wave will re-detect it as "new" and Praxis will silently skip it (already ingested) — but it inflates `new_files` counts and wastes cycles. | After writing the Praxis dispatch journal, ALWAYS manually add it to `journals_evaluated.jsonl` with `action_taken: "dispatch_output_skip"`. This is a separate step from third-wave mitigation (which handles Mentor/Forge journals). Confirmed 2026-06-25 dispatch #70. |
 | **Concurrent Praxis heartbeats create same-day eval gaps** | Gap backfill reveals 15,000+ entries, but many are Praxis dispatch journals from TODAY that were processed by concurrent heartbeats but never added to the eval file. These are not historical backlog — they are same-day concurrent evaluation gaps. | This is expected recovery behavior. Concurrent Praxis heartbeats (from different cron triggers) may each write their own dispatch journal but not coordinate eval file writes. The next dispatch wave's gap backfill catches them. After all same-day journals are backfilled, the count drops to 0. Do NOT truncate the eval file — these entries are genuine. Confirmed 2026-06-25 dispatch #96: 15,238 gap backfill entries, 31 from today's Praxis dispatch journals alone. |
 - **Concurrent dispatch wave session reference conflicts (confirmed 2026-06-25 dispatch #100)**. When two dispatch waves fire in rapid succession (same cron schedule or overlapping schedules), both may attempt to write the same session reference file (`references/session-YYYYMMDD-dispatch-NNN.md`). The `write_file` tool reports a "modified by sibling subagent" warning. This is harmless for session narratives (idempotent) but could cause data loss for evidence/state files. **Mitigation**: Session reference files are append-only — if you get this warning, accept the concurrent wave's write. For evidence/state files, use atomic patterns (write to temp, rename) or `echo >>` append. |
@@ -391,13 +335,8 @@ Confirmed 2026-06-24 dispatch #31: dispatcher listed `forge-scan-20260624T000942
 from datetime import datetime, timezone
 import json, os
 
-<<<<<<< Updated upstream
 state_path = '<hermes-home>/profiles/indigo/commons/data/ocas-praxis/ingest_state.json'
 eval_path = '<hermes-home>/profiles/indigo/commons/data/ocas-praxis/journals_evaluated.jsonl'
-=======
-state_path = '~/.hermes/profiles/indigo/commons/data/ocas-praxis/ingest_state.json'
-eval_path = '~/.hermes/profiles/indigo/commons/data/ocas-praxis/journals_evaluated.jsonl'
->>>>>>> Stashed changes
 
 with open(state_path) as f:
     state = json.load(f)
@@ -411,13 +350,8 @@ with open(eval_path) as f:
 
 # Find unevaluated journals newer than last_ingest_run
 jdirs = [
-<<<<<<< Updated upstream
     '<hermes-home>/profiles/indigo/commons/journals/',
     '<hermes-home>/commons/journals/'
-=======
-    '~/.hermes/profiles/indigo/commons/journals/',
-    '~/.hermes/commons/journals/'
->>>>>>> Stashed changes
 ]
 unevaluated = []
 for jdir in jdirs:
@@ -538,13 +472,8 @@ After completing all pipelines, you will feel an urge to write "proper" journals
 | #95 | 2026-06-25 | 4 | 9→22 | 0 | Multi-skill + email. Steady-state. Forge: 0 unprocessed. Mentor: 1206 files, 2 ingested, correction 9→22 (confirmation #35+). Praxis: 0 new journals, 0 gap backfill. All dispatcher `new_files` already evaluated. Email: 10 threads, 0 escalations. PR #12 approved. PR #13 one blocker remaining (double HTML escaping). |
 | #96 | 2026-06-25 | 2 | 9→22 | 0 | Multi-skill + email. Forge: 0 unprocessed. Mentor: 1207 files, 2 ingested, correction 9→22 (confirmation #37+). Praxis: 5 journals evaluated (mtime), 0 events, **15,238 gap backfill** (accumulated same-day concurrent heartbeat eval gaps, including 31 Praxis dispatch journals from today). Email: owner 7 threads (all no-action), indigo 3 threads (all no-action). **Survey follow-up (Dialectica) classified as no_action despite `intent: response_needed`.** |
 | #97 | 2026-06-25 | 1 | 9→22 | 0 | Multi-skill + email. Forge: 0 unprocessed. Mentor: 1209 files, 3 ingested, correction 9→22 (confirmation #38+). Praxis: 2 journals evaluated, 0 events, **15,190 gap backfill** (post-catch-up backlog clearance — residual dispatch-output journals from prior waves). Email: 10 threads, 0 escalations. **Gap backfill pattern:** 3rd consecutive >15K backfill = backlog clearance after archive (#72) + non-archive (#88) catch-ups. |
-<<<<<<< Updated upstream
-| #98 | 2026-06-25 | 3 | 9→22 | 1 | Multi-skill + email. Forge: 0 unprocessed. Mentor: 1208 files, 3 ingested, correction 9→22 (confirmation #39+). Praxis: 2 journals, 1 event, third-wave mitigation for forge-scan + concurrent journals. Email: owner 0 actionable (all from_me=True), indigo 0 actionable (PR #12 approved, PR #13 fix pushed). **GitHub API pitfall:** review ID from `pulls/reviews` ≠ comment ID for `pulls/comments/{id}/replies` (404). **Triage auth issue:** `triage.py --account indigo` uses <operator>'s auth. |
-| #99 | 2026-06-25 | 3 | 9→22 | 2 | Multi-skill + email. Forge: 0 unprocessed. Mentor: 1204 files, 1 ingested, correction 9→22 (confirmation #35+). Praxis: 3 journals evaluated, 2 events (no_signal), third-wave mitigation for dispatch-output journals. Email: owner 11 actionable (0 escalations — ARGGER shipment resolved, all informational), indigo 5 actionable (0 escalations — PR #12 approved, GitGuardian internal secrets = no action). **GitGuardian pattern:** Internal secret alerts on `indigokarasu/indigo` repo (JWT + high entropy) are test credentials, not active production secrets. No escalation needed unless they are active production keys. **Commons sync "already in sync":** Concurrent heartbeats may sync evidence/ingestion before the dispatch runs, producing 0 delta on dispatch sync. This is expected — do NOT treat as sync failure. |
-=======
 | #98 | 2026-06-25 | 3 | 9→22 | 1 | Multi-skill + email. Forge: 0 unprocessed. Mentor: 1208 files, 3 ingested, correction 9→22 (confirmation #39+). Praxis: 2 journals, 1 event, third-wave mitigation for forge-scan + concurrent journals. Email: owner 0 actionable (all from_me=True), indigo 0 actionable (PR #12 approved, PR #13 fix pushed). **GitHub API pitfall:** review ID from `pulls/reviews` ≠ comment ID for `pulls/comments/{id}/replies` (404). **Triage auth issue:** `triage.py --account indigo` uses <operator>'s auth. |
 | #99 | 2026-06-25 | 3 | 9→22 | 2 | Multi-skill + email. Forge: 0 unprocessed. Mentor: 1204 files, 1 ingested, correction 9→22 (confirmation #35+). Praxis: 3 journals evaluated, 2 events (no_signal), third-wave mitigation for dispatch-output journals. Email: owner 11 actionable (0 escalations — ARGGER shipment resolved, all informational), indigo 5 actionable (0 escalations — PR #12 approved, GitGuardian internal secrets = no action). **GitGuardian pattern:** Internal secret alerts on `<agent-handle>/indigo` repo (JWT + high entropy) are test credentials, not active production secrets. No escalation needed unless they are active production keys. **Commons sync "already in sync":** Concurrent heartbeats may sync evidence/ingestion before the dispatch runs, producing 0 delta on dispatch sync. This is expected — do NOT treat as sync failure. |
->>>>>>> Stashed changes
 | #100 | 2026-06-25 | 2 | 9→22 | 0 | Multi-skill + email. Forge: 0 unprocessed. Mentor: 1203 files, 1 ingested, correction 9→22 (confirmation #41+). Praxis: fast no-op (all dispatcher `new_files` already evaluated, 0 mtime-discovered). Email: owner 11 actionable (0 escalations — ARGGER panel shipped/DHL, GLG already declined, Bywater COC obligation fulfilled), indigo 5 actionable (0 escalations — PR reviews are Koda's domain). **Concurrent dispatch wave file conflict:** `write_file` reported sibling subagent modified the session reference file — harmless for idempotent session narratives. |
 | #102 | 2026-06-25 | 4 | 9→22 | 0 | Multi-skill + email. Forge: 0 unprocessed. Mentor: 1214 files, 2 ingested, correction 9→22 (confirmation #42+). Praxis: 4 journals evaluated, 0 events, **15,255 gap backfill** (4th consecutive >15K — extended post-catch-up clearance). Email: owner 16 actionable (0 escalations — ARGGER shipment confirmed, all informational), indigo 5 actionable (0 escalations — PR reviews Koda's domain, GitGuardian test noise). |
 | #106 | 2026-06-25 | 4 | 9→22 | 0 | Multi-skill + email. Forge: 0 unprocessed. Mentor: 1216 files, 2 ingested, correction 9→22 (confirmation #43+). Praxis: 5 journals evaluated (mtime), 0 events, 1 gap backfill (eval file 38,773 — nearly caught up after archive discovery). Email: owner 10 threads (0 escalations — ARGGER shipment resolved/DHL, all no-action), indigo 5 threads (0 escalations — PR reviews Koda's domain, GitGuardian test noise). All second-wave email (is_new=false except OpenTable). |
@@ -569,9 +498,5 @@ After completing all pipelines, you will feel an urge to write "proper" journals
 | 2026-07-10T04:55Z | 2026-07-10T04:55Z | 4 | 5→25 | 0 | Second-wave re-detection with explicit pipeline instructions (dispatcher `new_files` were prior-wave output journals: dispatch-wave, forge-scan, praxis-dispatch, mentor-light). Forge: 0 unprocessed → no_op. Mentor: 493 files scanned, 4 ingested, 0 events, correction 5→25 (OCAS 18). Praxis: 3 journals ingested (all no_signal), 0 events, **0 gap backfill** — dry-run walk found 0 unevaluated journals (eval fully caught up). Email: 1 informational thread (Roller shade) → action:none. **Key finding: Mentor did NOT advance praxis `ingest_state.json:last_ingest_run`** (remained `04:48:47` after a `05:16` heartbeat) — divergence from the documented "Mentor advances it past `latest_ts`" coupling. Re-read state after Mentor and use its actual value as the mtime floor; the ingest template already does this by default. Steady-state confirmed, eval 49,694. |
 | 2026-07-10T06:10Z | 2026-07-10T06:10Z | 4 | 5→25 | 0 | Explicit-pipeline-instruction dispatch. `new_files` was a prior-wave dispatch-wave artifact (06:05:04 < detected_at 06:10:46) → skipped eval per prior-wave rule, but ran all 3 pipelines per explicit override. Forge: 0 unprocessed (all 11 `vp_*.json` already in `processed/`). Mentor: 12 ingested, 0 errors, correction 5→25 (OCAS 18). Praxis: 6 no-signal journals (concurrent cron 05:34–06:14), gap backfill 2, 0 events. **Re-confirmed**: Mentor did NOT advance `ingest_state.json:last_ingest_run` (stayed `05:34:33` after 06:14 heartbeat) — 2nd same-day confirmation of the divergence from the documented "Mentor advances it past `latest_ts`" coupling. Email: 1 thread (Roller shade) second-wave `is_new=false` → `action:none`. Eval file 49,706. Steady-state confirmed. Timestamps externalized to `/tmp/dispatch_ts.txt` across terminal calls → all 4 output journals matched eval (count=1 each, 0 phantom). |
 | 2026-07-15T12:00Z | 2026-07-15T12:00Z | 2 | 14→23 | 0 | Multi-skill + email steady-state. Forge: 0 unprocessed (all `vp_*.json` in `processed/`). Mentor: 2016 files scanned, 12 ingested, 0 errors, correction 14→23 (OCAS 16). Praxis: dispatcher `new_file` (`mentor-light-20260715T114544Z.json`) already bridged at 11:46Z via automated `bridge_eval_both_stores` (`action_taken: post-dispatch-cleanup`) → fast no-op; gap backfill 2 (forge-scan + mentor-light, both no_signal), 0 template ingest, 14 Bug-2 noise lessons cleared (`--new-genuine-events 0`). **Re-confirmed**: Mentor did NOT advance `ingest_state.json:last_ingest_run` (stayed `11:36:15` after 12:01 heartbeat) — 3rd+ confirmation of the divergence. Email: owner 7 threads all `action:none` (self-reply to Kyra, GitHub/hermes-agent #55445 dev-notification, 5 expert-network solicitations, completed Apr shade thread); 0 drafts/sends/escalations. Eval file 292,293. Steady-state confirmed. |
-<<<<<<< Updated upstream
-| 2026-07-15T12:35Z | 2026-07-15T12:35Z | 2 | 14→23 | 0 | Multi-skill + email steady-state. Forge: 0 unprocessed (all 11 `vp_*.json` in `proposals/` also present in `processed/`). Mentor: 2054 files scanned, 20 ingested, 0 errors, correction 14→23 (OCAS 16). Praxis: dispatcher `new_file` (`mentor-light-20260715T123111Z.json`) already bridged in both eval stores via automated `bridge_eval_both_stores` (`action_taken: post-dispatch-cleanup`) → fast no-op; gap backfill 4 (3 mentor-light heartbeats from concurrent cron + forge-scan, all no_signal), 0 template ingest, 14 Bug-2 noise lessons cleared (`--new-genuine-events 0`). **Re-confirmed**: Mentor did NOT advance `ingest_state.json:last_ingest_run` (stayed `12:40:20` after 12:46 heartbeat) — 4th+ confirmation of the divergence. Email: owner 7 threads pure second-wave re-detection (all `is_new=false`, all `action:none`); 0 drafts/sends/escalations. Eval file 292,312. Steady-state confirmed. |
-=======
 | 2026-07-15T12:35Z | 2026-07-15T12:35Z | 2 | 14→23 | 0 | Multi-skill + email steady-state. Forge: 0 unprocessed (all 11 `vp_*.json` in `proposals/` also present in `processed/`). Mentor: 2054 files scanned, 20 ingested, 0 errors, correction 14→23 (OCAS 16). Praxis: dispatcher `new_file` (`mentor-light-20260715T123111Z.json`) already bridged in both eval stores via automated `bridge_eval_both_stores` (`action_taken: post-dispatch-cleanup`) → fast no-op; gap backfill 4 (3 mentor-light heartbeats from concurrent cron + forge-scan, all no_signal), 0 template ingest, 14 Bug-2 noise lessons cleared (`--new-genuine-events 0`). **Re-confirmed**: Mentor did NOT advance `ingest_state.json:last_ingest_run` (stayed `12:40:20` after 12:46 heartbeat) — 4th+ confirmation of the divergence. Email: owner 7 threads pure second-wave re-detection (all `is_new=false`, all `action:none`); 0 drafts/sends/escalations. Eval file 292,312. Steady-state confirmed. |
 | 2026-07-22T12:31Z | 2026-07-22T12:31Z | 2 | 12→20 | 0 | Genuine mixed wave. Forge: 0 unprocessed (`forge_count_unprocessed.py`=0; all 5 `vp_*.json` in `intake/` are mirrored in `intake/processed/`). Mentor: 1130 files scanned, 10 ingested (9 success/1 mixed_genuine), 0 errors, correction 12→20 (OCAS 16). Praxis: gap_backfill 3 (forge-scan + 2 mentor-light) before ingest; ingest template found 0 new (targets already evaluated via gap_backfill + heartbeat). **Key catch — `discover_recent_journals.py` default window trap**: raw `find -mtime -3` piped to the script with its DEFAULT 5-min window returned 0 candidates for hours-old dispatch targets; must pass `--window-minutes 1440`. Also an `ocas-rally/run_preopen-*.json` with all-null timestamp fields was NOT auto-matched and had to be appended explicitly. 6 genuine eval gaps (praxis-only) bridged via `bridge_eval_inline.py`; wave journal written + self-bridged; `verify_genuine_gap_profile.py` → GENUINE GAP=0; `advance_gate_state.py` + `closure_closeout_check.py` → `=== gates ALL CLOSED ===`. Email: 5 <operator> threads all Path A (`in_evidence` action=none), no drafts/escalations. Eval file 409,879 (profile==commons). |
->>>>>>> Stashed changes

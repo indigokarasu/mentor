@@ -8,11 +8,7 @@ Self-improving orchestration and evaluation engine. Manages long-running multi-s
 **Version:** 2.8.23
 **Type:** 
 **Layer:** software-development
-<<<<<<< Updated upstream
-**Author:** Indigo Karasu
-=======
 **Author:** <agent-name>
->>>>>>> Stashed changes
 
 ---
 

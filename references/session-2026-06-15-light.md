@@ -25,11 +25,7 @@ Full verify-and-backup workflow executed successfully. All three persistence tar
 Two evidence lines written per heartbeat is the expected pattern (script + caller backup).
 
 ### Known Issue Confirmed: skill_name ".." in Ingestion Log
-<<<<<<< Updated upstream
 Profile-scoped files produce `skill_name: ".."` because `os.path.relpath(fpath, JOURNALS_DIR)` goes outside the commons root when fpath is under `<hermes-home>/profiles/indigo/commons/journals/`. This is a parser bug in the script but doesn't affect heartbeat correctness — skill names are corrected in backup evidence.
-=======
-Profile-scoped files produce `skill_name: ".."` because `os.path.relpath(fpath, JOURNALS_DIR)` goes outside the commons root when fpath is under `~/.hermes/profiles/indigo/commons/journals/`. This is a parser bug in the script but doesn't affect heartbeat correctness — skill names are corrected in backup evidence.
->>>>>>> Stashed changes
 
 ### Commons Sync: Line-Level Set-Difference Confirmed Working
 ```python

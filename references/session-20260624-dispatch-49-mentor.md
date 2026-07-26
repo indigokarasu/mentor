@@ -13,11 +13,7 @@
 - **Correction mandatory:** YES — script succeeded on all 3 writes but count was still wrong
 
 ## Path Discovery: correct_active_skills_30d.py
-<<<<<<< Updated upstream
 The correction script path was initially tried as `<hermes-home>/profiles/indigo/skills/mentor/scripts/correct_active_skills_30d.py` — **WRONG** (doesn't exist). The correct path is `<hermes-home>/profiles/indigo/skills/ocas-mentor/scripts/correct_active_skills_30d.py`. The skill name is `ocas-mentor`, not `mentor`. This seems obvious but the skill directory naming convention (ocas- prefix) is easy to forget under pressure, especially when the data directory is `commons/data/mentor/` (no ocas- prefix).
-=======
-The correction script path was initially tried as `~/.hermes/profiles/indigo/skills/mentor/scripts/correct_active_skills_30d.py` — **WRONG** (doesn't exist). The correct path is `~/.hermes/profiles/indigo/skills/ocas-mentor/scripts/correct_active_skills_30d.py`. The skill name is `ocas-mentor`, not `mentor`. This seems obvious but the skill directory naming convention (ocas- prefix) is easy to forget under pressure, especially when the data directory is `commons/data/mentor/` (no ocas- prefix).
->>>>>>> Stashed changes
 
 **Fix:** Always use `skills/ocas-mentor/scripts/` path. The data directory (`commons/data/mentor/`) does NOT match the skill directory (`skills/ocas-mentor/`).
 

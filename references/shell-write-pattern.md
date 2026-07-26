@@ -18,22 +18,14 @@ In cron-triggered `terminal()` calls, Python `with open()` writes to persistent 
 | Python write to `/tmp/` | ✅ | /tmp is exempt |
 | `write_file` tool + `python3 /tmp/script.py` | ✅ | **Most reliable for cron mode** |
 
-<<<<<<< Updated upstream
-> ⚠️ **HEREDOC WARNING (corrected 2026-07-16):** The `python3 << 'PYEOF'` blocks shown in the examples below are ILLUSTRATIVE ONLY. In a cron `terminal()` call, ANY `<<` heredoc (including `python3 << 'PYEOF'`) triggers the terminal's foreground/background detector and returns `exit_code=-1` — the same trap as `cat > file << 'EOF'` at the row above. **Never paste a heredoc into a cron `terminal()` call.** Always `write_file` the script body to `/tmp/` first (via the write_file tool), then run `python3 /tmp/script.py` as its own `terminal()` call. This is the only pattern that reliably persists writes in cron mode. | Heredoc with nested single quotes | ❌ **FAILS** | `terminal()` heredoc containing Python dicts with apostrophes (e.g., `reason: 'Self-sent (sender = <third-party-or-user-email>).'`) breaks shell quoting. Even `<< 'EOF'` (no-expand) fails because the shell still tracks quote boundaries across heredoc content. **Fix:** `write_file` → `/tmp/script.py` → `python3 /tmp/script.py`. Bypasses shell quoting entirely. Confirmed 2026-06-24 dispatch #54. |
-=======
 > ⚠️ **HEREDOC WARNING (corrected 2026-07-16):** The `python3 << 'PYEOF'` blocks shown in the examples below are ILLUSTRATIVE ONLY. In a cron `terminal()` call, ANY `<<` heredoc (including `python3 << 'PYEOF'`) triggers the terminal's foreground/background detector and returns `exit_code=-1` — the same trap as `cat > file << 'EOF'` at the row above. **Never paste a heredoc into a cron `terminal()` call.** Always `write_file` the script body to `/tmp/` first (via the write_file tool), then run `python3 /tmp/script.py` as its own `terminal()` call. This is the only pattern that reliably persists writes in cron mode. | Heredoc with nested single quotes | ❌ **FAILS** | `terminal()` heredoc containing Python dicts with apostrophes (e.g., `reason: 'Self-sent (sender = <agent-email>).'`) breaks shell quoting. Even `<< 'EOF'` (no-expand) fails because the shell still tracks quote boundaries across heredoc content. **Fix:** `write_file` → `/tmp/script.py` → `python3 /tmp/script.py`. Bypasses shell quoting entirely. Confirmed 2026-06-24 dispatch #54. |
->>>>>>> Stashed changes
 
 ## Core Patterns
 
 ### Append a JSON line to a log file
 
 ```bash
-<<<<<<< Updated upstream
 printf '%s\n' '{"file": "/path/to/journal.json", "skill_name": "ocas-elephas", "ingested_at": "2026-06-05T05:47:00+00:00", "entries": 1}' >> <hermes-home>/profiles/indigo/commons/data/mentor/ingestion_log.jsonl
-=======
-printf '%s\n' '{"file": "/path/to/journal.json", "skill_name": "ocas-elephas", "ingested_at": "2026-06-05T05:47:00+00:00", "entries": 1}' >> ~/.hermes/profiles/indigo/commons/data/mentor/ingestion_log.jsonl
->>>>>>> Stashed changes
 ```
 
 ### Write a full JSON file (journal, evidence)
@@ -53,19 +45,11 @@ EOF
 import json, os, subprocess
 from datetime import datetime, timezone
 
-<<<<<<< Updated upstream
 DATA_DIR = "<hermes-home>/profiles/indigo/commons/data/mentor"
 total_3d = int(subprocess.check_output(['wc', '-l', '/tmp/mentor_files_3d.txt']).split()[0])
 true_new = int(subprocess.check_output(['wc', '-l', '/tmp/mentor_truly_new.txt']).split()[0])
 active_30d = int(subprocess.check_output(
     "find <hermes-home>/commons/journals/ <hermes-home>/profiles/indigo/commons/journals/ -name '*.json' -mtime -30 2>/dev/null | grep -oP 'ocas-[a-z]+' | sort -u | wc -l",
-=======
-DATA_DIR = "~/.hermes/profiles/indigo/commons/data/mentor"
-total_3d = int(subprocess.check_output(['wc', '-l', '/tmp/mentor_files_3d.txt']).split()[0])
-true_new = int(subprocess.check_output(['wc', '-l', '/tmp/mentor_truly_new.txt']).split()[0])
-active_30d = int(subprocess.check_output(
-    "find ~/.hermes/commons/journals/ ~/.hermes/profiles/indigo/commons/journals/ -name '*.json' -mtime -30 2>/dev/null | grep -oP 'ocas-[a-z]+' | sort -u | wc -l",
->>>>>>> Stashed changes
     shell=True).split()[0])
 
 record = {
@@ -101,13 +85,8 @@ Line-level Python set-difference — `cp -f` silently skips when profile is newe
 ```python
 # /tmp/mentor_sync.py  (written via write_file tool, then: python3 /tmp/mentor_sync.py)
 for src, dst in [
-<<<<<<< Updated upstream
     ("<hermes-home>/profiles/indigo/commons/data/mentor/evidence.jsonl", "<hermes-home>/commons/data/mentor/evidence.jsonl"),
     ("<hermes-home>/profiles/indigo/commons/data/mentor/ingestion_log.jsonl", "<hermes-home>/commons/data/mentor/ingestion_log.jsonl"),
-=======
-    ("~/.hermes/profiles/indigo/commons/data/mentor/evidence.jsonl", "~/.hermes/commons/data/mentor/evidence.jsonl"),
-    ("~/.hermes/profiles/indigo/commons/data/mentor/ingestion_log.jsonl", "~/.hermes/commons/data/mentor/ingestion_log.jsonl"),
->>>>>>> Stashed changes
 ]:
     with open(src) as f: profile_lines = {line.rstrip('\n') for line in f}
     with open(dst) as f: commons_lines = {line.rstrip('\n') for line in f}
@@ -123,17 +102,10 @@ for src, dst in [
 
 ```bash
 # OCAS-only count (for evaluation_coverage denominator)
-<<<<<<< Updated upstream
 ACTIVE_OCAS_30D=$(find <hermes-home>/commons/journals/ <hermes-home>/profiles/indigo/commons/journals/ -name "*.json" -mtime -30 2>/dev/null | grep -oP 'ocas-[a-z]+' | sort -u | wc -l)
 
 # All skills count
 ACTIVE_ALL_30D=$(find <hermes-home>/commons/journals/ <hermes-home>/profiles/indigo/commons/journals/ -name "*.json" -mtime -30 2>/dev/null | grep -oP 'commons/journals/([a-z][a-z0-9_-]+)' | sed 's|commons/journals/||' | sort -u | wc -l)
-=======
-ACTIVE_OCAS_30D=$(find ~/.hermes/commons/journals/ ~/.hermes/profiles/indigo/commons/journals/ -name "*.json" -mtime -30 2>/dev/null | grep -oP 'ocas-[a-z]+' | sort -u | wc -l)
-
-# All skills count
-ACTIVE_ALL_30D=$(find ~/.hermes/commons/journals/ ~/.hermes/profiles/indigo/commons/journals/ -name "*.json" -mtime -30 2>/dev/null | grep -oP 'commons/journals/([a-z][a-z0-9_-]+)' | sed 's|commons/journals/||' | sort -u | wc -l)
->>>>>>> Stashed changes
 ```
 
 ## Ingestion Dedup — Path Normalization
@@ -144,21 +116,13 @@ The ingestion log stores paths in multiple formats (relative, absolute, profile-
 python3 -c "
 import json
 paths = set()
-<<<<<<< Updated upstream
 with open('<hermes-home>/profiles/indigo/commons/data/mentor/ingestion_log.jsonl') as f:
-=======
-with open('~/.hermes/profiles/indigo/commons/data/mentor/ingestion_log.jsonl') as f:
->>>>>>> Stashed changes
     for line in f:
         try:
             d = json.loads(line)
             src = d.get('source') or d.get('file', '')
             if src and not src.startswith('/'):
-<<<<<<< Updated upstream
                 src = '<hermes-home>/profiles/indigo/commons/journals/' + src
-=======
-                src = '~/.hermes/profiles/indigo/commons/journals/' + src
->>>>>>> Stashed changes
             paths.add(src)
         except: pass
 for p in sorted(paths):
@@ -175,11 +139,7 @@ ALL steps MUST execute in a **SINGLE** `terminal()` call (shell variables don't 
 1. Record pre-run `wc -l` on evidence.jsonl and ingestion_log.jsonl
 2. Run the heartbeat script with **stdin redirect** (NOT a pipe — `cat | python3` is blocked by the `tirith:pipe_to_interpreter` security rule):
    ```bash
-<<<<<<< Updated upstream
    python3 <hermes-home>/profiles/indigo/skills/mentor/scripts/cron-heartbeat-light.py < /tmp/mentor_files_3d.txt
-=======
-   python3 ~/.hermes/profiles/indigo/skills/mentor/scripts/cron-heartbeat-light.py < /tmp/mentor_files_3d.txt
->>>>>>> Stashed changes
    ```
 3. Re-count all 3 files (evidence, ingestion, journal directory)
 4. If evidence delta = 0 → write backup via Python heredoc (pattern below). **This is NOT rare** — confirmed 2026-06-21 that evidence writes can fail silently while script stdout reports `new_files_ingested: N > 0`. The script's internal counter increments but the disk write fails. Always `wc -l` evidence.jsonl before and after, regardless of what stdout says.

@@ -13,11 +13,7 @@
 ## Key Observations
 
 ### Dual-path journal duplication in mtime scan
-<<<<<<< Updated upstream
 The mtime-based scan returned duplicate entries because both `<hermes-home>/profiles/indigo/commons/journals/` and `<hermes-home>/commons/journals/` contain overlapping files. The deduplication by filename (not path) correctly identified 3 unique unevaluated journals from this dispatch wave. This is expected behavior.
-=======
-The mtime-based scan returned duplicate entries because both `~/.hermes/profiles/indigo/commons/journals/` and `~/.hermes/commons/journals/` contain overlapping files. The deduplication by filename (not path) correctly identified 3 unique unevaluated journals from this dispatch wave. This is expected behavior.
->>>>>>> Stashed changes
 
 ### Dispatcher `new_files` incomplete (again)
 Dispatcher listed 3 journals but mtime scan found 5. The 2 extra were from concurrent heartbeats (mentor-light journals written between dispatcher scan and dispatch execution). This confirms the pattern: dispatcher `new_files` is a hint, mtime-based discovery is authoritative.
@@ -26,11 +22,7 @@ Dispatcher listed 3 journals but mtime scan found 5. The 2 extra were from concu
 Repair + scan chained in a single `terminal()` call. Both accounts had timezone suffix (`+00:00`). Without repair, scan would have silently failed with 0 results (or fallen back to wrong account). This is the 5th consecutive dispatch requiring the same repair.
 
 ### Taste scan authenticated correctly
-<<<<<<< Updated upstream
 Gmail initialized with `<user-google-email>` (user account, not agent). Both DoorDash orders attributed to <operator>. Scan accounted for 8 services (doordash, instacart, good_eggs, tock, opentable, yelp, amazon, hotels).
-=======
-Gmail initialized with `<user-google-email>` (user account, not agent). Both DoorDash orders attributed to <operator>. Scan accounted for 8 services (doordash, instacart, good_eggs, tock, opentable, yelp, amazon, hotels).
->>>>>>> Stashed changes
 
 ## Pipeline Status
 | Pipeline | Result | Details |
