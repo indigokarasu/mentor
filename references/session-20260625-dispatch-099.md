@@ -30,22 +30,14 @@
 
 ### Email Triage
 
-<<<<<<< Updated upstream
 #### <operator>'s Account (<user-google-email>)
-=======
-#### <operator>'s Account (<user-google-email>)
->>>>>>> Stashed changes
 - 11 actionable, 3 high-priority
 - **Priority 80:** <contact> / <vendor> — <item> shipped via DHL today. Tracking tomorrow. → No action (positive resolution, informational)
 - **Priority 70:** <bank> — Credit card payment scheduled ($<amount>). → No action (informational)
 - **Priority 65:** <contact> / <expert-network> — Paid survey follow-up. → No action (low-priority market research)
 - **Priority 30:** Amazon shipment, <expert-network> acknowledgment, <third-party-domain> compliance, <wallet> passkey, Kickstargogo promo. → All no action
 
-<<<<<<< Updated upstream
-#### the agent's Account (<third-party-or-user-email>)
-=======
 #### the agent's Account (<agent-email>)
->>>>>>> Stashed changes
 - 5 actionable, 2 high-priority
 - **Priority 70:** GitHub PR #12 (Nano-Collective/get-md) — **APPROVED** by @akramcodez ("LGTM @<agent-handle>"). → No action
 - **Priority 70:** GitHub PR #13 (DOCX→Markdown) — Also approved. → No action

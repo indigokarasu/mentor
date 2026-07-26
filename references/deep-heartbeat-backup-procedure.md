@@ -16,22 +16,13 @@ Python `with open()` in cron `terminal()` is unreliable. The deep heartbeat is N
 
 ### Step 1: Ensure proposals directory exists
 ```bash
-<<<<<<< Updated upstream
 mkdir -p <hermes-home>/profiles/<profile>/commons/data/mentor/proposals
-=======
-mkdir -p $HERMES_HOME/commons/data/mentor/proposals
->>>>>>> Stashed changes
 ```
 
 ### Step 2: Build the full dual-path file list (if not already built)
 ```bash
-<<<<<<< Updated upstream
 find <hermes-home>/commons/journals/ -name "*.json" -not -path "*/.archive/*" -not -path "*/.quarantine/*" > /tmp/mentor_deep_shared.txt
 find <hermes-home>/profiles/<profile>/commons/journals/ -name "*.json" -not -path "*/.archive/*" -not -path "*/.quarantine/*" >> /tmp/mentor_deep_shared.txt
-=======
-find ~/.hermes/commons/journals/ -name "*.json" -not -path "*/.archive/*" -not -path "*/.quarantine/*" > /tmp/mentor_deep_shared.txt
-find $HERMES_HOME/commons/journals/ -name "*.json" -not -path "*/.archive/*" -not -path "*/.quarantine/*" >> /tmp/mentor_deep_shared.txt
->>>>>>> Stashed changes
 sort -u /tmp/mentor_deep_shared.txt > /tmp/mentor_deep_files.txt
 ```
 
@@ -41,11 +32,7 @@ sort -u /tmp/mentor_deep_shared.txt > /tmp/mentor_deep_files.txt
 import json, os
 from datetime import datetime, timezone
 
-<<<<<<< Updated upstream
 DATA_DIR = "<hermes-home>/profiles/<profile>/commons/data/mentor"
-=======
-DATA_DIR = "$HERMES_HOME/commons/data/mentor"
->>>>>>> Stashed changes
 INGESTION_LOG = os.path.join(DATA_DIR, "ingestion_log.jsonl")
 
 already_ingested = set()
@@ -85,11 +72,7 @@ print(f"Ingestion backup: {written} records written")
 
 ### Step 4: Verify
 ```bash
-<<<<<<< Updated upstream
 echo "Ingestion (profile): $(wc -l < <hermes-home>/profiles/<profile>/commons/data/mentor/ingestion_log.jsonl)"
-=======
-echo "Ingestion (profile): $(wc -l < $HERMES_HOME/commons/data/mentor/ingestion_log.jsonl)"
->>>>>>> Stashed changes
 ```
 
 ## Key Differences from Light Heartbeat Backup

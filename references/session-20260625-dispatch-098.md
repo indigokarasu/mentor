@@ -46,11 +46,7 @@ Attempted to reply to a PR #13 review comment via `gh api repos/.../pulls/commen
 
 ### Triage script auth issue
 
-<<<<<<< Updated upstream
-`python3 scripts/triage.py --account <third-party-or-user-email>` reported "Auth OK: <user-google-email>" — it used <operator>'s auth even when targeting the agent's account. The script likely has a hardcoded credential path or the `--account` flag only affects the search query, not authentication.
-=======
 `python3 scripts/triage.py --account <agent-email>` reported "Auth OK: <user-google-email>" — it used <operator>'s auth even when targeting the agent's account. The script likely has a hardcoded credential path or the `--account` flag only affects the search query, not authentication.
->>>>>>> Stashed changes
 
 **Workaround:** For the agent's account, check state files directly (`last_email_check_mx_indigo_karasu_gmail_com.json`) and use `gmail_scan.py` with explicit auth.
 

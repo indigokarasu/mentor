@@ -4,15 +4,9 @@
 
 | Purpose | Path |
 |---------|------|
-<<<<<<< Updated upstream
 | Mentor data (evidence, ingestion, anomalies, OKR, decisions, proposals) | `<hermes-home>/profiles/<profile>/commons/data/mentor/` |
 | Mentor journals | `<hermes-home>/profiles/<profile>/commons/journals/ocas-mentor/` |
 | Skill directory | `<hermes-home>/profiles/<profile>/skills/ocas-mentor/` |
-=======
-| Mentor data (evidence, ingestion, anomalies, OKR, decisions, proposals) | `$HERMES_HOME/commons/data/mentor/` |
-| Mentor journals | `$HERMES_HOME/commons/journals/ocas-mentor/` |
-| Skill directory | `$HERMES_HOME/skills/ocas-mentor/` |
->>>>>>> Stashed changes
 
 ## Journal Locations (DUAL — scan BOTH)
 
@@ -20,13 +14,8 @@ Skill journals are written to **two** different locations depending on the skill
 
 | Location | Path | Notes |
 |----------|------|-------|
-<<<<<<< Updated upstream
 | Shared commons | `<hermes-home>/commons/journals/` | Most OCAS skills write here (custodian, elephas, spot, dispatch, bones, etc.) |
 | Profile-scoped commons | `<hermes-home>/profiles/<profile>/commons/journals/` | Some skills write here (elephas cron runs, bones monitor, forge, mentor self, etc.) |
-=======
-| Shared commons | `~/.hermes/commons/journals/` | Most OCAS skills write here (custodian, elephas, spot, dispatch, bones, etc.) |
-| Profile-scoped commons | `$HERMES_HOME/commons/journals/` | Some skills write here (elephas cron runs, bones monitor, forge, mentor self, etc.) |
->>>>>>> Stashed changes
 
 **Critical:** Scanning only one path will miss active skills and produce incorrect `active_skills_30d` counts. The `find` commands in heartbeat scripts must scan both paths and merge results (e.g., `cat list1 list2 | sort -u`).
 
@@ -46,13 +35,8 @@ be invisible to downstream processes that read from `mentor/`.
 
 After every heartbeat, sync key files from profile to commons:
 ```bash
-<<<<<<< Updated upstream
 PROFILE_DATA="<hermes-home>/profiles/<profile>/commons/data/mentor"
 COMMONS_DATA="<hermes-home>/commons/data/mentor"
-=======
-PROFILE_DATA="$HERMES_HOME/commons/data/mentor"
-COMMONS_DATA="~/.hermes/commons/data/mentor"
->>>>>>> Stashed changes
 for f in evidence.jsonl ingestion_log.jsonl anomalies.jsonl okr_state.json decisions.jsonl; do
     cp "$PROFILE_DATA/$f" "$COMMONS_DATA/$f" 2>/dev/null
 done
@@ -63,17 +47,10 @@ done
 **Always use UTC for journal directory names.** The `run_id` is composed from UTC time (`datetime.now(timezone.utc)`), so the directory must match:
 ```bash
 # CORRECT — UTC date matches UTC run_id
-<<<<<<< Updated upstream
 JOURNAL_DIR="<hermes-home>/profiles/<profile>/commons/journals/ocas-mentor/$(date -u +%Y-%m-%d)"
 
 # WRONG — local date can be a day behind, putting journal in wrong directory
 JOURNAL_DIR="<hermes-home>/profiles/<profile>/commons/journals/ocas-mentor/$(date +%Y-%m-%d)"
-=======
-JOURNAL_DIR="$HERMES_HOME/commons/journals/ocas-mentor/$(date -u +%Y-%m-%d)"
-
-# WRONG — local date can be a day behind, putting journal in wrong directory
-JOURNAL_DIR="$HERMES_HOME/commons/journals/ocas-mentor/$(date +%Y-%m-%d)"
->>>>>>> Stashed changes
 ```
 If the server timezone is not UTC, using `date +%Y-%m-%d` puts the journal file in yesterday's directory while the filename contains today's UTC timestamp — creating a mismatch that confuses cross-reference and manual inspection.
 

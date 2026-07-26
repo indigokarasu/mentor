@@ -45,16 +45,8 @@ Light heartbeat cron run. Script self-journaling **succeeded** on all 3 writes (
 
 ## Files Modified
 
-<<<<<<< Updated upstream
 - `<hermes-home>/profiles/<profile>/commons/data/mentor/evidence.jsonl` (+2 lines: script + backup)
 - `<hermes-home>/profiles/<profile>/commons/data/mentor/ingestion_log.jsonl` (+6 lines)
 - `<hermes-home>/profiles/<profile>/commons/journals/ocas-mentor/2026-06-15/mentor-light-20260615T231221Z.json` (new)
 - `<hermes-home>/commons/data/mentor/evidence.jsonl` (+2 lines synced)
 - `<hermes-home>/commons/data/mentor/ingestion_log.jsonl` (+6 lines synced)
-=======
-- `$HERMES_HOME/commons/data/mentor/evidence.jsonl` (+2 lines: script + backup)
-- `$HERMES_HOME/commons/data/mentor/ingestion_log.jsonl` (+6 lines)
-- `$HERMES_HOME/commons/journals/ocas-mentor/2026-06-15/mentor-light-20260615T231221Z.json` (new)
-- `~/.hermes/commons/data/mentor/evidence.jsonl` (+2 lines synced)
-- `~/.hermes/commons/data/mentor/ingestion_log.jsonl` (+6 lines synced)
->>>>>>> Stashed changes
