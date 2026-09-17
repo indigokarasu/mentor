@@ -8,7 +8,7 @@ includes:
 - scripts/**
 metadata:
   author: Indigo Karasu (indigokarasu)
-  version: 2.8.23
+  version: "2.9.0"
   hermes:
     category: software-development
     tags:
