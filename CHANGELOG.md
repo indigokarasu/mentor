@@ -1,5 +1,11 @@
 ## [2.6.6] - 2026-04-26
 
+## [2.9.0] - 2026-09-16
+
+### Changed
+- **Pass-rate promotion thresholds** — challenger variants promoted to champion only when: pass rate ≥ 0.85 over ≥5 trials (smoke), ≥15 trials for core execution skills (reliability), and strictly exceeding the champion's pass rate (no regression); documented in `references/evaluation_engine.md` per `spec-ocas-skill-improvements.md`.
+
+
 ### Added
 - Pitfalls — heartbeat execution section documenting six journal-schema inconsistencies discovered during deep heartbeat: outcome/status type variance, missing outcome fields (~90% of journals), duration_ms vs duration_seconds naming, empty run_id values, error type variance, incomplete config.json on existing installs
 

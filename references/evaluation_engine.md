@@ -37,3 +37,10 @@ Pair runs with same comparison_group_id. Require identical normalized_input_hash
 
 ## Aggregate Evaluation
 Build evaluation dataset over multiple runs. Do not promote on single-run basis except emergency rollback.
+
+### Pass-Rate Promotion Thresholds
+A challenger variant is promoted to champion only when ALL of the following hold (per `spec-ocas-skill-improvements.md`):
+- **Smoke Check**: pass rate ≥ 0.85 over ≥ 5 trials from `ocas-fellow`.
+- **Reliability Check**: pass rate ≥ 0.85 over ≥ 15 trials for core execution skills (Sift, Scout, Rally, Reach, Sands, Styx, Custodian, and any skill whose failure has external side effects).
+- **No Regression**: challenger pass rate strictly exceeds the champion's pass rate on the same benchmark (`eval.yaml`) suite.
+`ocas-fellow` supplies the `CycleResult` (pass rates, token metrics, grader breakdowns). Under 0.85 or on any regression, `mentor.variants.decide` issues a rejection with the failing metric recorded in the `VariantDecision`.
