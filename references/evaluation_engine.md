@@ -3,7 +3,7 @@
 ## Journal Ingestion
 Read newly written journals from all skills at `{agent_root}/commons/journals/` (recursive scan). Validate schema per spec-ocas-journal.md v1.3. Quarantine malformed entries. Track ingested run_ids in `{agent_root}/commons/data/ocas-mentor/ingestion_log.jsonl`.
 
-Mentor and Elephas are parallel consumers of the same journal files. Neither blocks the other. Mentor evaluates for performance; Elephas ingests for knowledge.
+Mentor and Chronicle are parallel consumers of the same journal files. Neither blocks the other. Mentor evaluates for performance; Chronicle ingests for knowledge.
 
 ### Journal File Layout
 - Files are `.json` (NOT `.jsonl`), one file per run, organized in date subdirectories
