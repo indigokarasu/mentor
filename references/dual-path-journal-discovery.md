@@ -63,4 +63,4 @@ In cron-triggered `terminal()` heredocs, Python's `os.walk()` and `subprocess.ru
 
 ## Ingestion Dedup
 
-The ingestion log stores absolute paths via `os.path.abspath()`. Since both `find` commands output absolute paths under different roots, the dedup check works correctly across both locations — a file at `<hermes-home>/commons/journals/ocas-elephas/run.json` and one at `<hermes-home>/profiles/indigo/commons/journals/ocas-elephas/run.json` are treated as distinct entries (which is correct since they are different files).
+The ingestion log stores absolute paths via `os.path.abspath()`. Since both `find` commands output absolute paths under different roots, the dedup check works correctly across both locations — a file at `<hermes-home>/commons/journals/chronicle/run.json` and one at `<hermes-home>/profiles/indigo/commons/journals/chronicle/run.json` are treated as distinct entries (which is correct since they are different files).

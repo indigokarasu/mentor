@@ -33,4 +33,4 @@
 - Lesson: check mtime + skill name before investigating escalation journals. Added to skill as new gotcha.
 
 ## Active Skills (30d)
-bones, custodian, dispatch, elephas, finch, forge, lucid, mentor, praxis, rally, reach, sands, scout, spot, taste, vesper, voyage, weave (18 OCAS) + custodian standalone (1 non-OCAS) = 19 total.
+bones, custodian, dispatch, chronicle, finch, forge, lucid, mentor, praxis, rally, reach, sands, scout, spot, taste, vesper, voyage, weave (18 OCAS) + custodian standalone (1 non-OCAS) = 19 total.

@@ -42,7 +42,7 @@ Light heartbeat: 1380 files scanned (3d), 5 new ingested (5 skills), 0 errors, 0
 - Commons ingestion: 29291 → 29296 (+5)
 
 ### Skills with New Journals
-- ocas-elephas
+- chronicle
 - ocas-finch
 - ocas-forge
 - ocas-spot

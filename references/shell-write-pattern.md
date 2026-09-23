@@ -25,7 +25,7 @@ In cron-triggered `terminal()` calls, Python `with open()` writes to persistent 
 ### Append a JSON line to a log file
 
 ```bash
-printf '%s\n' '{"file": "/path/to/journal.json", "skill_name": "ocas-elephas", "ingested_at": "2026-06-05T05:47:00+00:00", "entries": 1}' >> <hermes-home>/profiles/indigo/commons/data/mentor/ingestion_log.jsonl
+printf '%s\n' '{"file": "/path/to/journal.json", "skill_name": "chronicle", "ingested_at": "2026-06-05T05:47:00+00:00", "entries": 1}' >> <hermes-home>/profiles/indigo/commons/data/mentor/ingestion_log.jsonl
 ```
 
 ### Write a full JSON file (journal, evidence)

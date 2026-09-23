@@ -36,7 +36,7 @@
 Top skills by journal volume:
 - ocas-mentor: 3,574 (self-referential heartbeat journals)
 - ocas-dispatch: 1,909
-- ocas-elephas: 1,559
+- chronicle: 1,559
 - ocas-custodian: 881
 - ocas-forge: 615
 - ocas-spot: 346

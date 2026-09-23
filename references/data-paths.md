@@ -14,8 +14,8 @@ Skill journals are written to **two** different locations depending on the skill
 
 | Location | Path | Notes |
 |----------|------|-------|
-| Shared commons | `<hermes-home>/commons/journals/` | Most OCAS skills write here (custodian, elephas, spot, dispatch, bones, etc.) |
-| Profile-scoped commons | `<hermes-home>/profiles/indigo/commons/journals/` | Some skills write here (elephas cron runs, bones monitor, forge, mentor self, etc.) |
+| Shared commons | `<hermes-home>/commons/journals/` | Most OCAS skills write here (custodian, chronicle, spot, dispatch, bones, etc.) |
+| Profile-scoped commons | `<hermes-home>/profiles/indigo/commons/journals/` | Some skills write here (chronicle cron runs, bones monitor, forge, mentor self, etc.) |
 
 **Critical:** Scanning only one path will miss active skills and produce incorrect `active_skills_30d` counts. The `find` commands in heartbeat scripts must scan both paths and merge results (e.g., `cat list1 list2 | sort -u`).
 
