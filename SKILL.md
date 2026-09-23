@@ -31,6 +31,9 @@ triggers:
 Mentor is the system's control plane — in runtime mode it decomposes goals into task graphs, supervises execution across skills, and dynamically repairs failures through layered escalation. In heartbeat mode it reads journals from every skill, scores OKR performance against baselines, and generates improvement proposals that flow to Forge and Fellow.
 Mentor reads journals to evaluate skill performance. Chronicle ingestion of journal entity observations happens via the Chronicle daily embed pipeline.
 
+
+**Support files:** `references/support-file-map.md` indexes the bundled files not covered inline in this skill — check it before working from assumptions about what is (not) available.
+
 ## When to Use
 
 - OKR evaluation across all OCAS skills
