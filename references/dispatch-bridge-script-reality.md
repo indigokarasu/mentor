@@ -23,7 +23,7 @@ NONE of the above exist. A filesystem search for their names across the entire
 skills tree returned 0 hits. The real scripts present under
 `skills/ocas-mentor/scripts/` are only:
 
-- `cron-heartbeat-light.py`, `cron-heartbeat-deep.py`,
+- `cron-heartbeat-light.py`,
   `cron-heartbeat-deep-dualpath.py` — heartbeats
 - `discover_recent_journals.py`, `verify_ingest_window.py` — discovery
 - `deep_ingest_backup.py`, `sync_profile_to_commons.py`,
