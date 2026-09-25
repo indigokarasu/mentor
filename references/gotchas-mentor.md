@@ -34,7 +34,7 @@
     - `.json` single object: multi-line pretty-printed dict (e.g., lucid journals)
     - `.json` array: multi-line JSON array of dicts
     - Corrupted/truncated: some `.json` files contain concatenated objects or truncated entries
-    - Use the `load_journal_entries()` function from `scripts/cron-heartbeat-deep.py` which handles all three formats with a parse-fallback chain: try JSONL first, then single JSON, then array, then quarantine.
+    - Use the `load_journal_entries()` function from `scripts/cron-heartbeat-deep-dualpath.py` which handles all three formats with a parse-fallback chain: try JSONL first, then single JSON, then array, then quarantine.
 
 ## Ingestion and Recovery
 

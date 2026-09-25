@@ -341,7 +341,6 @@ See `references/self-update-mentor.md`.
 | `scripts/discover_recent_journals.py` | Tight-window (sub-3-day) journal discovery via CONTENT timestamp; counters the ~7h12m mtime lag. Emits a filtered file list for `cron-heartbeat-light.py`. **NOTE:** also recognizes `generated_at` and ANY `run_id` prefix (regex-extracted timestamp) — fixed 2026-07-13 to stop silently skipping praxis-cron/dispatch-wave/forge-scan journals. See `references/cron-mtime-discovery-gotcha.md` §3 and `references/discover-recent-journals-gotcha.md`. |
 | `references/evidence-log-maintenance.md` | **When evidence.jsonl grows corrupt entries or heartbeat crashes on gap detection** — full scan-and-repair procedure: brace-depth splitting for concatenated JSON, null-byte removal, dual-repair requirement. |
 | `scripts/repair_evidence_jsonl.py` | Standalone evidence.jsonl repair tool — scans both profile and commons for concatenated JSON, null-byte lines. Usable as `python3 scripts/repair_evidence_jsonl.py`. |
-| `scripts/cron-heartbeat-deep.py` | Original deep heartbeat (single-path, commons only — use dualpath instead) |
 | `scripts/cron-heartbeat-deep-dualpath.py` | **Preferred** deep heartbeat with dual-path scan + profile data sync |
 | `scripts/deep_ingest_backup.py` | Deep heartbeat ingestion backup — run when `wc -l` shows delta=0 after deep heartbeat |
 | `scripts/mentor_deep_sync.py` | Bidirectional profile↔commons sync (evidence + ingestion) via line-level set-difference — run after any heartbeat to reconcile the two stores |
