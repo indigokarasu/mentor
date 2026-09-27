@@ -215,8 +215,23 @@ def main():
         o = batch_outcomes.get(skill_name, {"success": 0, "error": 0, "unknown": 0})
         t = o["success"] + o["error"] + o["unknown"]
         if t == 0: continue
-        sr = o["success"] / t
-        skill_health.append({"skill": skill_name, "new": t, "success": o["success"], "error": o["error"], "unknown": o["unknown"], "success_rate": round(sr, 4), "health": "healthy" if sr >= 0.95 else "degraded" if sr >= 0.80 else "failing"})
+        # Use the SAME convention as orchestration_success_rate (gotcha #34): an entry with
+        # no error key is a non-failure, so `unknown` counts toward success. Scoring unknown
+        # as failure reported zero-error skills as "failing" whenever their journals used a
+        # richer outcome vocabulary than the 8-word success/error list (e.g. "watching",
+        # "complete", "PARTIAL -- ..."), which is a reporting artifact, not a defect.
+        # Because sr == 1 - er, success_rate cannot fall below 1.0 while errors are 0, so
+        # health must be driven by error_rate. "failing" now REQUIRES real errors.
+        sr = (o["success"] + o["unknown"]) / t
+        er = o["error"] / t
+        vr = o["unknown"] / t
+        # "unverified" (not "healthy"): most outcomes unreadable means we never verified the
+        # run, so asserting health would overclaim. The rate is still reported, not hidden.
+        if er > 0.05: health = "failing"
+        elif er > 0.0: health = "degraded"
+        elif vr > 0.5: health = "unverified"
+        else: health = "healthy"
+        skill_health.append({"skill": skill_name, "new": t, "success": o["success"], "error": o["error"], "unknown": o["unknown"], "success_rate": round(sr, 4), "error_rate": round(er, 4), "outcome_vocabulary_rate": round(vr, 4), "health": health})
 
     proposals = []
     if evaluation_coverage < 0.90:
@@ -290,9 +305,18 @@ def main():
     print(f"  Proposals:            {len(proposals)}")
     print(f"  Gap:                  {gap_minutes} min {'DETECTED' if gap_detected else 'OK'}")
     print("  SKILL HEALTH:")
-    for sh in sorted(skill_health, key=lambda x: x["success_rate"]):
-        icon = "🟢" if sh["health"] == "healthy" else "🟡" if sh["health"] == "degraded" else "🔴"
-        print(f"    {icon} {sh['skill']}: {sh['success_rate']:.1%} ({sh['new']} entries)")
+    for sh in sorted(skill_health, key=lambda x: (-x["error_rate"], x["success_rate"])):
+        icon = {"healthy": "🟢", "degraded": "🟡", "failing": "🔴", "unverified": "⚪"}[sh["health"]]
+        detail = f"{sh['success_rate']:.1%} ({sh['new']} entries)"
+        if sh["error_rate"] > 0:
+            detail += f", err {sh['error_rate']:.1%}"
+        if sh["outcome_vocabulary_rate"] > 0:
+            detail += f", {sh['outcome_vocabulary_rate']:.0%} unreadable outcome"
+        print(f"    {icon} {sh['skill']}: {detail}")
+    if any(sh["health"] == "unverified" for sh in skill_health):
+        print("  NOTE: 'unreadable outcome' = journal used an outcome word outside the")
+        print("        success/error vocabulary, so the run was not verified. Not a failure;")
+        print("        see normalize_outcome().")
     print("=" * 70)
 
 if __name__ == "__main__":
