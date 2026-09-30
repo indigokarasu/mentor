@@ -39,8 +39,33 @@ def normalize_outcome(entry):
         if val in ("success", "ok", "pass", "passed", "completed", "done"): return "success"
         if val in ("error", "fail", "failed", "failure"): return "error"
         return "unknown"
-    if entry.get("error") or entry.get("errors"): return "error"
+    if _reports_failure(entry): return "error"
     return "success"
+
+def _reports_failure(entry):
+    """True only when an error field describes THIS run failing, not what the run observed.
+
+    A journal that carries a structured `errors` payload (list of dict findings about
+    other cron jobs, upstream 429s, etc.) is a successful observation run that reported
+    problems it found. Classifying it as a failed run inflated error_rate and raised
+    phantom `high_errors_<skill>` anomalies. Only bare message payloads count.
+    """
+    for key in ("error", "errors"):
+        val = entry.get(key)
+        if not val: continue
+        if isinstance(val, bool): return val
+        if isinstance(val, (str, bytes)): return True
+        if isinstance(val, (int, float)): return True
+        if isinstance(val, (list, tuple)):
+            # Bare message list = the run's own failures. List of dicts = a findings report.
+            if val and all(isinstance(i, str) for i in val): return True
+            continue
+        if isinstance(val, dict):
+            # Dict keyed by outcome-ish state, or a scalar-bearing error record.
+            for k, v in val.items():
+                if str(k).lower() in ("error", "failed", "failure") and v: return True
+            continue
+    return False
 
 def load_journal_entries(filepath):
     try:

@@ -49,10 +49,33 @@ def parse_dt(ts_str):
         return None
 
 
+def _reports_failure(entry):
+    """True only when an error field describes THIS run failing, not what the run observed.
+
+    A journal carrying a structured `errors` payload (list of dict findings about other
+    cron jobs, upstream 429s, etc.) is a successful observation run that reported problems
+    it found. Key-presence alone misclassified those as failures. Only bare message
+    payloads count as this run failing.
+    """
+    for key in ("error", "errors"):
+        val = entry.get(key)
+        if not val: continue
+        if isinstance(val, bool): return val
+        if isinstance(val, (str, bytes, int, float)): return True
+        if isinstance(val, (list, tuple)):
+            if val and all(isinstance(i, str) for i in val): return True
+            continue
+        if isinstance(val, dict):
+            for k, v in val.items():
+                if str(k).lower() in ("error", "failed", "failure") and v: return True
+            continue
+    return False
+
+
 def normalize_outcome(entry):
     outcome = entry.get("outcome", entry.get("status"))
     if outcome is None:
-        return "error" if "error" in entry else "success"
+        return "error" if _reports_failure(entry) else "success"
     if isinstance(outcome, dict):
         return outcome.get("state", "unknown")
     if isinstance(outcome, str):
