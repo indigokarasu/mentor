@@ -51,6 +51,54 @@ After each deep heartbeat run, the wrapper writes evidence + OKR state to `<herm
 ## Silent Write Failure Pattern (confirmed 2026-06-24)
 The script's Python `with open()` writes to decisions.jsonl and proposals-{date}.json **silently fail** in cron mode — same pattern as light heartbeat gotcha #27. Evidence and journal writes can succeed while decisions/proposals writes fail. The caller MUST verify all 4 write targets (evidence, decisions, journal, proposals file) and back up via shell if missing. See the "Deep heartbeat caller verify-and-backup workflow" in the main SKILL.md.
 
+## Deep evidence records carry NO `heartbeat_type` (confirmed 2026-09-29)
+
+Deep evidence lines are identified by `"command": "mentor.heartbeat.deep"`, NOT by
+`heartbeat_type`. Line 257 composes the record with keys `timestamp`, `command`,
+`run_id`, `journals_scanned`, … and never sets `heartbeat_type`. Light records DO set
+`heartbeat_type: "light"`. Any trend/history query that filters deep records on
+`heartbeat_type == "deep"` silently returns **zero rows** — it looks like "no history
+exists" but is actually a wrong key. Filter on `command == "mentor.heartbeat.deep"`.
+
+## Evidence written twice per run (confirmed 2026-09-29)
+
+The script appends the same `evidence_record` to TWO different files:
+- line 258 → `MENTOR_DATA/evidence.jsonl` = `~/.hermes/commons/data/mentor/`
+- line 278 → `PROFILE_MENTOR_DATA/evidence.jsonl` = `~/.hermes/profiles/indigo/commons/data/mentor/`
+
+These are distinct paths, so this is intentional dual-store writing, NOT a single
+path written twice. But `mentor_deep_sync.py` then merges profile→commons by
+**byte-identical line set-difference**, and since the two lines are identical strings,
+the set-difference correctly finds nothing new. Result: both stores end up with
+exactly 2 copies of each deep evidence record (one from each write target), and they
+stay permanently in lockstep.
+
+Verified 2026-09-29: 20 duplicated line groups in the profile store, one per deep run
+since 2026-09-23, stable at exactly 2 per store. This inflates `wc -l` on
+evidence.jsonl by ~1 line per deep run. It does NOT corrupt OKR scoring (which reads
+journals, not evidence lines) and does not affect the light heartbeat. Leave it alone
+unless the duplication rate becomes a storage problem — de-duplicating retroactively
+would rewrite historical evidence and is riskier than the bloat. If a fix is ever
+wanted, the correct change is to make line 278 a no-op when
+`os.path.realpath(MENTOR_DATA) == os.path.realpath(PROFILE_MENTOR_DATA)` is false but
+the line is already present in the target — i.e. write profile-only if commons line
+already identical, which `mentor_deep_sync.py` set-difference already handles, so the
+real fix is to drop the line-258 commons write when running in profile-scoped cron.
+
+## `promotion_accuracy` is hardcoded NO_DATA (confirmed 2026-09-29)
+
+Line 192 unconditionally sets `okr_scores["promotion_accuracy"] = {"value": None,
+"status": "NO_DATA"}`, and line 265 hardcodes `None` into `okr_state.json`. There is no
+variant store, no champion/challenger file, and no promotion logic in this deployment —
+`find -name "*variant*"` under both mentor data dirs returns nothing, and the proposals
+directories have been empty since 2026-09-28.
+
+**This OKR can never PASS.** Do not report it as a gap to fix or a failing target; it is
+a vestigial OKR from a variant-evaluation feature that was never wired up in this
+deployment. Every deep heartbeat will show `promotion_accuracy=NO_DATA` alongside four
+PASSing OKRs, and that is the expected steady state, not a regression. Anyone reading a
+future deep-heartbeat report should not treat NO_DATA here as a new finding.
+
 ## Evidence Schema Note
 The evidence record does NOT include `orchestration_success_rate` or `error_rate` fields, even though the script computes them for OKR scoring. These values live in `okr_state.json` and the journal entry's `okr_scores` section. When parsing deep heartbeat evidence records, do not expect these fields in the flat evidence JSON.
 
