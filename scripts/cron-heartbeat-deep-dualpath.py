@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os
 """Mentor Deep Heartbeat — Dual-Path Wrapper. Fixes gotcha #32."""
-import json, os, hashlib, sys
+import json, os, hashlib, sys, gzip
 from datetime import datetime, timezone, timedelta
 from collections import defaultdict
 
@@ -67,9 +67,29 @@ def _reports_failure(entry):
             continue
     return False
 
+JOURNAL_SUFFIXES = (".jsonl", ".json", ".jsonl.gz", ".json.gz")
+
+def is_journal_file(filename):
+    """True for plain and gzipped journals. Genie compresses journals >7d old to
+    `.json.gz`, which no longer matched a plain `.json`/`.jsonl` suffix test — the deep
+    scan then saw 3,400 journals instead of 38,452 and scored OKRs on a truncated corpus."""
+    return filename.endswith(JOURNAL_SUFFIXES)
+
+def is_skill_name(name):
+    """True for a real skill directory name.
+
+    Files sitting directly in a journals root resolve to "unknown"; counting them as a
+    skill inflated skills_total/skills_active_30d by one and printed a phantom health row.
+    """
+    return bool(name) and name != "unknown" and not name.startswith(".")
+
 def load_journal_entries(filepath):
     try:
-        with open(filepath) as f: content = f.read().strip()
+        if filepath.endswith(".gz"):
+            with gzip.open(filepath, "rt", encoding="utf-8", errors="replace") as f:
+                content = f.read().strip()
+        else:
+            with open(filepath) as f: content = f.read().strip()
     except Exception: return []
     if not content: return []
     lines = content.splitlines()
@@ -96,14 +116,23 @@ MENTOR_DATA = os.path.expanduser("~/.hermes/commons/data/mentor/")
 PROFILE_MENTOR_DATA = os.path.expanduser("~/.hermes/profiles/indigo/commons/data/mentor/")
 
 def resolve_skill_name(filepath):
+    """Return the skill that owns a journal, or "unknown".
+
+    A journal must live in a skill *subdirectory* of a journals root. Files sitting
+    directly in the root (dispatch-wave-*.json.gz, journals_evaluated.jsonl) have no
+    skill owner; returning their filename inflated skills_total and printed phantom
+    rows in skill health.
+    """
     for base in JOURNALS_PATHS:
         if filepath.startswith(base):
-            rel = os.path.relpath(filepath, base)
-            parts = rel.split(os.sep)
-            if parts[0] and not parts[0].startswith("."): return parts[0]
+            parts = os.path.relpath(filepath, base).split(os.sep)
+            # parts[0] is the skill dir, parts[-1] the file. >=2 means a real subdir.
+            if len(parts) >= 2 and parts[0] and not parts[0].startswith("."):
+                return parts[0]
+            return "unknown"
     parts = filepath.split("/")
     for i, part in enumerate(parts):
-        if part == "journals" and i + 1 < len(parts):
+        if part == "journals" and i + 2 < len(parts):
             skill = parts[i + 1]
             if skill and not skill.startswith("."): return skill
     return "unknown"
@@ -144,19 +173,20 @@ def main():
         for root, dirs, files in os.walk(base_path):
             dirs[:] = [d for d in dirs if not d.startswith(".")]
             for fn in files:
-                if fn.endswith((".jsonl", ".json")):
+                if is_journal_file(fn):
                     fp = os.path.join(root, fn)
                     if fp not in seen: seen.add(fp); all_journal_files.append(fp)
 
     total_files = len(all_journal_files)
     skill_files = defaultdict(list)
     for fp in all_journal_files: skill_files[resolve_skill_name(fp)].append(fp)
-    installed_skill_dirs = sorted(set(skill_files.keys()))
+    installed_skill_dirs = sorted(n for n in skill_files if is_skill_name(n))
     total_installed = len(installed_skill_dirs) if installed_skill_dirs else 1
 
     thirty_days_ago = now - timedelta(days=30)
     skills_active_30d = set()
     for skill_name, files in skill_files.items():
+        if not is_skill_name(skill_name): continue
         for fp in files:
             try:
                 mtime = datetime.fromtimestamp(os.path.getmtime(fp), tz=timezone.utc)
