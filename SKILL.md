@@ -331,6 +331,7 @@ See `references/self-update-mentor.md`.
 | `references/self-update-mentor.md` | Before running `mentor.update` |
 | `references/evidence-log-maintenance.md` | When evidence.jsonl grows corrupt entries or heartbeat crashes on gap detection |
 | `references/data-paths.md` | Before writing any heartbeat or data script — canonical vs legacy paths |
+| `references/gzip-journal-discovery-gotcha.md` | **READ BEFORE ANY JOURNAL-DISCOVERY CHANGE** — Genie compresses journals in place to `.json.gz`; `*.json` matchers silently lose them (corpus fell 38,452 → 3,400 on 2026-10-01 while every OKR still read PASS). Also documents why the `mentor-deep-deep-` filename must NOT be "fixed". |
 | `references/dual-path-journal-discovery.md` | **READ BEFORE EVERY CRON HEARTBEAT** — journals live in two locations |
 | `references/shell-write-pattern.md` | **READ BEFORE EVERY CRON HEARTBEAT** — the only reliable write method in cron |
 | `templates/mentor-dispatch-quick-ref.md` | Before running Mentor in dispatch mode — canonical 7-step workflow |
