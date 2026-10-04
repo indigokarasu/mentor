@@ -328,11 +328,21 @@ def main():
         existing.extend(proposals)
         with open(ppath, "w") as f: json.dump(existing, f, indent=2)
 
-    # Profile-scoped writes
+    # Profile-scoped writes.
+    # IDEMPOTENCE GUARD: ~/.hermes/commons may be a symlink to
+    # ~/.hermes/profiles/indigo/commons (created 2026-07-13), in which case
+    # MENTOR_DATA and PROFILE_MENTOR_DATA resolve to the SAME file. Appending
+    # the evidence record twice produced one duplicate record per run (29 runs,
+    # 2026-09-23 through 2026-10-03) while the heartbeat still reported rc=0.
+    # Only write the profile copy when it is genuinely a distinct file.
     profile_evidence = os.path.join(PROFILE_MENTOR_DATA, "evidence.jsonl")
-    with open(profile_evidence, "a") as f: f.write(json.dumps(evidence_record) + "\n")
+    same_evidence = os.path.exists(profile_evidence) and os.path.samefile(EVIDENCE_LOG, profile_evidence)
+    if not same_evidence:
+        with open(profile_evidence, "a") as f: f.write(json.dumps(evidence_record) + "\n")
     profile_okr = os.path.join(PROFILE_MENTOR_DATA, "okr_state.json")
-    with open(profile_okr, "w") as f: json.dump(okr_save, f, indent=2)
+    if not (os.path.exists(OKR_STATE) and os.path.exists(profile_okr)
+            and os.path.samefile(OKR_STATE, profile_okr)):
+        with open(profile_okr, "w") as f: json.dump(okr_save, f, indent=2)
 
     jdir = os.path.join(os.path.expanduser("~/.hermes/profiles/indigo/commons/journals/ocas-mentor"), today_str)
     os.makedirs(jdir, exist_ok=True)
