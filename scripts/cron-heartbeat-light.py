@@ -10,6 +10,7 @@ Usage:
         | python3 cron-heartbeat-light.py
 """
 import os, json, sys
+import gzip
 from datetime import datetime, timezone
 
 _HELP_ARGS = {"--help", "-h"}
@@ -87,8 +88,20 @@ def load_journal_file(path):
     """Multi-format journal parser: JSONL, single JSON object, JSON array."""
     entries = []
     try:
-        with open(path, "r", encoding="utf-8") as f:
-            content = f.read().strip()
+        opener = gzip.open if path.endswith((".gz", ".gzip")) else None
+        try:
+            if opener is not None:
+                with opener(path, "rt", encoding="utf-8", errors="replace") as f:
+                    content = f.read().strip()
+            else:
+                with open(path, "r", encoding="utf-8", errors="replace") as f:
+                    content = f.read().strip()
+        except (OSError, UnicodeDecodeError):
+            # A single undecodable byte must not abort ingestion of the whole
+            # journal set. gzip.open raises ValueError (a UnicodeDecodeError
+            # subclass) on a corrupt stream; plain open raises UnicodeDecodeError
+            # when errors= is omitted. Both are per-file, not systemic.
+            return entries
         if not content:
             return entries
         try:
