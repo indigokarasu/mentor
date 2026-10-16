@@ -67,6 +67,41 @@ run_id **plus** exact payload, or a legitimate second record for the same run (t
 `correct_active_skills_30d.py` correction line) gets deleted. Write to a temp file,
 `os.replace` atomically, and keep a `.dupbak-<date>` copy first.
 
+## The walk double-count (same root cause, different write target)
+
+`cron-heartbeat-deep-dualpath.py` also **walks** both roots:
+
+```python
+JOURNALS_PATHS = ["~/.hermes/commons/journals/", "~/.hermes/profiles/indigo/commons/journals/"]
+...
+for base_path in JOURNALS_PATHS:
+    for root, dirs, files in os.walk(base_path):
+        for fn in files:
+            fp = os.path.join(root, fn)
+            if fp not in seen: seen.add(fp); all_journal_files.append(fp)
+```
+
+With the symlink, both walks traverse the **same physical tree**, producing every file
+twice under two different path prefixes. The `seen` set is keyed on the path string,
+not the inode, so it does not dedupe. Measured 2026-10-15: `journals_scanned` 58,258
+vs 29,129 files on disk = **1.997x**.
+
+Blast radius is **reporting-only**: OKR scores are ratios (each entry's outcome is
+counted in both numerator and denominator, so rates are unchanged), and ingestion
+dedup still holds (each new file gets two `md5(path)_mtime` run_id keys, both recorded,
+neither re-ingested next run). `skills_active_30d` and `evaluation_coverage` are
+name-set/mtime based and unaffected. What IS wrong: `journals_scanned`,
+`journals_ingested`, per-skill `new` counts, and ingestion_log volume are ~2x inflated.
+
+**Detection:** this is exactly what the gzip gotcha's corpus-size assertion catches —
+compare `journals_scanned` against a single-root `find`. A ~2x ratio with a healthy
+corpus means the symlink double-walk, not corpus growth. Do not "fix" it by editing
+discovery output; the fix is in the walk.
+
+**Fix (NOT yet applied — needs a deliberate change):** dedupe the walk by
+`os.path.realpath(fp)` instead of `fp` in the `seen` set. Safe because ingestion
+dedup is keyed on path-hash run_ids, so historical records stay valid either way.
+
 ## Rules for future work
 
 1. **Never write the same record to two paths without an `os.path.samefile` guard.**
