@@ -1,8 +1,8 @@
 ---
 license: MIT
 name: ocas-mentor
-description: 'Self-improving orchestration and evaluation engine. Manages long-running multi-skill workflows, analyzes journals from all skills, evaluates champion vs challenger variants, and proposes skill improvements to Forge. Use for multi-step project management, heartbeat runs, skill performance evaluation, or multi-skill coordination. NOT for: web research (use Sift), skill building (use Forge), user communication (use Dispatch), real-time skill execution, content generation, system health monitoring (use Custodian), or skill evaluation scoring.'
-source: https://github.com/<agent-handle>/mentor
+description: 'Self-improving orchestration and evaluation engine. Manages long-running multi-skill workflows, analyzes journals from all skills, evaluates champion vs challenger variants, and proposes skill improvements to Forge. Use for multi-step project management, heartbeat runs, skill performance evaluation, or multi-skill coordination. Keywords: self-improving orchestration, multi-skill workflow, skill evaluation, heartbeat, OKR scoring, variant evaluation, proposal generation, cron heartbeats, dispatch pipelines. NOT for: web research (use Sift), skill building (use Forge), user communication (use Dispatch), real-time skill execution, content generation, system health monitoring (use Custodian), or skill evaluation scoring.'
+source: https://github.com/indigokarasu/mentor
 includes:
 - references/**
 - scripts/**
@@ -82,48 +82,10 @@ Mentor does not emit entity signals directly. Journal outputs are ingested by Ch
 - `mentor.plan.list` / `mentor.plan.run` / `mentor.plan.status` / `mentor.plan.resume` / `mentor.plan.history` — workflow plan management
 
 ## Cron-Mode Constraints
-**READ FIRST: See `references/cron-execution-patterns.md` for a comprehensive guide to executing mentor heartbeats in cron mode, including critical script execution patterns, verification workflows, and common pitfalls to avoid.**
 
-Proper error handling in cron mode requires special attention because shell variables don't persist across `terminal()` calls and Python `with open()` writes can silently fail. The following constraints are confirmed through operational experience.
+**READ FIRST:** See `references/cron-mode-constraints.md` (full list of confirmed operational constraints for cron mode) and `references/cron-execution-patterns.md` (canonical heartbeat workflow). The constraints below are reproduced in the reference file and confirmed through operational experience.
 
-**Commons sync "already in sync" pattern (confirmed 2026-06-25):** After running the evidence/ingestion sync, `wc -l` may show 0 delta on both files. This happens when a concurrent heartbeat already synced the new lines between the script's write and the dispatch's sync call. This is EXPECTED in steady-state with multiple concurrent cron triggers. Do NOT treat as a sync failure. Verify with `grep <new_run_id> <hermes-home>/commons/data/mentor/evidence.jsonl` to confirm the line exists in commons. If present, sync is already done — proceed to next step.
 
-**`execute_code` is blocked in cron-triggered jobs.** All heartbeat, update, and plan runs triggered by cron must use `terminal()` with inline `python3 /path/to/scripts.py` for multi-stage logic. **CRITICAL: Do NOT use `<<` heredoc syntax in `terminal()`** — the `<<` delimiter triggers the terminal's foreground-background detection, causing exit_code=-1. Write scripts to `/tmp/` via `write_file` first, then invoke with `python3 /tmp/script.py`. See gotcha #70.
-
-**Pipe-to-python bash quoting pitfall (confirmed 2026-06-29 dispatch):** The pattern `VAR=$(tail -1 "$file" | python3 -c "..."))` fails with `syntax error near unexpected token` because bash's command substitution `$(...)` with a pipe and double quotes creates parsing conflicts. **Fix:** Use single quotes inside the Python script and ensure the pipe is inside the `$()`: `VAR=$(tail -1 "$file" | python3 -c 'import sys,json; print(json.loads(sys.stdin.read()).get("field",""))' ))` — note the single quotes. Or safer: avoid inline pipe-to-python entirely; write a `/tmp/script.py` via `write_file` and pipe into it: `tail -1 <fs-root>/file.jsonl | python3 /tmp/extract_field.py`. The shell then has no embedded Python to misparse.
-
-**`execute_code` blocking applies to ALL cron-triggered jobs** (confirmed 2026-06-25 dispatch #99). This includes not just heartbeat scripts but also state file writes, JSON manipulation, and any multi-step Python logic. When the dispatch caller (triggered by cron) needs to write JSON state files or perform set-difference syncs, it MUST use `terminal()` with `cat > file << 'EOF'` for JSON files or `echo >> file` for JSONL appends — never `execute_code`. Attempting `execute_code` in cron produces: `BLOCKED: execute_code runs arbitrary local Python`. This is a hard runtime constraint, not a suggestion.
-
-**Python runtime resolution (confirmed 2026-06-24):** The skill docs historically reference `<hermes-venv>/bin/python3.13` but this path does NOT exist. The venv symlinks all resolve to `/usr/bin/python3` (3.14). To run mentor/taste scripts that need `googleapiclient`:
-1. Install deps: `pip3 install --break-system-packages google-api-python-client google-auth google-auth-oauthlib`
-2. Use `/usr/bin/python3` (system Python 3.14, has googleapiclient after install)
-3. Do NOT use `<fs-root>/.local/share/uv/python/cpython-3.13.13-linux-x86_64-gnu/bin/python3.13` — it's externally-managed and cannot install packages
-4. Do NOT use `<hermes-home>/profiles/indigo/commons/data/ocas-taste/venv/bin/python3` — symlinks to system 3.14 but googleapiclient is not installed there
-**Script path: skill name vs data directory mismatch (confirmed 2026-06-24 dispatch #49, #55, #63):** The skill name is `ocas-mentor` so scripts live at `<hermes-home>/profiles/indigo/skills/ocas-mentor/scripts/`. The data directory is `<hermes-home>/profiles/indigo/commons/data/mentor/` (no `ocas-` prefix). Do NOT derive the script path from the data directory name — always use `skills/ocas-mentor/scripts/<script>.py`. The correction script specifically is at `skills/ocas-mentor/scripts/correct_active_skills_30d.py` (NOT `skills/mentor/scripts/`). **Hard rule:** Before invoking ANY Mentor script, verify the path starts with `skills/ocas-mentor/scripts/`. A quick `ls skills/ocas-mentor/scripts/<script>.py` confirms. The agent has fallen into this trap 3+ times despite knowing the rule — the instinct to derive the path from the data directory name (`commons/data/mentor/`) is strong and must be actively countered.
-
-**Inline Python variable scoping in `terminal()`** — When composing multi-step Python logic inline in `terminal()` (either as heredoc or `python3 -c`), variables defined inside a function are NOT available in the outer scope. This manifests as `NameError: name 'X' is not defined` at a line that logically follows the definition. **Fix:** Structure inline scripts so all logic is in a single flat scope (no nested functions), or write the script to `/tmp/` via `write_file` where you can verify scoping independently. Confirmed 2026-06-24 dispatch: `skill = jid.split("/")[0]` inside `extract_signals()` was invisible to the caller's loop.
-
-**Sandbox file discovery failure:** In the cron sandbox, Python's `subprocess.run(["find", ...])` and `os.walk()` silently return 0 results even when the filesystem is fully accessible via shell tools. Use the shell-pipe pattern: `find JOURNALS_DIR -name "*.json" -mtime -3 | sort -u > /tmp/mentor_files_3d.txt && python3 scripts/cron-heartbeat-light.py < /tmp/mentor_files_3d.txt`. **CRITICAL:** Any pipe to python3 (e.g., `cmd | python3 -c "..."`, `VAR=$(cmd | python3 -c "...")`, or `cat file | python3`) is blocked by the `tirith:pipe_to_interpreter` security rule in cron mode. Always avoid piping to python3; use alternatives like temporary files (`cmd > /tmp/out && python3 -c "..." < /tmp/out`), here-strings (`python3 -c "..." <<< "$(cmd)"`), or temporary scripts. See `references/shell-write-pattern.md`.
-
-**Pipe-to-interpreter blocks the ENTIRE terminal() call (confirmed 2026-07-08):** A trailing `tail -1 file | python3 -c "..."` verification step at the end of a multi-step cron `terminal()` command causes the security scanner to reject the WHOLE command — not just the pipe. Observed signature: `exit_code=-1`, `status: pending_approval`, `pattern_key: tirith:pipe_to_interpreter`. ALL steps in that call are lost (pre-run counts, script run, verification) and must be re-run. The block fires on the presence of `| python3` ANYWHERE in the command string, regardless of position. FIX: never put `cmd | python3` inside a cron `terminal()` call, even for final field checks. Do field verification via the `read_file` tool (outside terminal) or a `/tmp/*.py` script invoked WITHOUT a pipe (`python3 /tmp/check.py`).
-
-**Journal file-mtimes lag content timestamps (clock offset) — mtime discovery unreliable (confirmed 2026-07-08):** In this environment, journal files carry file-mtimes ~7h12m BEHIND the system clock while their CONTENT timestamps match real time (e.g., file mtime `00:31Z` vs content `07:31Z` vs system `07:41Z`). `find -mmin -N` is therefore unreliable for tight windows: a 5-minute heartbeat using `-mmin -5` perpetually returns 0 and SILENTLY MISSES real recent journals. Mitigations: (1) When a heartbeat returns 0 files, VERIFY via a content-timestamp scan that 0 is real, not a mtime artifact — reuse `scripts/verify_ingest_window.py`. (2) For tight windows, prefer content-timestamp-based discovery, or widen the mtime window to cover the offset (e.g. `-mmin -450`) as a stopgap. (3) Do not assume `find -mmin -5` == "last 5 real minutes" — cross-check with content timestamps. See `references/cron-mtime-discovery-gotcha.md`.
-
-**Python `with open()` writes are UNRELIABLE in cron `terminal()`** — Sometimes they persist, sometimes they silently fail. Piped `find | python3` is most likely to fail; `python3 /path/to/script.py` (no pipe) has been observed to succeed. Treat all Python writes as best-effort: verify with `wc -l` after, and use shell-level `echo >>` / `cat >` for critical evidence/journal writes. See `references/shell-write-pattern.md`.
-
-**Heredoc vs. pipe conflict:** `cat file | python3 << 'PYEOF'` does NOT deliver stdin to Python — the heredoc steals stdin. Write the script to `/tmp/` first, then pipe: `cat file | python3 /tmp/script.py`. See gotcha #33.
-
-**Env var on piped command:** `VAR=value cat file | python3 script` only sets the var for `cat`, not `python3`. Must `export` first — but even `export` in the same `terminal()` block may not propagate if the tool splits commands into subshells. **Safest:** `cat file | VAR=value python3 script`. See `references/gotchas-mentor-cron-envvars.md`.
-
-**Pre-run counts MUST be captured in the SAME `terminal()` call as script execution** — A separate `terminal()` call to record `EVIDENCE_BEFORE=$(wc -l ...)` before the script run creates a race window: other processes (prior heartbeat's correction script, concurrent cron jobs) can write to evidence.jsonl between your "before" snapshot and the script's write. The resulting delta is meaningless — it reflects accumulated writes from multiple processes, not just this run. **Fix:** Always capture pre-run counts, run the script, and verify post-run counts in a SINGLE `terminal()` call. Do NOT split across calls. Confirmed 2026-06-24: separate-call pre-run count was stale, producing a delta of 4672 (meaningless) instead of the expected 2–3.
-
-**Light heartbeat self-journaling is the EXPECTED DEFAULT failure pattern in cron mode** — As of 2026-06-16, the script's Python `with open()` writes to commons have failed 3+ consecutive times. The caller's backup write workflow is NOT a fallback — it is the ACTUAL persistence mechanism. Always run the full verify-and-backup workflow. Never skip verification even when prior runs succeeded. See `references/shell-write-pattern.md` and gotcha #23.
-
-**Forge/scan journal heredoc arithmetic syntax error (confirmed 2026-06-25 dispatch #85):** When writing a JSON journal via shell heredoc (`cat > file.json << EOF`), bash substring expansion (`${TS:9:2}`) inside the heredoc body triggers an arithmetic syntax error (`: syntax error: operand expected`). The `>` in the heredoc redirect combined with `${}` patterns confuses bash's parser. **Fix:** Always use Python (`json.dump()`) to write JSON journal files, never shell heredocs with bash variable substring operations. For simple non-JSON appends, `echo >> file` is safe.
-
-**Outcome-classification defect: an `errors` findings report is not a failed run (fixed 2026-09-30):** `normalize_outcome` in BOTH `cron-heartbeat-deep-dualpath.py` and `cron-heartbeat-light.py` inferred failure from *key presence* (`if entry.get("error") or entry.get("errors"): return "error"`). A journal whose `errors` field is a structured **report about other systems** (e.g. `ocas-custodian` listing failing cron jobs it found) was scored as a failed run. This inflated `error_rate`, depressed `orchestration_success_rate`, and raised phantom `high_errors_<skill>` anomalies. Verified blast radius on the live corpus: **10 of 38,436 entries**, all `ocas-custodian`, all a list-of-dicts findings report — zero genuine failures. Fix: `_reports_failure(entry)` classifies only *bare message* payloads (str/bytes/number/bool, list-of-str, dict keyed `error`/`failed`/`failure`) as this run's failure; a list-of-dicts stays a successful observation. 15/15 unit cases, corpus errors 8 -> 0. **Rule for future work:** outcome classification must read the *shape* of a field, not its presence. Reusable helper lives in both scripts.
-
-**Phantom-anomaly clearing:** when a root cause is fixed, mark the anomaly `stale: true` with `stale_reason`, `stale_set_at`, and `resolution: "root_caused_and_fixed"` rather than deleting the row — the record of the false positive is the evidence. Re-run the heartbeat afterward to confirm it does not regenerate.
 
 ## Operational Recipes (light / deep heartbeat, commons sync)
 
@@ -157,6 +119,54 @@ See `references/mentor-operational-recipes.md` for the exact shell blocks, the s
 
 
 
+
+## Examples
+
+### Example 1 — Light heartbeat (cron)
+**Input:** file list from `discover_recent_journals.py` (`/tmp/mentor_files_3d.txt`):
+`~/.hermes/commons/journals/ocas-forge/2026-07-14/forge-scan-20260714T060000Z.json`
+`~/.hermes/commons/journals/ocas-mentor/2026-07-14/mentor-light-20260714T060026Z.json`
+
+**Command:**
+```bash
+python3 scripts/cron-heartbeat-light.py < /tmp/mentor_files_3d.txt
+```
+
+**Expected:** `Cron heartbeat wrote 1 evidence record, 1 ingestion record, 1 journal.` (verify each file with `wc -l`, not just the script's stdout).
+
+### Example 2 — active_skills_30d correction (every heartbeat)
+**Input:** light heartbeat evidence record with `active_skills_30d: 11`.
+**Command:** `python3 scripts/correct_active_skills_30d.py`
+**Expected:** true 30-day count (e.g. `20`) plus a second evidence record with `correction: true`.
+
+### Example 3 — Deep heartbeat: ingestion delta = 0
+1. Run `cron-heartbeat-deep-dualpath.py`.
+2. Verify `wc -l` on `ingestion_log.jsonl` delta = 0.
+3. If delta = 0: run `deep_ingest_backup.py`, then `mentor_sync_commons.py`.
+
+## Error Handling
+
+| Failure mode | Handling |
+|---|---|
+| `tirith:pipe_to_interpreter` blocks the whole `terminal()` call | Rewrite as stdin redirect (`python3 script.py < file`) or a `/tmp/*.py` script; never `cmd \| python3` |
+| `execute_code` blocked in cron-triggered jobs | Use `terminal()` with inline `python3 /path/to/scripts.py` |
+| Evidence write returns 0 delta but script exited 0 | Re-run the full verify-and-backup workflow; check the sync script's exit code, not just stdout |
+| Journal already exists for the run_id | Do NOT write a second journal; the script's journal is canonical |
+| `active_skills_30d` undercount (9-14, not 18-22) | Always run `correct_active_skills_30d.py` and write the corrected evidence record |
+| `wc -l` shows 0 delta after sync (concurrent heartbeat) | Verify with `grep <new_run_id> evidence.jsonl`; if present, sync is already done |
+| Journal file-mtimes lag content timestamps ~7h12m | Use `discover_recent_journals.py` (content-timestamp) for tight windows; widen mtime window otherwise |
+| `with open()` write silently fails in cron | Verify with `wc -l`; use `cat >`/`echo >>` for critical writes |
+| Heredoc `${TS:9:2}` arithmetic error | Use `json.dump()` for JSON; `echo >>` for non-JSON appends |
+| Outcome misclassified (list-of-dicts `errors` treated as failure) | Use `_reports_failure()` shape check, not field presence |
+
+## Gotchas / Pitfalls
+
+- Cron-mode constraints are enumerated in `references/cron-mode-constraints.md`; read them before every heartbeat.
+- Outcome classification must read the *shape* of a field (`_reports_failure`), not its presence — an `errors` list-of-dicts findings report is not a failed run (10 of 38,436 entries; fixed 2026-09-30).
+- `active_skills_30d` is ALWAYS an undercount at the script level; the caller MUST always correct it.
+- The script's journal is canonical: never write a second journal for the same `run_id`.
+- Journal file-mtimes lag content timestamps by ~7h12m; `find -mmin` is unreliable for tight windows.
+- For the full chronological log of confirmed pitfalls, see `references/gotchas-mentor.md`.
 ## Dispatch / Cron Integration
 
 ## Workflow
@@ -251,7 +261,7 @@ Steps 5–7 are mandatory regardless of script success. The script's evidence re
 
 Steps 5–7 are mandatory regardless of script success. The script's evidence record (step 3) is always wrong on `active_skills_30d`. Do not skip the correction because the script reported "success." Confirmed 42+ times (2026-06-19 through 2026-06-25).
 
-**Security alert triage (confirmed 2026-06-25):** GitGuardian (and similar) alerts on internal repos (e.g., `<agent-handle>/indigo`) detecting JWTs or high-entropy secrets are typically test credentials, not active production secrets. Classify as `intent: "security_alert"` → **no action** unless the alert explicitly identifies an active production key. Recurring alerts on the same commit are noise — no escalation needed.
+**Security alert triage (confirmed 2026-06-25):** GitGuardian (and similar) alerts on internal repos (e.g., `indigokarasu/indigo`) detecting JWTs or high-entropy secrets are typically test credentials, not active production secrets. Classify as `intent: "security_alert"` → **no action** unless the alert explicitly identifies an active production key. Recurring alerts on the same commit are noise — no escalation needed.
 
 **Dispatcher second-wave pattern (confirmed 2026-06-21):** After the dispatch runs all three pipelines, the dispatcher re-scans and detects the mentor-light journal written by the dispatch's own run as "new." This is expected — the journal is genuinely new since the last dispatcher scan. The Praxis ingest should include the mentor-light journal from the dispatch run in its eval list to prevent re-processing. If a second dispatch wave fires, the mentor-light journal will already be evaluated and Praxis will find 0 new journals.
 
@@ -353,5 +363,6 @@ See `references/self-update-mentor.md`.
 | `references/gap-backfill-auto-correct.md` | **When you discover a phantom filename entry in the eval file** — gap backfill auto-corrects wrong filenames from script stdout rollover; the phantom entry is inert and harmless |
 | `references/ingestion-cross-reference-technique.md` | **READ DURING INGESTION CROSS-REFERENCE** — naive `comm -23` is misleading; use Python set difference instead |
 | `references/cron-execution-patterns.md` | **READ BEFORE RUNNING MENTOR HEARTBEATS IN CRON** — critical patterns for script execution, verification workflows, and common pitfalls in cron-triggered heartbeats |
+| `references/cron-mode-constraints.md` | **READ BEFORE RUNNING MENTOR HEARTBEATS** — full list of confirmed cron-mode operational constraints (stdin redirect, no heredocs, no execute_code, pre-run counts, journal integrity, outcome classification) |
 | `references/dispatch-bridge-script-reality.md` | **When a dispatch wave needs eval bridging** — the documented `bridge_eval_both_stores.py` / `close_dispatch_gap*.py` / `robust_eval_reconcile.py` / `reconcile_dispatch_eval_today.py` / `scan_eval_missing_journals.py` helpers DO NOT EXIST on disk. Use `scripts/bridge_eval_inline.py` (idempotent, in-process, both eval stores) instead. |
 | `references/dispatch-closure-script-reality.md` | **When a dispatch wave needs CLOSURE (gates ALL CLOSED)** — the documented `verify_genuine_gap_profile.py` / `closure_convergence_sweep.py` / `closure_closeout_check.py` / `advance_gate_state.py` helpers DO NOT EXIST on disk. Use `scripts/dispatch_closure_gap_scan.py --date <DATE> [--advance]` instead (bounded gap scan + idempotent bridge + state advance, verified 2026-07-23). |
