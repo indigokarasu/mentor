@@ -22,6 +22,10 @@
 12. **Heartbeat gap logic for cron** — If gap > 15min (light) or > 24h (deep), note it and continue. Don't assume quiet hours unless 22:00-08:00 PT confirmed.
 13. **Heartbeat gap >2h during active hours** — Check if gateway was down or job suppressed. See `references/heartbeat-gap-debugging.md`.
 
+13b. **`JOURNALS_PATHS` doubles the scan when `~/.hermes/commons` symlinks to the profile commons** — In this deployment `commons` is a symlink to `profiles/indigo/commons`, so `os.walk` over both roots visits every journal twice: scan count reads ~66k instead of ~33.7k, and the dedup `seen` set keyed on the raw filepath string never collapsed the duplicate (the two path strings differ). Fix: key `seen` on `os.path.realpath(fp)` so both roots collapse to the canonical physical path. Without this, ingestion_log entries double and `journals_scanned` is inflated 2x.
+
+## Anomalies (Active)
+
 ## Script Structure
 
 14. **Cron-mode forward-reference guard** — Define ALL helper functions before `main()` in top-down Python scripts.
