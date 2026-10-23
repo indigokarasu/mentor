@@ -1,5 +1,10 @@
 ## [2.6.6] - 2026-04-26
 
+## [2.10.0] - 2026-10-23
+
+### Added
+- **Project status and routing** — `mentor.projects.tag` tags each project from Finch's in-flight tracker with one of seven statuses plus reason, next step and owning skill (`data/ocas-mentor/project-status.json`); `scripts/project_router.py` routes next steps to the owning skill as kanban tasks. Contract in `references/project-status.md`.
+
 ## [2.9.0] - 2026-09-16
 
 ### Changed
