@@ -8,7 +8,7 @@ includes:
 - scripts/**
 metadata:
   author: Indigo Karasu (indigokarasu)
-  version: "2.9.0"
+  version: "2.10.0"
   hermes:
     category: software-development
     tags:
@@ -69,6 +69,8 @@ Mentor does not emit entity signals directly. Journal outputs are ingested by Ch
 - `mentor.project.create` — create a project with goal, constraints, and requested output
 - `mentor.project.status` — current project state, task graph, execution progress
 - `mentor.project.replan` — trigger strategy-level replan
+- `mentor.projects.tag` — tag every project Finch records (in-progress, active, maintenance, waiting-on-<owner>, waiting-on-external, complete, abandoned) with reason, next step and owning skill; see `references/project-status.md`
+- `mentor.projects.route` — `scripts/project_router.py`: hand the next step of in-progress/active projects to the owning skill as a kanban task (no LLM, deduplicated, capped per run)
 - `mentor.task.list` — tasks with statuses, dependencies, blocking reasons
 - `mentor.heartbeat.light` — lightweight pass: ingest journals, update aggregates, queue work
 - `mentor.heartbeat.deep` — deep pass: full scoring, trend analysis, proposals
