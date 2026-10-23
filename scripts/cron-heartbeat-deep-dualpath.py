@@ -175,7 +175,8 @@ def main():
             for fn in files:
                 if is_journal_file(fn):
                     fp = os.path.join(root, fn)
-                    if fp not in seen: seen.add(fp); all_journal_files.append(fp)
+                    key = os.path.realpath(fp)
+                    if key not in seen: seen.add(key); all_journal_files.append(fp)
 
     total_files = len(all_journal_files)
     skill_files = defaultdict(list)
