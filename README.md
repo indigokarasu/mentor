@@ -32,7 +32,7 @@ Self-improving orchestration and evaluation engine. Manages long-running multi-s
 - `mentor.proposals.create` — generate a VariantProposal for a target skill
 - `mentor.status` — active projects, pending evaluations, self-improvement metrics
 - `mentor.journal` — write journal for the current run; called at end of every run
-- `mentor.update` — pull latest from GitHub source; preserves journals and data. See `references/self-update-mentor.md` for the full procedure (Quick Path for clean state, Full Path for dirty state with local fixes to preserve).
+- `mentor.update` — pull latest from GitHub source; preserves journals and data. Skill updates now run through the centralized fleet updater (`scripts/update_skill.sh`, invoked by the `skills:update-fleet` cron). See that script for the Quick/Full path procedure.
 - `mentor.plan.list` / `mentor.plan.run` / `mentor.plan.status` / `mentor.plan.resume` / `mentor.plan.history` — workflow plan management
 - `references/session-20260624-dispatch-44.md` — dispatcher new_files timestamp mismatch, large gap backfill
 
