@@ -25,8 +25,10 @@ if set(sys.argv[1:]) & _HELP_ARGS:
     print((__doc__ or "").strip() or "Usage: python3 repair_evidence_jsonl.py")
     sys.exit(0)
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # _ocasenv.py sits beside this script
+from _ocasenv import profile_root  # noqa: E402  (host paths/timezone resolved at runtime)
 PATHS = [
-    ("profile", os.path.expanduser("$HERMES_HOME/commons/data/mentor/evidence.jsonl")),
+    ("profile", os.path.join(profile_root(), "commons/data/mentor/evidence.jsonl")),
     ("commons", os.path.expanduser("~/.hermes/commons/data/mentor/evidence.jsonl")),
 ]
 

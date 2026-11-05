@@ -17,7 +17,9 @@ if set(sys.argv[1:]) & _HELP_ARGS:
     print((__doc__ or "").strip() or "Usage: python3 deep_ingest_backup.py")
     sys.exit(0)
 
-DATA_DIR = os.path.expanduser("$HERMES_HOME/commons/data/mentor")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # _ocasenv.py sits beside this script
+from _ocasenv import profile_root  # noqa: E402  (host paths/timezone resolved at runtime)
+DATA_DIR = os.path.join(profile_root(), "commons/data/mentor")
 INGESTION_LOG = os.path.join(DATA_DIR, "ingestion_log.jsonl")
 DEEP_FILES = "/tmp/mentor_deep_files.txt"
 

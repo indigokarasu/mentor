@@ -111,9 +111,11 @@ def load_journal_entries(filepath):
     except json.JSONDecodeError: pass
     return []
 
-JOURNALS_PATHS = [os.path.expanduser("~/.hermes/commons/journals/"), os.path.expanduser("$HERMES_HOME/commons/journals/")]
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # _ocasenv.py sits beside this script
+from _ocasenv import profile_root  # noqa: E402  (host paths/timezone resolved at runtime)
+JOURNALS_PATHS = [os.path.expanduser("~/.hermes/commons/journals/"), os.path.join(profile_root(), "commons/journals/")]
 MENTOR_DATA = os.path.expanduser("~/.hermes/commons/data/mentor/")
-PROFILE_MENTOR_DATA = os.path.expanduser("$HERMES_HOME/commons/data/mentor/")
+PROFILE_MENTOR_DATA = os.path.join(profile_root(), "commons/data/mentor/")
 
 def resolve_skill_name(filepath):
     """Return the skill that owns a journal, or "unknown".
@@ -345,7 +347,7 @@ def main():
             and os.path.samefile(OKR_STATE, profile_okr)):
         with open(profile_okr, "w") as f: json.dump(okr_save, f, indent=2)
 
-    jdir = os.path.join(os.path.expanduser("$HERMES_HOME/commons/journals/ocas-mentor"), today_str)
+    jdir = os.path.join(os.path.join(profile_root(), "commons/journals/ocas-mentor"), today_str)
     os.makedirs(jdir, exist_ok=True)
     jfile = os.path.join(jdir, f"mentor-deep-{run_id}.json")
     jrecord = {"timestamp": now.isoformat(), "run_id": run_id, "command": "mentor.heartbeat.deep", "outcome": "success", "metrics": evidence_record, "okr_scores": okr_scores, "proposals": [{"id": p["proposal_id"], "skill": p["target_skill"], "priority": p["priority"]} for p in proposals], "anomalies_new": [a["key"] for a in new_anomalies], "skill_health": sorted(skill_health, key=lambda x: x["success_rate"]), "gap_detected": gap_detected, "gap_minutes": gap_minutes}

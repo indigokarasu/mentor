@@ -22,12 +22,14 @@ if set(sys.argv[1:]) & _HELP_ARGS:
     print((__doc__ or "").strip() or "Usage: python3 correct_active_skills_30d.py")
     sys.exit(0)
 
-AGENT_ROOT = os.path.expanduser("$HERMES_HOME")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # _ocasenv.py sits beside this script
+from _ocasenv import profile_root  # noqa: E402  (host paths/timezone resolved at runtime)
+AGENT_ROOT = profile_root()
 MENTOR_DATA = os.path.join(AGENT_ROOT, "commons", "data", "mentor")
 EVIDENCE_LOG = os.path.join(MENTOR_DATA, "evidence.jsonl")
 JOURNALS_DIRS = [
     os.path.expanduser("~/.hermes/commons/journals"),
-    os.path.expanduser("$HERMES_HOME/commons/journals"),
+    os.path.join(profile_root(), "commons/journals"),
 ]
 
 

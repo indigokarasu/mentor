@@ -17,7 +17,7 @@ def load_module():
 class TestCronHeartbeatLight(unittest.TestCase):
     def test_extract_skill_from_profile_scoped_journal_path(self):
         module = load_module()
-        path = os.path.expanduser("$HERMES_HOME/commons/journals/ocas-mentor/2026-07-09/mentor-light-20260709T133823Z.json")
+        path = os.path.expanduser("~/.hermes/profiles/example/commons/journals/ocas-mentor/2026-07-09/mentor-light-20260709T133823Z.json")
         self.assertEqual(module.extract_skill_from_journal_path(path), "ocas-mentor")
 
     def test_extract_skill_from_shared_commons_journal_path(self):

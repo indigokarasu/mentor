@@ -36,7 +36,9 @@ import sys
 import os
 from datetime import datetime, timezone
 
-BASE = os.path.expanduser("$HERMES_HOME")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # _ocasenv.py sits beside this script
+from _ocasenv import profile_root  # noqa: E402  (host paths/timezone resolved at runtime)
+BASE = profile_root()
 DISP = os.path.join(BASE, "commons/data/ocas-dispatch/journals_evaluated.jsonl")
 PRAX = os.path.join(BASE, "commons/data/ocas-praxis/journals_evaluated.jsonl")
 

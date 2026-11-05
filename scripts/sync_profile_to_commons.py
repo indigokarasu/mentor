@@ -22,7 +22,9 @@ if set(sys.argv[1:]) & _HELP_ARGS:
     print((__doc__ or "Usage: python3 sync_profile_to_commons.py").strip())
     sys.exit(0)
 
-PROFILE_DIR = '$HERMES_HOME/commons/data/mentor'
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # _ocasenv.py sits beside this script
+from _ocasenv import profile_root  # noqa: E402  (host paths/timezone resolved at runtime)
+PROFILE_DIR = os.path.join(profile_root(), 'commons/data/mentor')
 COMMONS_DIR = '~/.hermes/commons/data/mentor'
 
 JSONL_FILES = ['evidence.jsonl', 'ingestion_log.jsonl']

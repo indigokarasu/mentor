@@ -15,16 +15,18 @@ Usage:
 """
 import os, json, argparse, datetime, sys
 
-PROFILE_DATA = os.path.expanduser("$HERMES_HOME/commons/data")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # _ocasenv.py sits beside this script
+from _ocasenv import profile_root  # noqa: E402  (host paths/timezone resolved at runtime)
+PROFILE_DATA = os.path.join(profile_root(), "commons/data")
 JOURNAL_ROOTS = [
     os.path.expanduser("~/.hermes/commons/journals"),
-    os.path.expanduser("$HERMES_HOME/commons/journals"),
+    os.path.join(profile_root(), "commons/journals"),
 ]
 PRAXIS_EVAL = os.path.join(PROFILE_DATA, "ocas-praxis/journals_evaluated.jsonl")
 DISPATCH_EVAL = os.path.join(PROFILE_DATA, "ocas-dispatch/journals_evaluated.jsonl")
 MONITOR_ROOTS = [
     os.path.expanduser("~/.hermes/commons/data/monitor_state/journal_ingest_state.json"),
-    os.path.expanduser("$HERMES_HOME/commons/data/monitor_state/journal_ingest_state.json"),
+    os.path.join(profile_root(), "commons/data/monitor_state/journal_ingest_state.json"),
 ]
 PRAXIS_STATE = os.path.join(PROFILE_DATA, "ocas-praxis/ingest_state.json")
 

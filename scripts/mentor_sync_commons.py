@@ -9,9 +9,11 @@ if set(sys.argv[1:]) & _HELP_ARGS:
     print((__doc__ or "").strip() or "Usage: python3 mentor_sync_commons.py")
     sys.exit(0)
 
-PROFILE_EVIDENCE = os.path.expanduser("$HERMES_HOME/commons/data/mentor/evidence.jsonl")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # _ocasenv.py sits beside this script
+from _ocasenv import profile_root  # noqa: E402  (host paths/timezone resolved at runtime)
+PROFILE_EVIDENCE = os.path.join(profile_root(), "commons/data/mentor/evidence.jsonl")
 COMMONS_EVIDENCE = os.path.expanduser("~/.hermes/commons/data/mentor/evidence.jsonl")
-PROFILE_INGESTION = os.path.expanduser("$HERMES_HOME/commons/data/mentor/ingestion_log.jsonl")
+PROFILE_INGESTION = os.path.join(profile_root(), "commons/data/mentor/ingestion_log.jsonl")
 COMMONS_INGESTION = os.path.expanduser("~/.hermes/commons/data/mentor/ingestion_log.jsonl")
 
 # --- Evidence sync (field: timestamp) ---

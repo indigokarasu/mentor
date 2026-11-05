@@ -18,7 +18,9 @@ if set(sys.argv[1:]) & _HELP_ARGS:
     print((__doc__ or "").strip() or "Usage: python3 cron-heartbeat-light.py")
     sys.exit(0)
 
-AGENT_ROOT = os.path.expanduser("$HERMES_HOME")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # _ocasenv.py sits beside this script
+from _ocasenv import profile_root  # noqa: E402  (host paths/timezone resolved at runtime)
+AGENT_ROOT = profile_root()
 JOURNALS_DIR = os.path.expanduser("~/.hermes/commons/journals")
 # Canonical Mentor data lives under commons/data/mentor/ (not ocas-mentor/).
 # The ocas-mentor/ directory is a legacy alias; all heartbeats must write
@@ -167,7 +169,7 @@ def main():
                     if fp.startswith("/"):
                         canonical = fp
                     elif fp.startswith("commons/"):
-                        canonical = os.path.join(os.path.expanduser("$HERMES_HOME"), fp)
+                        canonical = os.path.join(profile_root(), fp)
                     else:
                         canonical = os.path.abspath(fp) if fp else fp
                     ingested_files.add(canonical)

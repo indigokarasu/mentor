@@ -29,9 +29,11 @@ NOW = datetime.now(timezone.utc)
 WIN_START = NOW.timestamp() - WINDOW * 60
 MTIME_CUTOFF = NOW.timestamp() - MTIME_COVER * 60
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # _ocasenv.py sits beside this script
+from _ocasenv import profile_root  # noqa: E402  (host paths/timezone resolved at runtime)
 ROOTS = [
     os.path.expanduser("~/.hermes/commons/journals"),
-    os.path.expanduser("$HERMES_HOME/commons/journals"),
+    os.path.join(profile_root(), "commons/journals"),
 ]
 
 

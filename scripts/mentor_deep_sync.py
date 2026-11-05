@@ -21,7 +21,9 @@ if set(sys.argv[1:]) & _HELP_ARGS:
     sys.exit(0)
 
 
-PROFILE = os.path.expanduser("$HERMES_HOME/commons/data/mentor")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # _ocasenv.py sits beside this script
+from _ocasenv import profile_root  # noqa: E402  (host paths/timezone resolved at runtime)
+PROFILE = os.path.join(profile_root(), "commons/data/mentor")
 COMMONS = os.path.expanduser("~/.hermes/commons/data/mentor")
 
 
